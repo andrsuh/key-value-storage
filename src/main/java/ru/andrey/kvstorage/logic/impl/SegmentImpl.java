@@ -1,9 +1,12 @@
 package ru.andrey.kvstorage.logic.impl;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
+import ru.andrey.kvstorage.initialiation.SegmentInitializationContext;
 import ru.andrey.kvstorage.logic.*;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -21,23 +24,26 @@ import java.util.Optional;
 public class SegmentImpl implements Segment {
     private final String segmentName;
     private final Path segmentPath;
-    private final int currentSize = 0;
-    private final Index segmentIndex = new SegmentIndex(); // todo sukhoa this of better design
+    private final int currentSize;
+    private final Index segmentIndex; // todo sukhoa think of better design
 
     private SegmentImpl(String segmentName, Path tableRootPath) {
         this.segmentName = segmentName;
         this.segmentPath = tableRootPath.resolve(segmentName);
+        this.segmentIndex = new SegmentIndex();
+        this.currentSize = 0;
+    }
+
+    public SegmentImpl(SegmentInitializationContext context) {
+        this.segmentName = context.getSegmentName();
+        this.segmentPath = context.getSegmentPath();
+        this.segmentIndex = context.getSegmentIndex();
+        this.currentSize = context.getCurrentSize();
     }
 
     static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
         SegmentImpl sg = new SegmentImpl(segmentName, tableRootPath);
         sg.initializeAsNew();
-        return sg;
-    }
-
-    static Segment existing(String segmentName, Path tableRootPath) throws DatabaseException {
-        SegmentImpl sg = new SegmentImpl(segmentName, tableRootPath);
-        sg.initializeAsExisting();
         return sg;
     }
 
@@ -50,28 +56,6 @@ public class SegmentImpl implements Segment {
             Files.createFile(segmentPath);
         } catch (IOException e) {
             throw new DatabaseException("Cannot create segment file for path: " + segmentPath, e);
-        }
-    }
-
-    private void initializeAsExisting() throws DatabaseException {
-        if (!Files.exists(segmentPath)) { // todo sukhoa race condition
-            throw new DatabaseException("Segment with such name doesn't exist: " + segmentName);
-        }
-
-
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(segmentPath)))) { // todo sukhoa: is it relayable to count bytes this way not using ByteChannel
-
-            var offset = 0;
-            String kvPair = reader.readLine();
-            while (kvPair != null) {
-                String[] split = kvPair.split(":");// todo sukhoa separator
-                segmentIndex.update(split[0], new IndexInfoImpl(offset, kvPair.length()));
-
-                offset = offset + kvPair.length() + 1; // + \n
-                kvPair = reader.readLine();
-            }
-        } catch (IOException e) {
-            throw new DatabaseException("Cannot read segment: " + segmentPath, e);
         }
     }
 
@@ -96,7 +80,6 @@ public class SegmentImpl implements Segment {
             out.write(content);
 
             segmentIndex.update(objectKey, new IndexInfoImpl(startPosition, length - 1)); // excluding \n
-//            System.out.println(" Written :" + length + " bytes, offset: " + startPosition);
         }
 
 

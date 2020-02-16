@@ -1,6 +1,11 @@
 package ru.andrey.kvstorage;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
+import ru.andrey.kvstorage.initialiation.DatabaseInitializer;
+import ru.andrey.kvstorage.initialiation.impl.DatabaseInitializationContextImpl;
+import ru.andrey.kvstorage.initialiation.impl.DatabaseInitializerImpl;
+import ru.andrey.kvstorage.initialiation.impl.SegmentInitializerImpl;
+import ru.andrey.kvstorage.initialiation.impl.TableInitializerImpl;
 import ru.andrey.kvstorage.logic.Database;
 import ru.andrey.kvstorage.logic.impl.DatabaseImpl;
 
@@ -17,42 +22,49 @@ public class Main {
 
     public static void main(String[] args) {
 
+        DatabaseInitializer initializer = new DatabaseInitializerImpl(new TableInitializerImpl(new SegmentInitializerImpl()));
+
         while (true) {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-                String[] commandInfo = reader.readLine().split(" ");
-                switch (OPS.valueOf(commandInfo[0])) {
-                    case CREATE_DATABASE: {
-                        Database database = DatabaseImpl.create(commandInfo[1], Path.of(""));
-                        databases.put(commandInfo[1], database);
-                        break;
+                while (true) {
+                    String[] commandInfo = reader.readLine().split(" ");
+                    switch (OPS.valueOf(commandInfo[0])) {
+                        case CREATE_DATABASE: {
+                            Database database = DatabaseImpl.create(commandInfo[1], Path.of(""));
+                            databases.put(commandInfo[1], database);
+                            break;
+                        }
+                        case INIT_DATABASE: {
+//                        Database database = DatabaseImpl.existing(commandInfo[1], Path.of(""));
+//                        databases.put(commandInfo[1], database);
+                            DatabaseInitializationContextImpl context = new DatabaseInitializationContextImpl(commandInfo[1], Path.of(""));
+                            initializer.prepareContext(context);
+                            databases.put(commandInfo[1], new DatabaseImpl(context));
+                            break;
+                        }
+                        case CREATE_TABLE: { // doesn't work
+                            Database database = databases.get(commandInfo[1]); // NPE AIOOB
+                            database.createTableIfNotExists(commandInfo[2]); // AIOOB
+                            break;
+                        }
+                        case UPDATE_KEY: {
+                            Database database = databases.get(commandInfo[1]); // NPE AIOOB
+                            database.write(commandInfo[2], commandInfo[3], commandInfo[4]); // AIOOB
+                            break;
+                        }
+                        case READ_KEY: {
+                            Database database = databases.get(commandInfo[1]); // NPE AIOOB
+                            String value = database.read(commandInfo[2], commandInfo[3]);// AIOOB
+                            System.out.println(value);
+                            break;
+                        }
+                        default:
+                            System.out.println("No such command: " + Arrays.toString(commandInfo));
                     }
-                    case INIT_DATABASE: {
-                        Database database = DatabaseImpl.existing(commandInfo[1], Path.of(""));
-                        databases.put(commandInfo[1], database);
-                        break;
-                    }
-                    case CREATE_TABLE: { // doesn't work
-                        Database database = databases.get(commandInfo[1]); // NPE AIOOB
-                        database.createTableIfNotExists(commandInfo[2]); // AIOOB
-                        break;
-                    }
-                    case UPDATE_KEY: {
-                        Database database = databases.get(commandInfo[1]); // NPE AIOOB
-                        database.write(commandInfo[2], commandInfo[3], commandInfo[4]); // AIOOB
-                        break;
-                    }
-                    case READ_KEY: {
-                        Database database = databases.get(commandInfo[1]); // NPE AIOOB
-                        String value = database.read(commandInfo[2], commandInfo[3]);// AIOOB
-                        System.out.println(value);
-                        break;
-                    }
-                    default:
-                        System.out.println("No such command: " + Arrays.toString(commandInfo));
                 }
-
             } catch (IOException | DatabaseException e) {
                 e.printStackTrace();
+                break;
             }
         }
     }
