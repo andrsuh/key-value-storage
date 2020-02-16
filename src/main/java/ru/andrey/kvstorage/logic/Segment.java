@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.logic;
 
-import ru.andrey.kvstorage.DatabaseException;
+import ru.andrey.kvstorage.exception.DatabaseException;
 
 import java.io.IOException;
 

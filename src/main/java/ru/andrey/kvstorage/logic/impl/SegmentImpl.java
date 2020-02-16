@@ -1,11 +1,9 @@
 package ru.andrey.kvstorage.logic.impl;
 
-import ru.andrey.kvstorage.DatabaseException;
+import ru.andrey.kvstorage.exception.DatabaseException;
 import ru.andrey.kvstorage.logic.*;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -26,9 +24,55 @@ public class SegmentImpl implements Segment {
     private final int currentSize = 0;
     private final Index segmentIndex = new SegmentIndex(); // todo sukhoa this of better design
 
-    public SegmentImpl(String segmentName, Path tableRootPath) throws IOException {
+    private SegmentImpl(String segmentName, Path tableRootPath) {
         this.segmentName = segmentName;
-        this.segmentPath = Files.createFile(tableRootPath.resolve(segmentName));
+        this.segmentPath = tableRootPath.resolve(segmentName);
+    }
+
+    static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
+        SegmentImpl sg = new SegmentImpl(segmentName, tableRootPath);
+        sg.initializeAsNew();
+        return sg;
+    }
+
+    static Segment existing(String segmentName, Path tableRootPath) throws DatabaseException {
+        SegmentImpl sg = new SegmentImpl(segmentName, tableRootPath);
+        sg.initializeAsExisting();
+        return sg;
+    }
+
+    private void initializeAsNew() throws DatabaseException {
+        if (Files.exists(segmentPath)) { // todo sukhoa race condition
+            throw new DatabaseException("Segment with such name already exists: " + segmentName);
+        }
+
+        try {
+            Files.createFile(segmentPath);
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot create segment file for path: " + segmentPath, e);
+        }
+    }
+
+    private void initializeAsExisting() throws DatabaseException {
+        if (!Files.exists(segmentPath)) { // todo sukhoa race condition
+            throw new DatabaseException("Segment with such name doesn't exist: " + segmentName);
+        }
+
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(segmentPath)))) { // todo sukhoa: is it relayable to count bytes this way not using ByteChannel
+
+            var offset = 0;
+            String kvPair = reader.readLine();
+            while (kvPair != null) {
+                String[] split = kvPair.split(":");// todo sukhoa separator
+                segmentIndex.update(split[0], new IndexInfoImpl(offset, kvPair.length()));
+
+                offset = offset + kvPair.length() + 1; // + \n
+                kvPair = reader.readLine();
+            }
+        } catch (IOException e) {
+            throw new DatabaseException("Cannot read segment: " + segmentPath, e);
+        }
     }
 
     static String createSegmentName(String tableName) {
@@ -51,8 +95,8 @@ public class SegmentImpl implements Segment {
             var startPosition = byteChannel.position();
             out.write(content);
 
-            segmentIndex.update(objectKey, new IndexInfoImpl(startPosition, length));
-            System.out.println(" Written :" + length + " bytes, offset: " + startPosition);
+            segmentIndex.update(objectKey, new IndexInfoImpl(startPosition, length - 1)); // excluding \n
+//            System.out.println(" Written :" + length + " bytes, offset: " + startPosition);
         }
 
 

@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.logic;
 
-import ru.andrey.kvstorage.DatabaseException;
+import ru.andrey.kvstorage.exception.DatabaseException;
 
 /**
  * Таблица - логическая сущность, представляющая собой набор файлов-сегментов, которые объединены одним
@@ -12,6 +12,8 @@ import ru.andrey.kvstorage.DatabaseException;
  * и хранящую файлы-сегменты данной таблицы
  */
 public interface Table {
+    String getName();
+
     void write(String objectKey, String objectValue) throws DatabaseException;
 
     String read(String objectKey) throws DatabaseException;

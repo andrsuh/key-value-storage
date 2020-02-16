@@ -1,8 +1,8 @@
 package ru.andrey.kvstorage.logic;
 
-import ru.andrey.kvstorage.DatabaseException;
+import ru.andrey.kvstorage.exception.DatabaseException;
 
-interface Database {
+public interface Database {
     void createTableIfNotExists(String tableName) throws DatabaseException;
 
     void createTableIfNotExists(String tableName, int segmentSizeInBytes) throws DatabaseException;
