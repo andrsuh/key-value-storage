@@ -5,6 +5,7 @@ import ru.andrey.kvstorage.exception.DatabaseException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 public class SegmentIndex implements Index {
     private final Map<String, IndexInfo> index = new HashMap<>(100); // todo sukhoa fix magic constant
@@ -17,5 +18,10 @@ public class SegmentIndex implements Index {
     @Override
     public Optional<IndexInfo> searchForKey(String objectKey) {
         return Optional.ofNullable(index.get(objectKey));
+    }
+
+    @Override
+    public Set<Map.Entry<String, IndexInfo>> values() {
+        return index.entrySet();
     }
 }

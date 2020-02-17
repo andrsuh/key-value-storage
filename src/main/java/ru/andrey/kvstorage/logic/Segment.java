@@ -8,9 +8,12 @@ public interface Segment {
 
     String getName();
 
-    // returns offset but maybe it's worth returning the offset and the number of bytes written?
-    // exception is also questionable
-    int write(String objectKey, String objectValue) throws IOException, DatabaseException;
+    // todo sukhoa in future may return something like SegmentWriteResult .. with report and error details?
+    // for new returns false if cannot allocate requested capacity
+    // exception is questionable
+    boolean write(String objectKey, String objectValue) throws IOException, DatabaseException;
 
     String read(String objectKey) throws IOException;
+
+    boolean isReadOnly();
 }

@@ -52,6 +52,11 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
+    public String getName() {
+        return dbName;
+    }
+
+    @Override
     public void createTableIfNotExists(String tableName) throws DatabaseException {
         Table table = TableImpl.create(tableName, databasePath);
         tables.put(table.getName(), table);

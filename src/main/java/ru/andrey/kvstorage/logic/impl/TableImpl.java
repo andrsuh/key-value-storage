@@ -24,8 +24,8 @@ import java.util.Objects;
 public class TableImpl implements Table {
     private final String tableName;
     private final Path tablePath;
-    private Segment currentSegment;
-    private final Map<String, Segment> segments;
+    private final Map<String, Segment> tableIndex;
+    private Segment currentSegment; // todo sukhoa potentially AtomicReference
 
     private TableImpl(String tableName, Path pathToDatabaseRoot) {
         Objects.requireNonNull(tableName);
@@ -34,13 +34,13 @@ public class TableImpl implements Table {
         this.tableName = tableName;
         this.tablePath = pathToDatabaseRoot.resolve(tableName);
 
-        this.segments = new LinkedHashMap<>();
+        this.tableIndex = new LinkedHashMap<>();
     }
 
     public TableImpl(TableInitializationContext context) {
         this.tableName = context.getTableName();
         this.tablePath = context.getTablePath();
-        this.segments = context.getSegments();
+        this.tableIndex = context.getSegments();
         this.currentSegment = context.getCurrentSegment();
     }
 
@@ -58,7 +58,7 @@ public class TableImpl implements Table {
         try {
             Files.createDirectory(tablePath);
             currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
-            segments.put(currentSegment.getName(), currentSegment);
+            tableIndex.put(currentSegment.getName(), currentSegment);
 
         } catch (IOException e) {
             throw new DatabaseException("Cannot create table directory for path: " + tablePath, e);
@@ -68,7 +68,14 @@ public class TableImpl implements Table {
     @Override
     public void write(String objectKey, String objectValue) throws DatabaseException {
         try {
-            currentSegment.write(objectKey, objectValue);
+            while (true) {
+                var s = currentSegment; // cache to local for preventing concurrent issues in future
+                if (!s.isReadOnly() && s.write(objectKey, objectValue)) {
+                    tableIndex.put(objectKey, s);
+                    break;
+                }
+                currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
+            }
         } catch (IOException e) {
             throw new DatabaseException(e); // todo sukhoa review exceptions
         }
@@ -77,7 +84,11 @@ public class TableImpl implements Table {
     @Override
     public String read(String objectKey) throws DatabaseException {
         try {
-            return currentSegment.read(objectKey);
+            Segment segment = tableIndex.get(objectKey);
+            if (segment == null) {
+                throw new DatabaseException("No such key: " + objectKey);
+            }
+            return segment.read(objectKey);
         } catch (IOException e) {
             throw new DatabaseException(e);
         }

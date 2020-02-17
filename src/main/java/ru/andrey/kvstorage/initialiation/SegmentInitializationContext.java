@@ -13,7 +13,7 @@ public interface SegmentInitializationContext {
 
     void setSegmentPath(Path segmentPath);
 
-    int getCurrentSize();
+    int getCurrentSize(); // todo sukhoa should be long
 
     void setCurrentSize(int currentSize);
 

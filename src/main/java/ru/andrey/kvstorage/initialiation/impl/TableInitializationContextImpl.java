@@ -45,7 +45,7 @@ public class TableInitializationContextImpl implements TableInitializationContex
         return segments;
     }
 
-    public void setSegments(Map<String, Segment> segments) {
+    public void setTableIndex(Map<String, Segment> segments) {
         this.segments = segments;
     }
 }

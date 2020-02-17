@@ -31,7 +31,7 @@ public class TableInitializerImpl implements TableInitializer {
             throw new DatabaseException("Table with such name doesn't exist: " + context.getTableName());
         }
 
-        Map<String, Segment> segments = new HashMap<>();
+        Map<String, Segment> tableIndex = new HashMap<>();
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(context.getTablePath(), p -> Files.isRegularFile(p)); // todo sukhoa make faster by making parallel
              Stream<Path> directoryStream = StreamSupport.stream(ds.spliterator(), false)) {
 
@@ -47,13 +47,21 @@ public class TableInitializerImpl implements TableInitializer {
                         }
 
                         SegmentImpl segment = new SegmentImpl(segmentInitContext); // todo sukhoa handle case with more than one segment
-                        segments.put(segment.getName(), segment);
+
+                        updateTableIndex(tableIndex, segmentInitContext, segment);
                         context.setCurrentSegment(segment);
                     });
         } catch (Exception e) { // todo sukhoa handle this. refactor
             throw new DatabaseException(e);
         }
 
-        context.setSegments(segments);
+        context.setTableIndex(tableIndex);
+    }
+
+    private void updateTableIndex(Map<String, Segment> tableIndex, SegmentInitializationContextImpl segmentInitContext, Segment segment) {
+        segmentInitContext.getSegmentIndex().values()
+                .forEach(segmentIndexEntry -> {
+                    tableIndex.put(segmentIndexEntry.getKey(), segment);
+                });
     }
 }

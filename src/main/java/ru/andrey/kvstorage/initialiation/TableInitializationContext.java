@@ -20,5 +20,5 @@ public interface TableInitializationContext {
 
     Map<String, Segment> getSegments();
 
-    void setSegments(Map<String, Segment> segments);
+    void setTableIndex(Map<String, Segment> segments);
 }

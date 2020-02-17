@@ -22,23 +22,28 @@ import java.util.Optional;
  * - является неизменяемым после появления более нового сегмента
  */
 public class SegmentImpl implements Segment {
+    private static final long MAX_SEGMENT_SIZE = 20;
+
     private final String segmentName;
     private final Path segmentPath;
-    private final int currentSize;
     private final Index segmentIndex; // todo sukhoa think of better design
+
+    private long currentSizeInBytes;
+    private volatile boolean readOnly = true;
 
     private SegmentImpl(String segmentName, Path tableRootPath) {
         this.segmentName = segmentName;
         this.segmentPath = tableRootPath.resolve(segmentName);
         this.segmentIndex = new SegmentIndex();
-        this.currentSize = 0;
+        this.currentSizeInBytes = 0;
+        this.readOnly = false;
     }
 
     public SegmentImpl(SegmentInitializationContext context) {
         this.segmentName = context.getSegmentName();
         this.segmentPath = context.getSegmentPath();
         this.segmentIndex = context.getSegmentIndex();
-        this.currentSize = context.getCurrentSize();
+        this.currentSizeInBytes = context.getCurrentSize();
     }
 
     static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
@@ -69,9 +74,17 @@ public class SegmentImpl implements Segment {
     }
 
     @Override
-    public int write(String objectKey, String objectValue) throws IOException, DatabaseException { // todo sukhoa deal with second exception
+    public boolean write(String objectKey, String objectValue) throws IOException, DatabaseException { // todo sukhoa deal with second exception
         byte[] content = (objectKey + ":" + objectValue + "\n").getBytes();// todo sukhoa add charset,  create separator field (property!)
         int length = content.length;
+
+        if (!canAllocate(length)) { // todo sukhoa race condition
+            System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
+            readOnly = false;
+            return false;
+        }
+
+        currentSizeInBytes = currentSizeInBytes + length;
 
         try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.APPEND);
              OutputStream out = Channels.newOutputStream(byteChannel)) {
@@ -81,9 +94,11 @@ public class SegmentImpl implements Segment {
 
             segmentIndex.update(objectKey, new IndexInfoImpl(startPosition, length - 1)); // excluding \n
         }
+        return true; // todo sukhoa fix
+    }
 
-
-        return 0; // todo sukhoa fix
+    private boolean canAllocate(int length) {
+        return MAX_SEGMENT_SIZE - currentSizeInBytes >= length;
     }
 
     @Override
@@ -102,5 +117,10 @@ public class SegmentImpl implements Segment {
 
             return new String(bytes).split(":")[1]; // todo sukhoa charset, handle separator
         }
+    }
+
+    @Override
+    public boolean isReadOnly() {
+        return readOnly;
     }
 }
