@@ -1,10 +1,17 @@
 package ru.andrey.kvstorage.console;
 
-public enum DbCommandType {
+import ru.andrey.kvstorage.console.impl.*;
+import ru.andrey.kvstorage.initialization.Initializer;
+import ru.andrey.kvstorage.initialization.impl.DatabaseInitializer;
+import ru.andrey.kvstorage.initialization.impl.SegmentInitializer;
+import ru.andrey.kvstorage.initialization.impl.TableInitializer;
+
+public enum DatabaseCommands {
+
     INIT_DATABASE {
         @Override
         public DatabaseCommand getCommand(ExecutionEnvironment env, String... args) {
-            return null;
+            return new InitializeDatabaseCommand(env, INITIALIZER, args);
         }
     },
     CREATE_DATABASE {
@@ -31,6 +38,12 @@ public enum DbCommandType {
             return new ReadKeyCommand(env, args);
         }
     };
+
+    private static final Initializer INITIALIZER = new DatabaseInitializer( // todo sukhoa this is temporary solution
+            new TableInitializer(
+                    new SegmentInitializer()
+            )
+    );
 
     public abstract DatabaseCommand getCommand(ExecutionEnvironment env, String... args);
 }

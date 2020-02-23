@@ -1,8 +1,12 @@
 package ru.andrey.kvstorage.logic.impl;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
-import ru.andrey.kvstorage.initialiation.SegmentInitializationContext;
-import ru.andrey.kvstorage.logic.*;
+import ru.andrey.kvstorage.index.SegmentIndex;
+import ru.andrey.kvstorage.index.SegmentIndexInfo;
+import ru.andrey.kvstorage.index.impl.SegmentIndexImpl;
+import ru.andrey.kvstorage.index.impl.SegmentIndexInfoImpl;
+import ru.andrey.kvstorage.initialization.SegmentInitializationContext;
+import ru.andrey.kvstorage.logic.Segment;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,15 +30,15 @@ public class SegmentImpl implements Segment {
 
     private final String segmentName;
     private final Path segmentPath;
-    private final Index segmentIndex; // todo sukhoa think of better design
+    private final SegmentIndex segmentIndex; // todo sukhoa think of better design
 
     private long currentSizeInBytes;
-    private volatile boolean readOnly = true;
+    private volatile boolean readOnly = false;
 
     private SegmentImpl(String segmentName, Path tableRootPath) {
         this.segmentName = segmentName;
         this.segmentPath = tableRootPath.resolve(segmentName);
-        this.segmentIndex = new SegmentIndex();
+        this.segmentIndex = new SegmentIndexImpl();
         this.currentSizeInBytes = 0;
         this.readOnly = false;
     }
@@ -42,7 +46,7 @@ public class SegmentImpl implements Segment {
     public SegmentImpl(SegmentInitializationContext context) {
         this.segmentName = context.getSegmentName();
         this.segmentPath = context.getSegmentPath();
-        this.segmentIndex = context.getSegmentIndex();
+        this.segmentIndex = context.getIndex();
         this.currentSizeInBytes = context.getCurrentSize();
     }
 
@@ -74,25 +78,26 @@ public class SegmentImpl implements Segment {
     }
 
     @Override
-    public boolean write(String objectKey, String objectValue) throws IOException, DatabaseException { // todo sukhoa deal with second exception
+    public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
         byte[] content = (objectKey + ":" + objectValue + "\n").getBytes();// todo sukhoa add charset,  create separator field (property!)
         int length = content.length;
 
         if (!canAllocate(length)) { // todo sukhoa race condition
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
-            readOnly = false;
+            readOnly = true;
             return false;
         }
 
         currentSizeInBytes = currentSizeInBytes + length;
 
+        // todo sukhoa move to separate class?
         try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.APPEND);
              OutputStream out = Channels.newOutputStream(byteChannel)) {
 
             var startPosition = byteChannel.position();
             out.write(content);
 
-            segmentIndex.update(objectKey, new IndexInfoImpl(startPosition, length - 1)); // excluding \n
+            segmentIndex.onSegmentUpdated(objectKey, new SegmentIndexInfoImpl(startPosition, length - 1)); // excluding \n
         }
         return true; // todo sukhoa fix
     }
@@ -103,12 +108,13 @@ public class SegmentImpl implements Segment {
 
     @Override
     public String read(String objectKey) throws IOException {
-        Optional<IndexInfo> indexInfo = segmentIndex.searchForKey(objectKey);
+        Optional<SegmentIndexInfo> indexInfo = segmentIndex.searchForKey(objectKey);
 
         if (indexInfo.isEmpty()) {
             throw new IllegalStateException("Read nonexistent key");
         }
 
+        // todo sukhoa move to separate class ByteChannelReader or whatever
         try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.READ);
              InputStream in = Channels.newInputStream(byteChannel)) {
 

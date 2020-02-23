@@ -1,5 +1,6 @@
-package ru.andrey.kvstorage.console;
+package ru.andrey.kvstorage.console.impl;
 
+import ru.andrey.kvstorage.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.logic.Database;
 
 import java.util.HashMap;

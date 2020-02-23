@@ -1,4 +1,6 @@
-package ru.andrey.kvstorage.console;
+package ru.andrey.kvstorage.console.impl;
+
+import ru.andrey.kvstorage.console.DatabaseCommandResult;
 
 public class DatabaseCommandResultImpl implements DatabaseCommandResult {
     private final String message;

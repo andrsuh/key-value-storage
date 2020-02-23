@@ -1,10 +1,12 @@
-package ru.andrey.kvstorage.logic;
+package ru.andrey.kvstorage.index.impl;
 
-public class IndexInfoImpl implements IndexInfo {
+import ru.andrey.kvstorage.index.SegmentIndexInfo;
+
+public class SegmentIndexInfoImpl implements SegmentIndexInfo {
     private final long offset;
     private final long length;
 
-    public IndexInfoImpl(long offset, long length) {
+    public SegmentIndexInfoImpl(long offset, long length) {
         this.offset = offset;
         this.length = length;
     }

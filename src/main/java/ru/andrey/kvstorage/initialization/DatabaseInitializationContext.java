@@ -1,4 +1,4 @@
-package ru.andrey.kvstorage.initialiation;
+package ru.andrey.kvstorage.initialization;
 
 import ru.andrey.kvstorage.logic.Table;
 
@@ -8,14 +8,10 @@ import java.util.Map;
 public interface DatabaseInitializationContext {
     String getDbName();
 
-    void setDbName(String dbName);
-
     Path getDatabasePath();
-
-    void setDatabasePath(Path databasePath);
 
     Map<String, Table> getTables();
 
-    void setTables(Map<String, Table> tables);
+    void addTable(Table table);
 }
 
