@@ -26,11 +26,11 @@ import java.util.Optional;
  * - является неизменяемым после появления более нового сегмента
  */
 public class SegmentImpl implements Segment {
-    private static final long MAX_SEGMENT_SIZE = 20;
+    private static final long MAX_SEGMENT_SIZE = 100_000L; // todo sukhoa use properties
 
     private final String segmentName;
     private final Path segmentPath;
-    private final SegmentIndex segmentIndex; // todo sukhoa think of better design
+    private final SegmentIndex segmentIndex;
 
     private long currentSizeInBytes;
     private volatile boolean readOnly = false;
@@ -69,6 +69,12 @@ public class SegmentImpl implements Segment {
     }
 
     static String createSegmentName(String tableName) {
+        // todo sukhoa remove this shit after min allowed segment size is set
+        //        try {
+        //            Thread.sleep(1);
+        //        } catch (InterruptedException e) {
+        //            e.printStackTrace();
+        //        }
         return tableName + "_" + System.currentTimeMillis();
     }
 

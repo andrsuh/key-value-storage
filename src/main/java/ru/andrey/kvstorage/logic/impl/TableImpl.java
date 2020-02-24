@@ -58,8 +58,6 @@ public class TableImpl implements Table {
         try {
             Files.createDirectory(tablePath);
             currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
-//            tableIndex.put(currentSegment.getName(), currentSegment);
-
         } catch (IOException e) {
             throw new DatabaseException("Cannot create table directory for path: " + tablePath, e);
         }
@@ -68,12 +66,13 @@ public class TableImpl implements Table {
     @Override
     public void write(String objectKey, String objectValue) throws DatabaseException {
         try {
-            while (true) {
+            while (true) { // todo sukhoa
                 var s = currentSegment; // cache to local for preventing concurrent issues in future
                 if (!s.isReadOnly() && s.write(objectKey, objectValue)) {
                     tableIndex.onTableUpdated(objectKey, s);
                     break;
                 }
+                // todo sukhoa use Atomic reference in future
                 currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
             }
         } catch (IOException e) {

@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public class TableIndexImpl implements TableIndex {
-    private final Map<String, Segment> index = new HashMap<>(); // todo sukhoa ConcurrentMap
+    private final Map<String, Segment> index = new HashMap<>(); // todo sukhoa ConcurrentMap?
 
     @Override
     public Optional<Segment> searchForKey(String objectKey) {
@@ -17,6 +17,9 @@ public class TableIndexImpl implements TableIndex {
 
     @Override
     public void onTableUpdated(String objectKey, Segment segment) {
-        index.put(objectKey, segment);
+        Segment previous = index.put(objectKey, segment);
+        if (previous != null && segment != previous) { // todo sukhoa override equals
+            System.out.println("key: " + objectKey + " segment: " + segment.getName());
+        }
     }
 }
