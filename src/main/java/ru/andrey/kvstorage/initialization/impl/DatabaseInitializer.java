@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.initialization.impl;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
-import ru.andrey.kvstorage.index.impl.TableIndexImpl;
+import ru.andrey.kvstorage.index.impl.TableIndex;
 import ru.andrey.kvstorage.initialization.DatabaseInitializationContext;
 import ru.andrey.kvstorage.initialization.InitializationContext;
 import ru.andrey.kvstorage.initialization.Initializer;
@@ -32,7 +32,7 @@ public class DatabaseInitializer implements Initializer {
         if (!Files.exists(databaseContext.getDatabasePath())) { // todo sukhoa race condition
             throw new DatabaseException("Database with such name doesn't exist: " + databaseContext.getDbName());
         }
-
+        // TODO A: make parallel?
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(databaseContext.getDatabasePath(), p -> Files.isDirectory(p));
              Stream<Path> directoryStream = StreamSupport.stream(ds.spliterator(), false)) {
 
@@ -41,7 +41,7 @@ public class DatabaseInitializer implements Initializer {
                         String tableName = d.getFileName().toString();
                         Path tableRootPath = databaseContext.getDatabasePath();
 
-                        TableInitializationContext tableInitContext = new TableInitializationContextImpl(tableName, tableRootPath, new TableIndexImpl());
+                        TableInitializationContext tableInitContext = new TableInitializationContextImpl(tableName, tableRootPath, new TableIndex<>());
 
                         InitializationContext downstreamContext = InitializationContextImpl.builder()
                                 .executionEnvironment(initialContext.executionEnvironment())
@@ -54,10 +54,10 @@ public class DatabaseInitializer implements Initializer {
                         } catch (DatabaseException e) {
                             throw new RuntimeException(e);
                         }
-
-                        initialContext.executionEnvironment()
-                                .addDatabase(new DatabaseImpl(initialContext.currentDbContext()));
                     });
+            // moved here because previously db was added N times (N = number of tables)
+            initialContext.executionEnvironment()
+                    .addDatabase(new DatabaseImpl(initialContext.currentDbContext()));
         } catch (IOException e) {
             throw new DatabaseException("Cannot initialize database: " + databaseContext.getDbName(), e);
         }

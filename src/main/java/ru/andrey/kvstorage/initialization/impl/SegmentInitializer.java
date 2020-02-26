@@ -1,7 +1,8 @@
 package ru.andrey.kvstorage.initialization.impl;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
-import ru.andrey.kvstorage.index.impl.SegmentIndexImpl;
+import ru.andrey.kvstorage.index.SegmentIndexInfo;
+import ru.andrey.kvstorage.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.index.impl.SegmentIndexInfoImpl;
 import ru.andrey.kvstorage.initialization.InitializationContext;
 import ru.andrey.kvstorage.initialization.Initializer;
@@ -18,6 +19,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 public class SegmentInitializer implements Initializer {
+    private static final int ENDLINE_SYMBOL_LENGTH = System.getProperty("line.separator").length();
+    private static final String KEY_VALUE_SEPARATOR = ":";
 
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
@@ -29,7 +32,7 @@ public class SegmentInitializer implements Initializer {
             throw new DatabaseException("Segment with such name doesn't exist: " + segmentContext.getSegmentName());
         }
 
-        SegmentIndexImpl index = new SegmentIndexImpl();
+        SegmentIndex<String, SegmentIndexInfo> index = new SegmentIndex<>();
         Set<String> keys = new HashSet<>();
         // todo sukhoa we should read all segments sorting by timestamp
         int segmentSize = 0;
@@ -37,15 +40,16 @@ public class SegmentInitializer implements Initializer {
             var offset = 0;
             String kvPair = reader.readLine();
             while (kvPair != null) {
-                String[] split = kvPair.split(":");// todo sukhoa separator
+                // TODO A: non-unique key occurrence policy: always pick latest and erase previous?
+                String[] split = kvPair.split(KEY_VALUE_SEPARATOR);// todo sukhoa separator A: I think this seprator should not be user defined and should be always a colon (moved to constant)
                 String key = split[0];
                 SegmentIndexInfoImpl segmentIndexInfo = new SegmentIndexInfoImpl(offset, kvPair.length());
 
                 keys.add(key);
-                index.onSegmentUpdated(key, segmentIndexInfo);
+                index.updateIndex(key, segmentIndexInfo);
 
-                offset = offset + kvPair.length() + 1; // + \n
-                segmentSize += kvPair.length();
+                offset = offset + kvPair.length() + ENDLINE_SYMBOL_LENGTH;
+                segmentSize += kvPair.length(); // TODO A: shouldn't segment include endlines? I think it should
                 kvPair = reader.readLine();
             }
         } catch (IOException e) {
@@ -67,7 +71,7 @@ public class SegmentInitializer implements Initializer {
 
     private void tableIndexUpdate(TableInitializationContext tableContext, Set<String> keysInSegment, Segment segmentRef) {
         keysInSegment.forEach(k -> {
-            tableContext.getTableIndex().onTableUpdated(k, segmentRef);
+            tableContext.getTableIndex().updateIndex(k, segmentRef);
         });
     }
 

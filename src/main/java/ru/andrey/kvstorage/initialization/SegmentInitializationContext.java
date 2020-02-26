@@ -1,6 +1,7 @@
 package ru.andrey.kvstorage.initialization;
 
-import ru.andrey.kvstorage.index.SegmentIndex;
+import ru.andrey.kvstorage.index.Index;
+import ru.andrey.kvstorage.index.SegmentIndexInfo;
 
 import java.nio.file.Path;
 
@@ -9,7 +10,7 @@ public interface SegmentInitializationContext {
 
     Path getSegmentPath();
 
-    SegmentIndex getIndex();
+    Index<String, SegmentIndexInfo> getIndex();
 
     int getCurrentSize(); // todo sukhoa should be long
 }
