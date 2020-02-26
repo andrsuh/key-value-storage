@@ -1,9 +1,9 @@
 package ru.andrey.kvstorage.logic.impl;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
-import ru.andrey.kvstorage.index.SegmentIndex;
+import ru.andrey.kvstorage.index.Index;
 import ru.andrey.kvstorage.index.SegmentIndexInfo;
-import ru.andrey.kvstorage.index.impl.SegmentIndexImpl;
+import ru.andrey.kvstorage.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.index.impl.SegmentIndexInfoImpl;
 import ru.andrey.kvstorage.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.logic.Segment;
@@ -30,7 +30,7 @@ public class SegmentImpl implements Segment {
 
     private final String segmentName;
     private final Path segmentPath;
-    private final SegmentIndex segmentIndex;
+    private final Index<String, SegmentIndexInfo> segmentIndex;
 
     private long currentSizeInBytes;
     private volatile boolean readOnly = false;
@@ -38,7 +38,7 @@ public class SegmentImpl implements Segment {
     private SegmentImpl(String segmentName, Path tableRootPath) {
         this.segmentName = segmentName;
         this.segmentPath = tableRootPath.resolve(segmentName);
-        this.segmentIndex = new SegmentIndexImpl();
+        this.segmentIndex = new SegmentIndex<>();
         this.currentSizeInBytes = 0;
         this.readOnly = false;
     }
@@ -103,7 +103,7 @@ public class SegmentImpl implements Segment {
             var startPosition = byteChannel.position();
             out.write(content);
 
-            segmentIndex.onSegmentUpdated(objectKey, new SegmentIndexInfoImpl(startPosition, length - 1)); // excluding \n
+            segmentIndex.updateIndex(objectKey, new SegmentIndexInfoImpl(startPosition, length - 1)); // excluding \n
         }
         return true; // todo sukhoa fix
     }
@@ -114,7 +114,7 @@ public class SegmentImpl implements Segment {
 
     @Override
     public String read(String objectKey) throws IOException {
-        Optional<SegmentIndexInfo> indexInfo = segmentIndex.searchForKey(objectKey);
+        Optional<SegmentIndexInfo> indexInfo = segmentIndex.getIndex(objectKey);
 
         if (indexInfo.isEmpty()) {
             throw new IllegalStateException("Read nonexistent key");

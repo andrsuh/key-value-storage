@@ -2,7 +2,8 @@ package ru.andrey.kvstorage.initialization.impl;
 
 import lombok.Builder;
 import lombok.Getter;
-import ru.andrey.kvstorage.index.SegmentIndex;
+import ru.andrey.kvstorage.index.Index;
+import ru.andrey.kvstorage.index.SegmentIndexInfo;
 import ru.andrey.kvstorage.initialization.SegmentInitializationContext;
 
 import java.nio.file.Path;
@@ -13,9 +14,9 @@ public class SegmentInitializationContextImpl implements SegmentInitializationCo
     private final String segmentName;
     private final Path segmentPath;
     private final int currentSize;
-    private final SegmentIndex index; // todo sukhoa think of better design
+    private final Index<String, SegmentIndexInfo> index; // todo sukhoa think of better design
 
-    private SegmentInitializationContextImpl(String segmentName, Path segmentPath, int currentSize, SegmentIndex index) {
+    private SegmentInitializationContextImpl(String segmentName, Path segmentPath, int currentSize, Index<String, SegmentIndexInfo> index) {
         this.segmentName = segmentName;
         this.segmentPath = segmentPath;
         this.currentSize = currentSize;

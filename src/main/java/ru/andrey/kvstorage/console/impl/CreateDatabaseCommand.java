@@ -8,7 +8,7 @@ import ru.andrey.kvstorage.logic.Database;
 import ru.andrey.kvstorage.logic.impl.DatabaseImpl;
 
 import java.nio.file.Path;
-
+// TODO A: should throw ex if db is already present in environment?
 public class CreateDatabaseCommand implements DatabaseCommand {
     private final ExecutionEnvironment env;
     private final String databaseName;

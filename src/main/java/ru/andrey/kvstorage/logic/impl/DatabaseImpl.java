@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.logic.impl;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
-import ru.andrey.kvstorage.index.impl.TableIndexImpl;
+import ru.andrey.kvstorage.index.impl.TableIndex;
 import ru.andrey.kvstorage.initialization.DatabaseInitializationContext;
 import ru.andrey.kvstorage.logic.Database;
 import ru.andrey.kvstorage.logic.Table;
@@ -59,7 +59,7 @@ public class DatabaseImpl implements Database {
 
     @Override
     public void createTableIfNotExists(String tableName) throws DatabaseException {
-        Table table = TableImpl.create(tableName, databasePath, new TableIndexImpl()); // todo sukhoa is this injection ok?
+        Table table = TableImpl.create(tableName, databasePath, new TableIndex()); // todo sukhoa is this injection ok?
         tables.put(table.getName(), table);
     }
 

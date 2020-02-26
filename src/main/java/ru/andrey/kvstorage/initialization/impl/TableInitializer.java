@@ -67,6 +67,6 @@ public class TableInitializer implements Initializer {
         return Arrays.stream(name.split("_"))
                 .skip(2)
                 .map(Long::valueOf)
-                .findFirst().orElseThrow(() -> new IllegalStateException("No datatime provided for segment name :" + name));
+                .findFirst().orElseThrow(() -> new IllegalStateException("No datetime provided for segment name :" + name));
     }
 }
