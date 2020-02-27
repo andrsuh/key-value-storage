@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.logic.impl;
 
 import ru.andrey.kvstorage.exception.DatabaseException;
-import ru.andrey.kvstorage.index.TableIndex;
+import ru.andrey.kvstorage.index.Index;
 import ru.andrey.kvstorage.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.logic.Segment;
 import ru.andrey.kvstorage.logic.Table;
@@ -24,10 +24,10 @@ import java.util.Optional;
 public class TableImpl implements Table {
     private final String tableName;
     private final Path tablePath;
-    private final TableIndex tableIndex;
+    private final Index<String, Segment> tableIndex;
     private Segment currentSegment; // todo sukhoa potentially AtomicReference
 
-    private TableImpl(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) {
+    private TableImpl(String tableName, Path pathToDatabaseRoot, Index<String, Segment> tableIndex) {
         Objects.requireNonNull(tableName);
         Objects.requireNonNull(pathToDatabaseRoot);
 
@@ -44,7 +44,7 @@ public class TableImpl implements Table {
         this.currentSegment = context.getCurrentSegment();
     }
 
-    static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
+    static Table create(String tableName, Path pathToDatabaseRoot, Index<String, Segment> tableIndex) throws DatabaseException {
         TableImpl tb = new TableImpl(tableName, pathToDatabaseRoot, tableIndex);
         tb.initializeAsNew();
         return tb;
@@ -69,7 +69,7 @@ public class TableImpl implements Table {
             while (true) { // todo sukhoa
                 var s = currentSegment; // cache to local for preventing concurrent issues in future
                 if (!s.isReadOnly() && s.write(objectKey, objectValue)) {
-                    tableIndex.onTableUpdated(objectKey, s);
+                    tableIndex.updateIndex(objectKey, s);
                     break;
                 }
                 // todo sukhoa use Atomic reference in future
@@ -83,7 +83,7 @@ public class TableImpl implements Table {
     @Override
     public String read(String objectKey) throws DatabaseException {
         try {
-            Optional<Segment> segment = tableIndex.searchForKey(objectKey);
+            Optional<Segment> segment = tableIndex.getIndex(objectKey);
             if (segment.isEmpty()) {
                 throw new DatabaseException("No such key: " + objectKey);
             }

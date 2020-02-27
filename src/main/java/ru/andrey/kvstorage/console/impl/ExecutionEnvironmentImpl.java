@@ -19,6 +19,7 @@ public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
     @Override
     public void setCurrentDatabase(Database db) {
         this.current = db;
+        // TODO A: name as an input param and get db from map instead
     }
 
     @Override

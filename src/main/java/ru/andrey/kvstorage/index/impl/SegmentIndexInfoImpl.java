@@ -4,7 +4,7 @@ import ru.andrey.kvstorage.index.SegmentIndexInfo;
 
 public class SegmentIndexInfoImpl implements SegmentIndexInfo {
     private final long offset;
-    private final long length;
+    private final long length; // TODO A: won't integers suffice?
 
     public SegmentIndexInfoImpl(long offset, long length) {
         this.offset = offset;
