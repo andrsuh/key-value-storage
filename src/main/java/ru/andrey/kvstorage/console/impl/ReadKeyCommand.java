@@ -34,7 +34,7 @@ public class ReadKeyCommand implements DatabaseCommand {
         Optional<Database> database = env.getDatabase(databaseName);
         if (database.isPresent()) {
             String result = database.get().read(tableName, key);
-            return new DatabaseCommandResultImpl("Read key: " + key, result);
+            return DatabaseCommandResult.success(result);
         }
         throw new DatabaseException("No such database: " + databaseName);
     }

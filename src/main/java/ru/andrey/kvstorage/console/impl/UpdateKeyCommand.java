@@ -36,7 +36,7 @@ public class UpdateKeyCommand implements DatabaseCommand {
         Optional<Database> database = env.getDatabase(databaseName);
         if (database.isPresent()) {
             database.get().write(tableName, key, value);
-            return new DatabaseCommandResultImpl("Updated table: " + tableName + ", key: " + key, null);
+            return DatabaseCommandResult.success("Updated table: " + tableName + ", key: " + key);
         }
         throw new DatabaseException("No such database: " + databaseName);
     }

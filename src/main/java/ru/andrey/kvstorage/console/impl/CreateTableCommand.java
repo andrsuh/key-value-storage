@@ -32,7 +32,7 @@ public class CreateTableCommand implements DatabaseCommand {
         Optional<Database> database = env.getDatabase(databaseName);
         if (database.isPresent()) {
             database.get().createTableIfNotExists(tableName);
-            return new DatabaseCommandResultImpl("Created table: " + tableName, null);
+            return DatabaseCommandResult.success("Created table: " + tableName);
         }
         throw new DatabaseException("No such database: " + databaseName);
     }

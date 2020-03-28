@@ -6,6 +6,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import ru.andrey.kvstorage.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.console.DatabaseCommands;
+import ru.andrey.kvstorage.console.impl.ExecutionEnvironmentImpl;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +19,8 @@ public class DatabaseServerTest {
 
     @Test
     public void checkStorageCorrectness() {
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl());
+
         String dbName = "test_" + new Random().nextInt(1_000_000);
         String tableName = "table";
         String[] initCommands = {
@@ -28,7 +31,7 @@ public class DatabaseServerTest {
         System.out.println(Arrays.toString(initCommands));
 
         Arrays.stream(initCommands)
-                .forEach(DatabaseServer::executeNextCommand);
+                .forEach(databaseServer::executeNextCommand);
 
         Random random = new Random();
 
@@ -48,7 +51,7 @@ public class DatabaseServerTest {
                 case UPDATE_KEY: {
 
                     String value = key + "_" + i;
-                    DatabaseServer.executeNextCommand(
+                    databaseServer.executeNextCommand(
                             "UPDATE_KEY " + dbName + " " + tableName + " " + key + " " + value);
                     mapStorage.put(key, value);
 
@@ -58,11 +61,11 @@ public class DatabaseServerTest {
                     if (!mapStorage.containsKey(key))
                         break;
 
-                    DatabaseCommandResult commandResult = DatabaseServer.executeNextCommand(
+                    DatabaseCommandResult commandResult = databaseServer.executeNextCommand(
                             "READ_KEY " + dbName + " " + tableName + " " + key);
 
-                    if (commandResult != null) {
-                        Assert.assertEquals("Key : " + key, mapStorage.get(key), commandResult.getResult());
+                    if (commandResult.isSuccess()) {
+                        Assert.assertEquals("Key : " + key, mapStorage.get(key), commandResult.getResult().get());
                     }
                     break;
                 }

@@ -27,6 +27,6 @@ public class CreateDatabaseCommand implements DatabaseCommand {
 //            database.get().
 //        }
         env.addDatabase(DatabaseImpl.create(databaseName, Path.of(""))); // todo sukhoa fix path
-        return new DatabaseCommandResultImpl("Database: " + databaseName + "created", null);
+        return DatabaseCommandResult.success("Database: " + databaseName + "created");
     }
 }

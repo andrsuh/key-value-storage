@@ -37,6 +37,6 @@ public class InitializeDatabaseCommand implements DatabaseCommand {
 
         initializer.perform(initializationContext);
 
-        return new DatabaseCommandResultImpl("Database: " + databaseName + "initialized", null);
+        return DatabaseCommandResult.success("Database: " + databaseName + "initialized");
     }
 }

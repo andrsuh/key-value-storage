@@ -3,25 +3,30 @@ package ru.andrey.kvstorage;
 import ru.andrey.kvstorage.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.console.DatabaseCommands;
 import ru.andrey.kvstorage.console.ExecutionEnvironment;
-import ru.andrey.kvstorage.console.impl.DatabaseCommandResultImpl;
 import ru.andrey.kvstorage.console.impl.ExecutionEnvironmentImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.Arrays;
 
 public class DatabaseServer {
 
-    private static final ExecutionEnvironment env = new ExecutionEnvironmentImpl();
+    private final ExecutionEnvironment env;
+
+    public DatabaseServer(ExecutionEnvironment env) {
+        this.env = env;
+    }
 
     public static void main(String[] args) {
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl());
 
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
             while (true) {
-                DatabaseCommandResult commandResult = executeNextCommand(reader.readLine());
+                DatabaseCommandResult commandResult = databaseServer.executeNextCommand(reader.readLine());
 
-                if (commandResult.getResult() != null) {
-                    System.out.println(commandResult.getResult());
+                if (commandResult.isSuccess()) {
+                    System.out.println(commandResult.getResult().get());
                 }
             }
         } catch (IOException e) {
@@ -29,15 +34,19 @@ public class DatabaseServer {
         }
     }
 
-    static DatabaseCommandResult executeNextCommand(String commandText) {
+    DatabaseCommandResult executeNextCommand(String commandText) {
         try {
             String[] commandInfo = commandText.split(" ");
 
-            DatabaseCommands commandType = DatabaseCommands.valueOf(commandInfo[0]);
-            return commandType.getCommand(env, commandInfo).execute();
+            return DatabaseCommands.valueOf(commandInfo[0])
+                    .getCommand(env, commandInfo)
+                    .execute();
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            return new DatabaseCommandResultImpl(e.getMessage(), null);
+            String message = e.getMessage() != null
+                    ? e.getMessage()
+                    : Arrays.toString(e.getStackTrace());
+            return DatabaseCommandResult.error(message);
         }
     }
 }
