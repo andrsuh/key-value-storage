@@ -20,12 +20,23 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
 import static ru.andrey.kvstorage.console.DatabaseCommandResult.DatabaseCommandStatus.FAILED;
 import static ru.andrey.kvstorage.console.DatabaseCommandResult.DatabaseCommandStatus.SUCCESS;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommandsTest {
+
+    private static final String DB_NAME = "db_1";
+
+    private static final String TABLE_NAME = "tb_1";
+
+    private static final String KEY_NAME = "key";
+
+    private static final String VALUE = "value";
+
     @Mock
     public Database database;
 
@@ -36,41 +47,111 @@ public class CommandsTest {
     public DatabaseServer server = new DatabaseServer(env);
 
     @Test
-    public void test_read_noSuchDb() {
-        String dbName = "db_1";
-        when(env.getDatabase(dbName)).thenReturn(Optional.empty());
+    public void test_readKey_noSuchDb() {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
                 .name(DatabaseCommands.READ_KEY.name())
-                .dbName(dbName)
+                .dbName(DB_NAME)
                 .tableName("table")
                 .key("key")
                 .build();
 
         DatabaseCommandResult result = server.executeNextCommand(command.toString());
-        Assert.assertEquals(FAILED, result.getStatus());
+        assertEquals(FAILED, result.getStatus());
     }
 
     @Test
-    public void test_read_success() throws DatabaseException {
-        String dbName = "db_1";
-        String tableName = "tb_1";
-        String keyName = "key";
-        String value = "value";
-
-        when(env.getDatabase(dbName)).thenReturn(Optional.of(database));
+    public void test_readKey_success() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
         when(env.currentDatabase()).thenReturn(Optional.empty());
-        when(database.read(tableName, keyName)).thenReturn(value);
+        when(database.read(TABLE_NAME, KEY_NAME)).thenReturn(VALUE);
 
         Command command = Command.builder()
                 .name(DatabaseCommands.READ_KEY.name())
-                .dbName(dbName)
-                .tableName(tableName)
-                .key(keyName)
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
                 .build();
 
         DatabaseCommandResult result = server.executeNextCommand(command.toString());
-        Assert.assertEquals(SUCCESS, result.getStatus());
+        assertEquals(SUCCESS, result.getStatus());
+    }
+
+    @Test
+    public void test_updateKey_noSuchDb() {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.UPDATE_KEY.name())
+                .dbName(DB_NAME)
+                .tableName("table")
+                .key("key")
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(FAILED, result.getStatus());
+    }
+
+    @Test
+    public void test_updateKey_success() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        when(env.currentDatabase()).thenReturn(Optional.empty());
+        doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE);
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.UPDATE_KEY.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
+                .value(VALUE)
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(SUCCESS, result.getStatus());
+    }
+
+    @Test
+    public void test_createTable_noSuchDb() {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.CREATE_TABLE.name())
+                .dbName(DB_NAME)
+                .tableName("table")
+                .key("key")
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(FAILED, result.getStatus());
+    }
+
+    @Test
+    public void test_createTable_success() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        when(env.currentDatabase()).thenReturn(Optional.empty());
+        doNothing().when(database).createTableIfNotExists(TABLE_NAME);
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.CREATE_TABLE.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(SUCCESS, result.getStatus());
+    }
+
+    @Test
+    public void test_executeNext_noCommandName() {
+        DatabaseCommandResult databaseCommandResult = server.executeNextCommand(null);
+        assertEquals(FAILED, databaseCommandResult.getStatus());
+    }
+
+    @Test
+    public void test_executeNext_noCommandFound() {
+        DatabaseCommandResult databaseCommandResult = server.executeNextCommand("fake_command_name");
+        assertEquals(FAILED, databaseCommandResult.getStatus());
     }
 
 
