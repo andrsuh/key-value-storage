@@ -12,16 +12,6 @@ public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
     private Database current;
 
     @Override
-    public Optional<Database> currentDatabase() {
-        return Optional.ofNullable(current);
-    }
-
-    @Override
-    public void setCurrentDatabase(Database db) {
-        this.current = db;
-    }
-
-    @Override
     public Optional<Database> getDatabase(String name) {
         return Optional.ofNullable(dbs.get(name));
     }

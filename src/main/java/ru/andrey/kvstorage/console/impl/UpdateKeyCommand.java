@@ -6,7 +6,6 @@ import ru.andrey.kvstorage.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.exception.DatabaseException;
 import ru.andrey.kvstorage.logic.Database;
 
-import java.util.Arrays;
 import java.util.Optional;
 
 public class UpdateKeyCommand implements DatabaseCommand {
@@ -17,27 +16,24 @@ public class UpdateKeyCommand implements DatabaseCommand {
     private final String value;
 
     public UpdateKeyCommand(ExecutionEnvironment env, String... args) {
-        Object[] arguments = Arrays.stream(args)
-                .skip(env.currentDatabase().isEmpty() ? 1 : 2)
-                .map(Object::toString)
-                .toArray();
+        if (args.length < 5) {
+            throw new IllegalArgumentException("Not enough args");
+        }
 
-        //  if (args.length < 1) todo sukhoa
-        this.databaseName = env.currentDatabase().map(Database::getName).orElse((String) arguments[0]);
-        this.tableName = (String) arguments[1];
-        this.key = (String) arguments[2];
-        this.value = (String) arguments[3];
+        this.databaseName = args[1];
+        this.tableName = args[2];
+        this.key = args[3];
+        this.value = args[4];
         this.env = env;
     }
 
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
-        // if .... todo sukhoa
         Optional<Database> database = env.getDatabase(databaseName);
-        if (database.isPresent()) {
-            database.get().write(tableName, key, value);
-            return DatabaseCommandResult.success("Updated table: " + tableName + ", key: " + key);
+        if (database.isEmpty()) {
+            throw new DatabaseException("No such database: " + databaseName);
         }
-        throw new DatabaseException("No such database: " + databaseName);
+        database.get().write(tableName, key, value);
+        return DatabaseCommandResult.success("Updated table: " + tableName + ", key: " + key);
     }
 }
