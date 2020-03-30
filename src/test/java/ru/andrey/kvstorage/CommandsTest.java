@@ -3,7 +3,6 @@ package ru.andrey.kvstorage;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
@@ -20,9 +19,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.when;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 import static ru.andrey.kvstorage.console.DatabaseCommandResult.DatabaseCommandStatus.FAILED;
 import static ru.andrey.kvstorage.console.DatabaseCommandResult.DatabaseCommandStatus.SUCCESS;
 
@@ -46,6 +44,8 @@ public class CommandsTest {
     @InjectMocks
     public DatabaseServer server = new DatabaseServer(env);
 
+    // ================= update key tests =================
+
     @Test
     public void test_readKey_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
@@ -64,7 +64,6 @@ public class CommandsTest {
     @Test
     public void test_readKey_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        when(env.currentDatabase()).thenReturn(Optional.empty());
         when(database.read(TABLE_NAME, KEY_NAME)).thenReturn(VALUE);
 
         Command command = Command.builder()
@@ -79,6 +78,26 @@ public class CommandsTest {
     }
 
     @Test
+    public void test_readKey_exception() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        var message = "Table already exists";
+        doThrow(new DatabaseException(message)).when(database).read(TABLE_NAME, KEY_NAME);
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.READ_KEY.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(FAILED, result.getStatus());
+        assertEquals(message, result.getErrorMessage());
+    }
+
+    // ================= update key tests =================
+
+    @Test
     public void test_updateKey_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
@@ -86,7 +105,7 @@ public class CommandsTest {
                 .name(DatabaseCommands.UPDATE_KEY.name())
                 .dbName(DB_NAME)
                 .tableName("table")
-                .key("key")
+                .key(KEY_NAME)
                 .build();
 
         DatabaseCommandResult result = server.executeNextCommand(command.toString());
@@ -94,9 +113,27 @@ public class CommandsTest {
     }
 
     @Test
+    public void test_updateKey_exception() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        var message = "Table already exists";
+        doThrow(new DatabaseException(message)).when(database).write(TABLE_NAME, KEY_NAME, VALUE);
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.UPDATE_KEY.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
+                .value(VALUE)
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(FAILED, result.getStatus());
+        assertEquals(message, result.getErrorMessage());
+    }
+
+    @Test
     public void test_updateKey_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        when(env.currentDatabase()).thenReturn(Optional.empty());
         doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE);
 
         Command command = Command.builder()
@@ -111,6 +148,8 @@ public class CommandsTest {
         assertEquals(SUCCESS, result.getStatus());
     }
 
+    // ================= create table tests =================
+
     @Test
     public void test_createTable_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
@@ -118,8 +157,8 @@ public class CommandsTest {
         Command command = Command.builder()
                 .name(DatabaseCommands.CREATE_TABLE.name())
                 .dbName(DB_NAME)
-                .tableName("table")
-                .key("key")
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
                 .build();
 
         DatabaseCommandResult result = server.executeNextCommand(command.toString());
@@ -129,7 +168,6 @@ public class CommandsTest {
     @Test
     public void test_createTable_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        when(env.currentDatabase()).thenReturn(Optional.empty());
         doNothing().when(database).createTableIfNotExists(TABLE_NAME);
 
         Command command = Command.builder()
@@ -143,6 +181,23 @@ public class CommandsTest {
     }
 
     @Test
+    public void test_createTable_exception() throws DatabaseException {
+        var message = "Table already exists";
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        doThrow(new DatabaseException(message)).when(database).createTableIfNotExists(TABLE_NAME);
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.CREATE_TABLE.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(FAILED, result.getStatus());
+        assertEquals(message, result.getErrorMessage());
+    }
+
+    @Test
     public void test_executeNext_noCommandName() {
         DatabaseCommandResult databaseCommandResult = server.executeNextCommand(null);
         assertEquals(FAILED, databaseCommandResult.getStatus());
@@ -153,7 +208,6 @@ public class CommandsTest {
         DatabaseCommandResult databaseCommandResult = server.executeNextCommand("fake_command_name");
         assertEquals(FAILED, databaseCommandResult.getStatus());
     }
-
 
     @Builder
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -171,5 +225,4 @@ public class CommandsTest {
                     .collect(Collectors.joining(" "));
         }
     }
-
 }

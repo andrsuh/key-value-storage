@@ -5,6 +5,7 @@ import ru.andrey.kvstorage.initialization.Initializer;
 import ru.andrey.kvstorage.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.initialization.impl.SegmentInitializer;
 import ru.andrey.kvstorage.initialization.impl.TableInitializer;
+import ru.andrey.kvstorage.logic.impl.DatabaseImpl;
 
 public enum DatabaseCommands {
 
@@ -17,7 +18,7 @@ public enum DatabaseCommands {
     CREATE_DATABASE {
         @Override
         public DatabaseCommand getCommand(ExecutionEnvironment env, String... args) {
-            return new CreateDatabaseCommand(env, args);
+            return new CreateDatabaseCommand(env, DatabaseImpl::create, args);
         }
     },
     CREATE_TABLE {
