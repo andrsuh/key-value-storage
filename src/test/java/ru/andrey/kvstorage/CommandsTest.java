@@ -8,11 +8,11 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
-import ru.andrey.kvstorage.console.DatabaseCommandResult;
-import ru.andrey.kvstorage.console.DatabaseCommands;
-import ru.andrey.kvstorage.console.ExecutionEnvironment;
-import ru.andrey.kvstorage.exception.DatabaseException;
-import ru.andrey.kvstorage.logic.Database;
+import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
+import ru.andrey.kvstorage.server.console.DatabaseCommands;
+import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
+import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.logic.Database;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -21,8 +21,8 @@ import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.*;
-import static ru.andrey.kvstorage.console.DatabaseCommandResult.DatabaseCommandStatus.FAILED;
-import static ru.andrey.kvstorage.console.DatabaseCommandResult.DatabaseCommandStatus.SUCCESS;
+import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.FAILED;
+import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.SUCCESS;
 
 @RunWith(MockitoJUnitRunner.class)
 public class CommandsTest {
