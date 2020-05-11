@@ -85,7 +85,11 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
-        byte[] content = (objectKey + ":" + objectValue + "\n").getBytes();// todo sukhoa add charset,  create separator field (property!)
+        // todo sukhoa create something like DatabaseStoreUnit / DatabaseStorePackage
+        // todo sukhoa store 4 bytes for key size then 8 bytes for value size then key with value themselves without any separators
+        // todo sukhoa fix read accordingly
+
+        byte[] content = (objectKey + ":" + objectValue + "\n").getBytes();// todo create separator field (property!)
         int length = content.length;
 
         if (!canAllocate(length)) { // todo sukhoa race condition
