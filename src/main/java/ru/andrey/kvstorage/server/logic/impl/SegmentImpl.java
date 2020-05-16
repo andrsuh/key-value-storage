@@ -9,8 +9,6 @@ import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.channels.Channels;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.Files;
@@ -85,34 +83,29 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
-        // todo sukhoa create something like DatabaseStoreUnit / DatabaseStorePackage
-        // todo sukhoa store 4 bytes for key size then 8 bytes for value size then key with value themselves without any separators
-        // todo sukhoa fix read accordingly
 
-        byte[] content = (objectKey + ":" + objectValue + "\n").getBytes();// todo create separator field (property!)
-        int length = content.length;
+        DatabaseStoringUnit storingUnit = new DatabaseStoringUnit(objectKey, objectValue);
 
-        if (!canAllocate(length)) { // todo sukhoa race condition
+        if (!canAllocate(storingUnit.size())) {
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
             readOnly = true;
             return false;
         }
 
-        currentSizeInBytes = currentSizeInBytes + length;
+        currentSizeInBytes = currentSizeInBytes + storingUnit.size();
 
-        // todo sukhoa move to separate class?
         try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.APPEND);
-             OutputStream out = Channels.newOutputStream(byteChannel)) {
+             DatabaseOutputStream out = new DatabaseOutputStream(Channels.newOutputStream(byteChannel))) {
 
             var startPosition = byteChannel.position();
-            out.write(content);
+            int bytesWritten = out.write(storingUnit);
 
-            segmentIndex.onSegmentUpdated(objectKey, new SegmentIndexInfoImpl(startPosition, length - 1)); // excluding \n
+            segmentIndex.onSegmentUpdated(objectKey, new SegmentIndexInfoImpl(startPosition));
         }
         return true; // todo sukhoa fix
     }
 
-    private boolean canAllocate(int length) {
+    private boolean canAllocate(long length) {
         return MAX_SEGMENT_SIZE - currentSizeInBytes >= length;
     }
 
@@ -124,14 +117,14 @@ public class SegmentImpl implements Segment {
             throw new IllegalStateException("Read nonexistent key");
         }
 
-        // todo sukhoa move to separate class ByteChannelReader or whatever
         try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.READ);
-             InputStream in = Channels.newInputStream(byteChannel)) {
+             DatabaseInputStream in = new DatabaseInputStream(Channels.newInputStream(byteChannel))) {
 
             byteChannel.position(indexInfo.get().getOffset());
-            byte[] bytes = in.readNBytes((int) indexInfo.get().getLength()); // todo sukhoa handle this typecast
 
-            return new String(bytes).split(":")[1]; // todo sukhoa charset, handle separator
+            DatabaseStoringUnit unit = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
+
+            return new String(unit.getValue()); // todo sukhoa charset, handle separator
         }
     }
 

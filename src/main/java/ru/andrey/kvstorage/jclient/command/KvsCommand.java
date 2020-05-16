@@ -3,7 +3,6 @@ package ru.andrey.kvstorage.jclient.command;
 import java.util.List;
 
 public interface KvsCommand {
-    String separator = "\r\t";
 
     List<String> asList();
 

@@ -8,6 +8,7 @@ import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -18,7 +19,7 @@ public class DatabaseServerTest {
     private Map<String, String> mapStorage = new ConcurrentHashMap<>();
 
     @Test
-    public void checkStorageCorrectness() {
+    public void checkStorageCorrectness() throws IOException {
         DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl());
 
         String dbName = "test_" + new Random().nextInt(1_000_000);

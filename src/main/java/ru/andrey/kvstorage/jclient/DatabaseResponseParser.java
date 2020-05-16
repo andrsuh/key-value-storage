@@ -1,7 +1,6 @@
 package ru.andrey.kvstorage.jclient;
 
 public class DatabaseResponseParser {
-    private static final String SEPARATOR = "\r\n";
     private static final char START_BYTE = '#';
     private static final char STRING_BYTE = '$';
     private static final char ERROR_BYTE = '-';
@@ -12,9 +11,8 @@ public class DatabaseResponseParser {
         }
 
         StringBuilder result = new StringBuilder();
-        int i = 2;
-        while (response[i] != '\r') {
-            result.append((char) response[i++]);
+        for (int i = 1; i < response.length; i++) {
+            result.append((char) response[i]);
         }
 
         switch (response[1]) {

@@ -8,13 +8,15 @@ import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
+import ru.andrey.kvstorage.server.logic.impl.DatabaseInputStream;
+import ru.andrey.kvstorage.server.logic.impl.DatabaseStoringUnit;
 import ru.andrey.kvstorage.server.logic.impl.SegmentImpl;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class SegmentInitializer implements Initializer {
@@ -33,21 +35,23 @@ public class SegmentInitializer implements Initializer {
         Set<String> keys = new HashSet<>();
         // todo sukhoa we should read all segments sorting by timestamp
         int segmentSize = 0;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Files.newInputStream(segmentContext.getSegmentPath())))) { // todo sukhoa: is it relayable to count bytes this way not using ByteChannel
+        try (DatabaseInputStream in = new DatabaseInputStream(new BufferedInputStream(Files.newInputStream(segmentContext.getSegmentPath())))) { // todo sukhoa: is it relayable to count bytes this way not using ByteChannel
             var offset = 0;
-            String kvPair = reader.readLine();
-            while (kvPair != null) {
-                String[] split = kvPair.split(":");// todo sukhoa separator
-                String key = split[0];
-                SegmentIndexInfoImpl segmentIndexInfo = new SegmentIndexInfoImpl(offset, kvPair.length());
 
-                keys.add(key);
-                index.onSegmentUpdated(key, segmentIndexInfo);
+            Optional<DatabaseStoringUnit> storingUnit = in.readDbUnit();
+            while (storingUnit.isPresent()) {
+                DatabaseStoringUnit unit = storingUnit.get();
+                SegmentIndexInfoImpl segmentIndexInfo = new SegmentIndexInfoImpl(offset);
+                offset += unit.size();
 
-                offset = offset + kvPair.length() + 1; // + \n
-                segmentSize += kvPair.length();
-                kvPair = reader.readLine();
+                String keyString = new String(unit.getKey());
+                keys.add(keyString);
+                index.onSegmentUpdated(keyString, segmentIndexInfo);
+                segmentSize = offset;
+
+                storingUnit = in.readDbUnit();
             }
+
         } catch (IOException e) {
             throw new DatabaseException("Cannot read segment: " + segmentContext.getSegmentPath(), e);
         }

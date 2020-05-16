@@ -48,7 +48,6 @@ public class DatabaseInitializer implements Initializer {
                                 .currentDatabaseContext(initialContext.currentDbContext())
                                 .currentTableContext(tableInitContext)
                                 .build();
-
                         try {
                             tableInitializer.perform(downstreamContext);
                         } catch (DatabaseException e) {

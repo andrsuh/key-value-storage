@@ -1,29 +1,36 @@
 package ru.andrey.kvstorage;
 
-import ru.andrey.kvstorage.app.domain.Post;
-import ru.andrey.kvstorage.app.domain.PostMapper;
-import ru.andrey.kvstorage.app.repo.PostRepositoryImpl;
-import ru.andrey.kvstorage.jclient.DatabaseResponseParser;
-import ru.andrey.kvstorage.jclient.client.KvsClient;
-import ru.andrey.kvstorage.jclient.client.SimpleKvsClient;
-import ru.andrey.kvstorage.jclient.connection.DirectReferenceConnection;
-import ru.andrey.kvstorage.jclient.repository.KvsRepository;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 
+import java.io.BufferedReader;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class DatabaseServer {
 
+    private static ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private ServerSocket serverSocket;
+
     private final ExecutionEnvironment env;
 
-    public DatabaseServer(ExecutionEnvironment env) {
+
+    public DatabaseServer(ExecutionEnvironment env) throws IOException {
+        this.serverSocket = new ServerSocket(4321);
         this.env = env;
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+
         DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl());
 
 //        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
@@ -37,16 +44,58 @@ public class DatabaseServer {
 //        } catch (IOException e) {
 //            throw new IllegalStateException("Server disconnected due to exceptions while opening input stream", e);
 //        }
+
+
         databaseServer.executeNextCommand("INIT_DATABASE test_3"); // todo sukhoa Make so that databases are getting initialised on startUP
+//        databaseServer.executeNextCommand("UPDATE_KEY test_3 Post 1 Hello#Hello#Hello"); // todo sukhoa Make so that databases are getting initialised on startUP
 
-        KvsClient client = new SimpleKvsClient(
-                "test_3",
-                () -> new DirectReferenceConnection(databaseServer),
-                new DatabaseResponseParser());
+        while (true) {
+            executor.submit(new ClientTask(databaseServer.serverSocket.accept(), databaseServer));
+        }
+    }
 
-        KvsRepository<Post> postRepository = new PostRepositoryImpl(new PostMapper(), () -> client);
-        Post post = postRepository.get("1");
-        System.out.println(post);
+    static class ClientTask implements Runnable, Closeable {
+        private final Socket client;
+        private final DatabaseServer server;
+
+        public ClientTask(Socket client, DatabaseServer server) {
+            this.client = client;
+            this.server = server;
+        }
+
+        @Override
+        public void close() {
+            try {
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
+        @Override
+        public void run() {
+            try {
+                var bufferedReader = new BufferedReader(new InputStreamReader(client.getInputStream()));
+                var out = client.getOutputStream();
+
+                while (!client.isClosed()) {
+                    int b, i = 0;
+                    byte[] res = new byte[1000]; // todo sukhoa remove magic constant
+
+                    while ((b = bufferedReader.read()) != -1 && b != '\r') {
+                        res[i++] = (byte) b;
+                    }
+                    if (i > 0) {
+                        out.write(server.executeNextCommandAndGetApiBytes(Arrays.copyOfRange(res, 0, i)));
+                        out.flush();
+                    }
+                }
+            } catch (IOException e) {
+                System.out.println("CLient socket threw IO Exception " + e.getMessage());
+            } finally {
+                close();
+            }
+        }
     }
 
     public byte[] executeNextCommandAndGetApiBytes(byte[] commandText) {
