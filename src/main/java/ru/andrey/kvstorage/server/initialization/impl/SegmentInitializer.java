@@ -27,7 +27,7 @@ public class SegmentInitializer implements Initializer {
 
         System.out.println("Creating segment " + segmentContext.getSegmentName());
 
-        if (!Files.exists(segmentContext.getSegmentPath())) { // todo sukhoa race condition
+        if (!Files.exists(segmentContext.getSegmentPath())) {
             throw new DatabaseException("Segment with such name doesn't exist: " + segmentContext.getSegmentName());
         }
 
@@ -35,7 +35,8 @@ public class SegmentInitializer implements Initializer {
         Set<String> keys = new HashSet<>();
         // todo sukhoa we should read all segments sorting by timestamp
         int segmentSize = 0;
-        try (DatabaseInputStream in = new DatabaseInputStream(new BufferedInputStream(Files.newInputStream(segmentContext.getSegmentPath())))) { // todo sukhoa: is it relayable to count bytes this way not using ByteChannel
+        try (DatabaseInputStream in = new DatabaseInputStream(
+                new BufferedInputStream(Files.newInputStream(segmentContext.getSegmentPath())))) {
             var offset = 0;
 
             Optional<DatabaseStoringUnit> storingUnit = in.readDbUnit();
@@ -51,7 +52,6 @@ public class SegmentInitializer implements Initializer {
 
                 storingUnit = in.readDbUnit();
             }
-
         } catch (IOException e) {
             throw new DatabaseException("Cannot read segment: " + segmentContext.getSegmentPath(), e);
         }

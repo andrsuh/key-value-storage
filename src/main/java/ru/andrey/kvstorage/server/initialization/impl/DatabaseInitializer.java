@@ -29,7 +29,7 @@ public class DatabaseInitializer implements Initializer {
 
         System.out.println("Creating database: " + databaseContext.getDbName());
 
-        if (!Files.exists(databaseContext.getDatabasePath())) { // todo sukhoa race condition
+        if (!Files.exists(databaseContext.getDatabasePath())) {
             throw new DatabaseException("Database with such name doesn't exist: " + databaseContext.getDbName());
         }
 

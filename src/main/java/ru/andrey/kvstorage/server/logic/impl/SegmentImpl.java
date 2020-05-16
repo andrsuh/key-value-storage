@@ -38,10 +38,10 @@ public class SegmentImpl implements Segment {
         this.segmentPath = tableRootPath.resolve(segmentName);
         this.segmentIndex = new SegmentIndexImpl();
         this.currentSizeInBytes = 0;
-        this.readOnly = false;
     }
 
     public SegmentImpl(SegmentInitializationContext context) {
+        this.readOnly = true;
         this.segmentName = context.getSegmentName();
         this.segmentPath = context.getSegmentPath();
         this.segmentIndex = context.getIndex();
