@@ -56,7 +56,7 @@ public class TableInitializer implements Initializer {
                             throw new RuntimeException(e);
                         }
 
-                        context.currentDbContext().addTable(new TableImpl(context.currentTableContext()));
+                        context.currentDbContext().addTable(TableImpl.initializeFromContext(context.currentTableContext()));
                     });
         } catch (Exception e) { // todo sukhoa handle this. refactor
             throw new DatabaseException(e);

@@ -52,8 +52,8 @@ public class DatabaseServerTest {
 
         Collections.shuffle(allowedKeys);
 
-        for (int i = 0; i < 100_000; i++) {
-            DatabaseCommands commandType = random.nextDouble() > 0.8 ? DatabaseCommands.UPDATE_KEY : DatabaseCommands.READ_KEY;
+        for (int i = 0; i < 300_000; i++) {
+            DatabaseCommands commandType = random.nextDouble() > 0.9 ? DatabaseCommands.UPDATE_KEY : DatabaseCommands.READ_KEY;
 
             String key = allowedKeys.get(random.nextInt(allowedKeys.size()));
 
