@@ -1,14 +1,14 @@
 package ru.andrey.kvstorage.app.domain;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.ToString;
+import lombok.*;
 
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @ToString
 public class Post {
-    private final String getName;
-    private final String user;
-    private final String content;
+    private String title;
+    private String user;
+    private String content;
 }

@@ -65,8 +65,8 @@ public class TableInitializer implements Initializer {
 
     private long segmentCreationTimeByName(String name) {
         return Arrays.stream(name.split("_"))
-                .skip(2)
+                .skip(1)
                 .map(Long::valueOf)
-                .findFirst().orElseThrow(() -> new IllegalStateException("No datatime provided for segment name :" + name));
+                .findFirst().orElseThrow(() -> new IllegalStateException("No datatime provided for segment name: " + name));
     }
 }
