@@ -15,7 +15,7 @@ import java.util.stream.StreamSupport;
 
 public class TableInitializer implements Initializer {
 
-    private Initializer segmentInitializer;
+    private final Initializer segmentInitializer;
 
     public TableInitializer(Initializer segmentInitializer) {
         this.segmentInitializer = segmentInitializer;
@@ -27,7 +27,7 @@ public class TableInitializer implements Initializer {
 
         System.out.println("Creating table " + tableContext.getTableName());
 
-        if (!Files.exists(tableContext.getTablePath())) { // todo sukhoa race condition
+        if (!Files.exists(tableContext.getTablePath())) {
             throw new DatabaseException("Table with such name doesn't exist: " + tableContext.getTableName());
         }
 

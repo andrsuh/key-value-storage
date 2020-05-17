@@ -14,6 +14,7 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Database;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -43,6 +44,9 @@ public class CommandsTest {
 
     @InjectMocks
     public DatabaseServer server = new DatabaseServer(env);
+
+    public CommandsTest() throws IOException {
+    }
 
     // ================= update key tests =================
 

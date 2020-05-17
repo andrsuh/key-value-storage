@@ -16,6 +16,6 @@ public class GetKvsCommand implements KvsCommand {
 
     @Override
     public List<String> asList() {
-        return List.of(COMMAND_NAME, databaseName, tableName, key);
+        return List.of(COMMAND_NAME, databaseName, tableName, key, "\r");
     }
 }

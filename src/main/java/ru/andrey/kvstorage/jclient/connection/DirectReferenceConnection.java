@@ -11,11 +11,6 @@ public class DirectReferenceConnection implements KvsConnection {
     }
 
     @Override
-    public void connect() throws KvsConnectionException {
-
-    }
-
-    @Override
     public void close() throws KvsConnectionException {
 
     }
