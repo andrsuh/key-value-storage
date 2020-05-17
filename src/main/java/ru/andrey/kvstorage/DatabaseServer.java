@@ -4,6 +4,9 @@ import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
+import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.initialization.Initializer;
+import ru.andrey.kvstorage.server.initialization.impl.*;
 
 import java.io.BufferedReader;
 import java.io.Closeable;
@@ -18,39 +21,49 @@ import java.util.concurrent.Executors;
 public class DatabaseServer {
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
-
+    private final ExecutionEnvironment env;
     private ServerSocket serverSocket;
 
-    private final ExecutionEnvironment env;
-
-
-    public DatabaseServer(ExecutionEnvironment env) throws IOException {
+    public DatabaseServer(ExecutionEnvironment env, Initializer initializer) throws IOException, DatabaseException {
         this.serverSocket = new ServerSocket(4321);
         this.env = env;
+
+        InitializationContextImpl initializationContext = InitializationContextImpl.builder()
+                .executionEnvironment(env)
+                .build();
+
+        initializer.perform(initializationContext);
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException, DatabaseException {
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl());
+        Initializer initializer = new DatabaseServerInitializer(
+                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-//            while (true) {
-//                DatabaseCommandResult commandResult = databaseServer.executeNextCommand(reader.readLine());
-//
-//                if (commandResult.isSuccess()) {
-//                    System.out.println(commandResult.getResult().get());
-//                }
-//            }
-//        } catch (IOException e) {
-//            throw new IllegalStateException("Server disconnected due to exceptions while opening input stream", e);
-//        }
-
-
-        databaseServer.executeNextCommand("INIT_DATABASE test_3"); // todo sukhoa Make so that databases are getting initialised on startUP
-//        databaseServer.executeNextCommand("UPDATE_KEY test_3 Post 1 Hello#Hello#Hello"); // todo sukhoa Make so that databases are getting initialised on startUP
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
 
         while (true) {
             executor.submit(new ClientTask(databaseServer.serverSocket.accept(), databaseServer));
+        }
+    }
+
+    public byte[] executeNextCommandAndGetApiBytes(byte[] commandText) {
+        return executeNextCommand(new String(commandText)).toApiBytes();
+    }
+
+    public DatabaseCommandResult executeNextCommand(String commandText) {
+        try {
+            String[] commandInfo = commandText.split(" ");
+
+            return DatabaseCommands.valueOf(commandInfo[0])
+                    .getCommand(env, commandInfo)
+                    .execute();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            String message = e.getMessage() != null
+                    ? e.getMessage()
+                    : Arrays.toString(e.getStackTrace());
+            return DatabaseCommandResult.error(message);
         }
     }
 
@@ -95,26 +108,6 @@ public class DatabaseServer {
             } finally {
                 close();
             }
-        }
-    }
-
-    public byte[] executeNextCommandAndGetApiBytes(byte[] commandText) {
-        return executeNextCommand(new String(commandText)).toApiBytes();
-    }
-
-    public DatabaseCommandResult executeNextCommand(String commandText) {
-        try {
-            String[] commandInfo = commandText.split(" ");
-
-            return DatabaseCommands.valueOf(commandInfo[0])
-                    .getCommand(env, commandInfo)
-                    .execute();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            String message = e.getMessage() != null
-                    ? e.getMessage()
-                    : Arrays.toString(e.getStackTrace());
-            return DatabaseCommandResult.error(message);
         }
     }
 }
