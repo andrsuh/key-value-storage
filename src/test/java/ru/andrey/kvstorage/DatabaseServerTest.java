@@ -7,6 +7,12 @@ import org.junit.runners.JUnit4;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
+import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.initialization.Initializer;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 
 import java.io.IOException;
 import java.util.*;
@@ -19,8 +25,11 @@ public class DatabaseServerTest {
     private Map<String, String> mapStorage = new ConcurrentHashMap<>();
 
     @Test
-    public void checkStorageCorrectness() throws IOException {
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl());
+    public void checkStorageCorrectness() throws IOException, DatabaseException {
+        Initializer initializer = new DatabaseServerInitializer(
+                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
+
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
 
         String dbName = "test_" + new Random().nextInt(1_000_000);
         String tableName = "table";
@@ -43,8 +52,8 @@ public class DatabaseServerTest {
 
         Collections.shuffle(allowedKeys);
 
-        for (int i = 0; i < 100_000; i++) {
-            DatabaseCommands commandType = random.nextDouble() > 0.8 ? DatabaseCommands.UPDATE_KEY : DatabaseCommands.READ_KEY;
+        for (int i = 0; i < 300_000; i++) {
+            DatabaseCommands commandType = random.nextDouble() > 0.9 ? DatabaseCommands.UPDATE_KEY : DatabaseCommands.READ_KEY;
 
             String key = allowedKeys.get(random.nextInt(allowedKeys.size()));
 

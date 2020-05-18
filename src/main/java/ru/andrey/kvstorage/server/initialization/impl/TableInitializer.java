@@ -56,7 +56,7 @@ public class TableInitializer implements Initializer {
                             throw new RuntimeException(e);
                         }
 
-                        context.currentDbContext().addTable(new TableImpl(context.currentTableContext()));
+                        context.currentDbContext().addTable(TableImpl.initializeFromContext(context.currentTableContext()));
                     });
         } catch (Exception e) { // todo sukhoa handle this. refactor
             throw new DatabaseException(e);
@@ -65,8 +65,8 @@ public class TableInitializer implements Initializer {
 
     private long segmentCreationTimeByName(String name) {
         return Arrays.stream(name.split("_"))
-                .skip(2)
+                .skip(1)
                 .map(Long::valueOf)
-                .findFirst().orElseThrow(() -> new IllegalStateException("No datatime provided for segment name :" + name));
+                .findFirst().orElseThrow(() -> new IllegalStateException("No datatime provided for segment name: " + name));
     }
 }

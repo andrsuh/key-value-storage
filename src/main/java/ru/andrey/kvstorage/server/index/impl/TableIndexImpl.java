@@ -19,7 +19,7 @@ public class TableIndexImpl implements TableIndex {
     public void onTableUpdated(String objectKey, Segment segment) {
         Segment previous = index.put(objectKey, segment);
         if (previous != null && segment != previous) { // todo sukhoa override equals
-            System.out.println("key: " + objectKey + " segment: " + segment.getName());
+//            System.out.println("key: " + objectKey + " segment: " + segment.getName());
         }
     }
 }

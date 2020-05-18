@@ -1,16 +1,29 @@
 package ru.andrey.kvstorage.app.domain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import ru.andrey.kvstorage.jclient.mapper.EntityMapper;
 
+import java.io.IOException;
+
 public class PostMapper implements EntityMapper<Post> {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public Post mapToObject(String s) {
-        String[] postArray = s.split("#"); // todo use json serialization
-        return new Post(postArray[0], postArray[1], postArray[2]);
+        try {
+            return objectMapper.readValue(s, Post.class);
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot deserialize string to post: " + s, e);
+        }
     }
 
     @Override
     public String mapToString(Post entity) {
-        return entity.getGetName() + "#" + entity.getUser() + "#" + entity.getContent();
+        try {
+            return objectMapper.writeValueAsString(entity);
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("Cannot serialize port to json: " + entity, e);
+        }
     }
 }

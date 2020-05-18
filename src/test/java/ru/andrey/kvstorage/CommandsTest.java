@@ -12,6 +12,10 @@ import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 import ru.andrey.kvstorage.server.logic.Database;
 
 import java.io.IOException;
@@ -42,10 +46,12 @@ public class CommandsTest {
     @Mock
     public ExecutionEnvironment env;
 
-    @InjectMocks
-    public DatabaseServer server = new DatabaseServer(env);
 
-    public CommandsTest() throws IOException {
+    @InjectMocks
+    public DatabaseServer server = new DatabaseServer(env,
+            new DatabaseServerInitializer(new DatabaseInitializer(new TableInitializer(new SegmentInitializer()))));
+
+    public CommandsTest() throws IOException, DatabaseException {
     }
 
     // ================= update key tests =================

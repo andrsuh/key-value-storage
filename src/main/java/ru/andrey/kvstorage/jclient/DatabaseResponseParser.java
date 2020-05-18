@@ -11,7 +11,7 @@ public class DatabaseResponseParser {
         }
 
         StringBuilder result = new StringBuilder();
-        for (int i = 1; i < response.length; i++) {
+        for (int i = 2; i < response.length; i++) {
             result.append((char) response[i]);
         }
 

@@ -37,7 +37,7 @@ public class TableImpl implements Table {
         this.tableIndex = tableIndex;
     }
 
-    public TableImpl(TableInitializationContext context) {
+    private TableImpl(TableInitializationContext context) {
         this.tableName = context.getTableName();
         this.tablePath = context.getTablePath();
         this.tableIndex = context.getTableIndex();
@@ -47,7 +47,11 @@ public class TableImpl implements Table {
     static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
         TableImpl tb = new TableImpl(tableName, pathToDatabaseRoot, tableIndex);
         tb.initializeAsNew();
-        return tb;
+        return new CachingTable(tb);
+    }
+
+    public static Table initializeFromContext(TableInitializationContext context) {
+        return new CachingTable(new TableImpl(context));
     }
 
     private void initializeAsNew() throws DatabaseException {

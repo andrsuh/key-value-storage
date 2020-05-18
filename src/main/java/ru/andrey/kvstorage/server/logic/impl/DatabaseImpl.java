@@ -28,7 +28,7 @@ public class DatabaseImpl implements Database {
         this.tables = new HashMap<>(16);
     }
 
-    public DatabaseImpl(DatabaseInitializationContext context) {
+    private DatabaseImpl(DatabaseInitializationContext context) {
         this.dbName = context.getDbName();
         this.databasePath = context.getDatabasePath();
         this.tables = context.getTables();
@@ -38,6 +38,10 @@ public class DatabaseImpl implements Database {
         DatabaseImpl db = new DatabaseImpl(dbName, databaseRoot);
         db.initializeAsNew();
         return db;
+    }
+
+    public static Database initializeFromContext(DatabaseInitializationContext context) {
+        return new DatabaseImpl(context);
     }
 
     private void initializeAsNew() throws DatabaseException {

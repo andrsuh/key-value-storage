@@ -6,8 +6,6 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.DatabaseFactory;
 
-import java.nio.file.Path;
-
 public class CreateDatabaseCommand implements DatabaseCommand {
     private final ExecutionEnvironment env;
     private final String databaseName;
@@ -24,7 +22,7 @@ public class CreateDatabaseCommand implements DatabaseCommand {
 
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
-        env.addDatabase(databaseFactory.createNonExistent(databaseName, Path.of(""))); // todo sukhoa fix path
+        env.addDatabase(databaseFactory.createNonExistent(databaseName, env.getWorkingPath()));
         return DatabaseCommandResult.success("Database: " + databaseName + "created");
     }
 }

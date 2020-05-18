@@ -41,7 +41,7 @@ public class SocketConnection implements KvsConnection {
             while ((b = inputStream.read()) != -1 && b != '\r') {
                 res[i++] = (byte) b;
             }
-            return Arrays.copyOfRange(res, 0, i - 1);
+            return Arrays.copyOfRange(res, 0, i);
         } catch (IOException e) {
             throw new IllegalStateException("obosralsa");
         }
