@@ -9,6 +9,7 @@ import ru.andrey.kvstorage.server.logic.Database;
 import java.util.Optional;
 
 public class ReadKeyCommand implements DatabaseCommand {
+
     private final ExecutionEnvironment env;
     private final String databaseName;
     private final String tableName;
@@ -18,10 +19,10 @@ public class ReadKeyCommand implements DatabaseCommand {
         if (args.length < 4) {
             throw new IllegalArgumentException("Not enough args");
         }
+        this.env = env;
         this.databaseName = args[1];
         this.tableName = args[2];
         this.key = args[3];
-        this.env = env;
     }
 
     @Override

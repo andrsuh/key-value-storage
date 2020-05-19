@@ -1,5 +1,11 @@
 package ru.andrey.kvstorage.server.console;
 
+import ru.andrey.kvstorage.resp.object.RespBulkString;
+import ru.andrey.kvstorage.resp.object.RespError;
+import ru.andrey.kvstorage.resp.object.RespObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -13,6 +19,14 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
     static DatabaseCommandResult error(String message) {
         Objects.requireNonNull(message);
         return new DatabaseCommandResultImpl(null, message, DatabaseCommandStatus.FAILED);
+    }
+
+    static DatabaseCommandResult error(Exception exception) {
+        Objects.requireNonNull(exception);
+        String message = exception.getMessage() != null
+            ? exception.getMessage()
+            : Arrays.toString(exception.getStackTrace());
+        return DatabaseCommandResult.error(message);
     }
 
     Optional<String> getResult();
@@ -59,11 +73,12 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         }
 
         @Override
-        public byte[] toApiBytes() {
-            String apiStringResult = START_BYTE + getResult()
-                    .map(r -> STRING_BYTE + r)
-                    .orElseGet(() -> ERROR_BYTE + getErrorMessage()) + SEPARATOR;
-            return apiStringResult.getBytes();
+        public RespObject serialize() {
+            final Optional<String> result = getResult();
+
+            return result.isPresent()
+                ? new RespBulkString(result.get().getBytes(StandardCharsets.US_ASCII))
+                : new RespError(errorMessage);
         }
     }
 }

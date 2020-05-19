@@ -1,9 +1,10 @@
 package ru.andrey.kvstorage.jclient.connection;
 
 import ru.andrey.kvstorage.DatabaseServer;
-import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
+import ru.andrey.kvstorage.resp.object.RespObject;
 
 public class DirectReferenceConnection implements KvsConnection {
+
     private final DatabaseServer databaseServer;
 
     public DirectReferenceConnection(DatabaseServer databaseServer) {
@@ -11,12 +12,10 @@ public class DirectReferenceConnection implements KvsConnection {
     }
 
     @Override
-    public void close() throws KvsConnectionException {
-
+    public RespObject send(RespObject object) {
+        return databaseServer.executeNextCommand(object.asString()).serialize();
     }
 
     @Override
-    public byte[] send(byte[] command) {
-        return databaseServer.executeNextCommandAndGetApiBytes(command);
-    }
+    public void close() {}
 }

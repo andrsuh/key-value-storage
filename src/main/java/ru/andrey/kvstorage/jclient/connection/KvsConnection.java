@@ -1,10 +1,11 @@
 package ru.andrey.kvstorage.jclient.connection;
 
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
+import ru.andrey.kvstorage.resp.object.RespObject;
 
 public interface KvsConnection extends AutoCloseable {
 
-    byte[] send(byte[] command);
+    RespObject send(RespObject command);
 
     @Override
     void close() throws KvsConnectionException;

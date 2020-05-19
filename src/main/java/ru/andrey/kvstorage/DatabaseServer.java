@@ -1,28 +1,37 @@
 package ru.andrey.kvstorage;
 
+import org.apache.commons.lang3.StringUtils;
+import ru.andrey.kvstorage.resp.RespReader;
+import ru.andrey.kvstorage.resp.RespWriter;
+import ru.andrey.kvstorage.server.console.DatabaseCommand;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.Initializer;
-import ru.andrey.kvstorage.server.initialization.impl.*;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.InitializationContextImpl;
+import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
+import ru.andrey.kvstorage.server.resp.CommandReader;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class DatabaseServer {
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
+
+    private final ServerSocket serverSocket;
     private final ExecutionEnvironment env;
-    private ServerSocket serverSocket;
 
     public DatabaseServer(ExecutionEnvironment env, Initializer initializer) throws IOException, DatabaseException {
         this.serverSocket = new ServerSocket(4321);
@@ -49,23 +58,30 @@ public class DatabaseServer {
         }
     }
 
-    public byte[] executeNextCommandAndGetApiBytes(byte[] commandText) {
-        return executeNextCommand(new String(commandText)).toApiBytes();
-    }
-
     public DatabaseCommandResult executeNextCommand(String commandText) {
         try {
-            String[] commandInfo = commandText.split(" ");
+            if (StringUtils.isEmpty(commandText)) {
+                return DatabaseCommandResult.error("Command name is not specified");
+            }
 
-            return DatabaseCommands.valueOf(commandInfo[0])
-                    .getCommand(env, commandInfo)
-                    .execute();
+            final String[] args = commandText.split(" ");
+            if (args.length < 1) {
+                return DatabaseCommandResult.error("Command name is not specified");
+            }
+
+            return DatabaseCommands.valueOf(args[0]).getCommand(env, args).execute();
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            String message = e.getMessage() != null
-                    ? e.getMessage()
-                    : Arrays.toString(e.getStackTrace());
-            return DatabaseCommandResult.error(message);
+            return DatabaseCommandResult.error(e);
+        }
+    }
+
+    public DatabaseCommandResult executeNextCommand(DatabaseCommand command) {
+        try {
+            return command.execute();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return DatabaseCommandResult.error(e);
         }
     }
 
@@ -79,36 +95,32 @@ public class DatabaseServer {
         }
 
         @Override
+        public void run() {
+            try {
+                final CommandReader reader = new CommandReader(
+                    new RespReader(new BufferedInputStream(client.getInputStream())),
+                    server.env
+                );
+                final RespWriter writer = new RespWriter(new BufferedOutputStream(client.getOutputStream()));
+
+                while (!client.isClosed()) {
+                    if (!reader.hasNextCommand()) continue;
+
+                    writer.write(server.executeNextCommand(reader.readCommand()).serialize());
+                }
+            } catch (IOException e) {
+                System.out.println("Client socket threw IO Exception " + e.getMessage());
+            } finally {
+                close();
+            }
+        }
+
+        @Override
         public void close() {
             try {
                 client.close();
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-        }
-
-        @Override
-        public void run() {
-            try {
-                var bufferedReader = new BufferedReader(new InputStreamReader(client.getInputStream()));
-                var out = client.getOutputStream();
-
-                while (!client.isClosed()) {
-                    int b, i = 0;
-                    byte[] res = new byte[1000]; // todo sukhoa remove magic constant
-
-                    while ((b = bufferedReader.read()) != -1 && b != '\r') {
-                        res[i++] = (byte) b;
-                    }
-                    if (i > 0) {
-                        out.write(server.executeNextCommandAndGetApiBytes(Arrays.copyOfRange(res, 0, i)));
-                        out.flush();
-                    }
-                }
-            } catch (IOException e) {
-                System.out.println("CLient socket threw IO Exception " + e.getMessage());
-            } finally {
-                close();
             }
         }
     }

@@ -1,29 +1,26 @@
 package ru.andrey.kvstorage.jclient.client;
 
-import ru.andrey.kvstorage.jclient.DatabaseResponseParser;
 import ru.andrey.kvstorage.jclient.command.GetKvsCommand;
 import ru.andrey.kvstorage.jclient.connection.KvsConnection;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
+import ru.andrey.kvstorage.resp.object.RespObject;
 
 import java.util.function.Supplier;
 
 // It is not supposed to be thread-safe
 public class SimpleKvsClient implements KvsClient {
     private final Supplier<KvsConnection> connectionSupplier;
-    private final DatabaseResponseParser responseParser;
     private final String databaseName; // todo sukhoa make SimpleKvsClient get something like "ConnectionSettings" or "ConnectionConfigurations" class
 
     private KvsConnection connection;
 
     public SimpleKvsClient(
             String databaseName,
-            Supplier<KvsConnection> connectionSupplier, // todo sukhoa Connection factory?
-            DatabaseResponseParser responseParser
+            Supplier<KvsConnection> connectionSupplier // todo sukhoa Connection factory?
     ) {
         this.connectionSupplier = connectionSupplier;
         this.databaseName = databaseName;
         this.connection = connectionSupplier.get();
-        this.responseParser = responseParser;
     }
 
     @Override
@@ -33,8 +30,7 @@ public class SimpleKvsClient implements KvsClient {
         }
 
         try {
-            return responseParser.parseResponse(
-                    connection.send(new GetKvsCommand(databaseName, tableName, key).toApiBytesRepresentation()));
+            return handleResponse(connection.send(new GetKvsCommand(databaseName, tableName, key).serialize()));
         } catch (Exception e) {
             // IO exception in future
             try {
@@ -49,5 +45,13 @@ public class SimpleKvsClient implements KvsClient {
     @Override
     public String set(String key, String value) {
         throw new UnsupportedOperationException();
+    }
+
+    private String handleResponse(RespObject response) {
+        if (response.isError()) {
+            throw new RuntimeException(response.asString());
+        }
+
+        return response.asString();
     }
 }

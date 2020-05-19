@@ -9,6 +9,7 @@ import ru.andrey.kvstorage.server.logic.Database;
 import java.util.Optional;
 
 public class CreateTableCommand implements DatabaseCommand {
+
     private final ExecutionEnvironment env;
     private final String databaseName;
     private final String tableName;
