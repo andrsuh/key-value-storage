@@ -116,6 +116,7 @@ public class CommandsTest {
                 .dbName(DB_NAME)
                 .tableName("table")
                 .key(KEY_NAME)
+                .value(VALUE)
                 .build();
 
         DatabaseCommandResult result = server.executeNextCommand(command.toString());
@@ -209,7 +210,7 @@ public class CommandsTest {
 
     @Test
     public void test_executeNext_noCommandName() {
-        DatabaseCommandResult databaseCommandResult = server.executeNextCommand(null);
+        DatabaseCommandResult databaseCommandResult = server.executeNextCommand((String) null);
         assertEquals(FAILED, databaseCommandResult.getStatus());
     }
 
