@@ -1,5 +1,11 @@
 package ru.andrey.kvstorage.server.console;
 
+import ru.andrey.kvstorage.resp.object.RespBulkString;
+import ru.andrey.kvstorage.resp.object.RespError;
+import ru.andrey.kvstorage.resp.object.RespObject;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -59,11 +65,12 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         }
 
         @Override
-        public byte[] toApiBytes() {
-            String apiStringResult = START_BYTE + getResult()
-                    .map(r -> STRING_BYTE + r)
-                    .orElseGet(() -> ERROR_BYTE + getErrorMessage()) + SEPARATOR;
-            return apiStringResult.getBytes();
+        public RespObject serialize() {
+            final Optional<String> result = getResult();
+
+            return result.isPresent()
+                ? new RespBulkString(result.get().getBytes(StandardCharsets.US_ASCII))
+                : new RespError(errorMessage);
         }
     }
 }
