@@ -21,6 +21,14 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         return new DatabaseCommandResultImpl(null, message, DatabaseCommandStatus.FAILED);
     }
 
+    static DatabaseCommandResult error(Exception exception) {
+        Objects.requireNonNull(exception);
+        String message = exception.getMessage() != null
+            ? exception.getMessage()
+            : Arrays.toString(exception.getStackTrace());
+        return DatabaseCommandResult.error(message);
+    }
+
     Optional<String> getResult();
 
     DatabaseCommandStatus getStatus();
