@@ -1,6 +1,8 @@
 package ru.andrey.kvstorage.jclient.client;
 
 import ru.andrey.kvstorage.jclient.command.GetKvsCommand;
+import ru.andrey.kvstorage.jclient.command.KvsCommand;
+import ru.andrey.kvstorage.jclient.command.SetKvsCommand;
 import ru.andrey.kvstorage.jclient.connection.KvsConnection;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
 import ru.andrey.kvstorage.resp.object.RespObject;
@@ -25,12 +27,21 @@ public class SimpleKvsClient implements KvsClient {
 
     @Override
     public String get(String tableName, String key) {
+        return executeCommand(new GetKvsCommand(databaseName, tableName, key));
+    }
+
+    @Override
+    public String set(String tableName, String key, String value) {
+        return executeCommand(new SetKvsCommand(databaseName, tableName, key, value));
+    }
+
+    private String executeCommand(KvsCommand command) {
         if (connection == null) {
             connection = connectionSupplier.get();
         }
 
         try {
-            return handleResponse(connection.send(new GetKvsCommand(databaseName, tableName, key).serialize()));
+            return handleResponse(connection.send(command.serialize()));
         } catch (Exception e) {
             // IO exception in future
             try {
@@ -40,11 +51,6 @@ public class SimpleKvsClient implements KvsClient {
             }
             throw new IllegalStateException("Connection io exception", e);
         }
-    }
-
-    @Override
-    public String set(String key, String value) {
-        throw new UnsupportedOperationException();
     }
 
     private String handleResponse(RespObject response) {
