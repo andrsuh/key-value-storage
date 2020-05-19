@@ -9,6 +9,7 @@ import ru.andrey.kvstorage.server.logic.Database;
 import java.util.Optional;
 
 public class UpdateKeyCommand implements DatabaseCommand {
+
     private final ExecutionEnvironment env;
     private final String databaseName;
     private final String tableName;
@@ -19,12 +20,11 @@ public class UpdateKeyCommand implements DatabaseCommand {
         if (args.length < 5) {
             throw new IllegalArgumentException("Not enough args");
         }
-
+        this.env = env;
         this.databaseName = args[1];
         this.tableName = args[2];
         this.key = args[3];
         this.value = args[4];
-        this.env = env;
     }
 
     @Override
