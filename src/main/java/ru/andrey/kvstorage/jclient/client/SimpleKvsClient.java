@@ -3,41 +3,39 @@ package ru.andrey.kvstorage.jclient.client;
 import ru.andrey.kvstorage.jclient.command.GetKvsCommand;
 import ru.andrey.kvstorage.jclient.command.KvsCommand;
 import ru.andrey.kvstorage.jclient.command.SetKvsCommand;
+import ru.andrey.kvstorage.jclient.connection.ConnectionConfiguration;
+import ru.andrey.kvstorage.jclient.connection.ConnectionFactory;
 import ru.andrey.kvstorage.jclient.connection.KvsConnection;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
-import java.util.function.Supplier;
-
 // It is not supposed to be thread-safe
 public class SimpleKvsClient implements KvsClient {
-    private final Supplier<KvsConnection> connectionSupplier;
-    private final String databaseName; // todo sukhoa make SimpleKvsClient get something like "ConnectionSettings" or "ConnectionConfigurations" class
+
+    private final ConnectionConfiguration configuration;
+    private final ConnectionFactory connectionFactory;
 
     private KvsConnection connection;
 
-    public SimpleKvsClient(
-            String databaseName,
-            Supplier<KvsConnection> connectionSupplier // todo sukhoa Connection factory?
-    ) {
-        this.connectionSupplier = connectionSupplier;
-        this.databaseName = databaseName;
-        this.connection = connectionSupplier.get();
+    public SimpleKvsClient(ConnectionConfiguration configuration, ConnectionFactory connectionFactory) {
+        this.configuration = configuration;
+        this.connectionFactory = connectionFactory;
+        this.connection = connectionFactory.buildConnection(configuration);
     }
 
     @Override
     public String get(String tableName, String key) {
-        return executeCommand(new GetKvsCommand(databaseName, tableName, key));
+        return executeCommand(new GetKvsCommand(configuration.getDatabaseName(), tableName, key));
     }
 
     @Override
     public String set(String tableName, String key, String value) {
-        return executeCommand(new SetKvsCommand(databaseName, tableName, key, value));
+        return executeCommand(new SetKvsCommand(configuration.getDatabaseName(), tableName, key, value));
     }
 
     private String executeCommand(KvsCommand command) {
         if (connection == null) {
-            connection = connectionSupplier.get();
+            connection = connectionFactory.buildConnection(configuration);
         }
 
         try {
