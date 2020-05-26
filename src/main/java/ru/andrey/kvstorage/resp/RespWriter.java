@@ -11,6 +11,12 @@ public class RespWriter {
 
     private final OutputStream os;
 
+    /**
+     * Записывает {@code object} в выходной поток.
+     *
+     * @param object объект, который нужно записать
+     * @throws IOException если произошла ошибка ввода-вывода
+     */
     public void write(RespObject object) throws IOException {
         object.write(os);
         os.flush();
