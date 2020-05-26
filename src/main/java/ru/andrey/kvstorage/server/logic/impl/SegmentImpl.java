@@ -1,9 +1,8 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.index.SegmentIndex;
 import ru.andrey.kvstorage.server.index.SegmentIndexInfo;
-import ru.andrey.kvstorage.server.index.impl.SegmentIndexImpl;
+import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndexInfoImpl;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
@@ -36,7 +35,7 @@ public class SegmentImpl implements Segment {
     private SegmentImpl(String segmentName, Path tableRootPath) {
         this.segmentName = segmentName;
         this.segmentPath = tableRootPath.resolve(segmentName);
-        this.segmentIndex = new SegmentIndexImpl();
+        this.segmentIndex = new SegmentIndex();
         this.currentSizeInBytes = 0;
     }
 
@@ -98,9 +97,8 @@ public class SegmentImpl implements Segment {
              DatabaseOutputStream out = new DatabaseOutputStream(Channels.newOutputStream(byteChannel))) {
 
             var startPosition = byteChannel.position();
-            int bytesWritten = out.write(storingUnit);
 
-            segmentIndex.onSegmentUpdated(objectKey, new SegmentIndexInfoImpl(startPosition));
+            segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentIndexInfoImpl(startPosition));
         }
         return true; // todo sukhoa fix
     }

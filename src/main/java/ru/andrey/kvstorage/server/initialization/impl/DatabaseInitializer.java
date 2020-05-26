@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.index.impl.TableIndexImpl;
+import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.DatabaseInitializationContext;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
@@ -41,7 +41,7 @@ public class DatabaseInitializer implements Initializer {
                         String tableName = d.getFileName().toString();
                         Path tableRootPath = databaseContext.getDatabasePath();
 
-                        TableInitializationContext tableInitContext = new TableInitializationContextImpl(tableName, tableRootPath, new TableIndexImpl());
+                        TableInitializationContext tableInitContext = new TableInitializationContextImpl(tableName, tableRootPath, new TableIndex());
 
                         InitializationContext downstreamContext = InitializationContextImpl.builder()
                                 .executionEnvironment(initialContext.executionEnvironment())

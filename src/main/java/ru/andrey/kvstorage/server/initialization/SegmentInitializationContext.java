@@ -1,6 +1,7 @@
 package ru.andrey.kvstorage.server.initialization;
 
-import ru.andrey.kvstorage.server.index.SegmentIndex;
+
+import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 
 import java.nio.file.Path;
 
