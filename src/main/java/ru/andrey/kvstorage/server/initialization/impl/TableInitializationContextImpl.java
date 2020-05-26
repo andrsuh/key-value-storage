@@ -2,7 +2,7 @@ package ru.andrey.kvstorage.server.initialization.impl;
 
 import lombok.Getter;
 import lombok.Setter;
-import ru.andrey.kvstorage.server.index.TableIndex;
+import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
 

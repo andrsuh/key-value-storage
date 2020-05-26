@@ -2,7 +2,7 @@ package ru.andrey.kvstorage.server.initialization.impl;
 
 import lombok.Builder;
 import lombok.Getter;
-import ru.andrey.kvstorage.server.index.SegmentIndex;
+import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 
 import java.nio.file.Path;

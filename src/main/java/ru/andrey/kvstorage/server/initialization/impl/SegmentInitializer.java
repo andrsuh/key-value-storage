@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.index.impl.SegmentIndexImpl;
+import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndexInfoImpl;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
@@ -31,7 +31,7 @@ public class SegmentInitializer implements Initializer {
             throw new DatabaseException("Segment with such name doesn't exist: " + segmentContext.getSegmentName());
         }
 
-        SegmentIndexImpl index = new SegmentIndexImpl();
+        SegmentIndex index = new SegmentIndex();
         Set<String> keys = new HashSet<>();
         // todo sukhoa we should read all segments sorting by timestamp
         int segmentSize = 0;
@@ -47,7 +47,7 @@ public class SegmentInitializer implements Initializer {
 
                 String keyString = new String(unit.getKey());
                 keys.add(keyString);
-                index.onSegmentUpdated(keyString, segmentIndexInfo);
+                index.onIndexedEntityUpdated(keyString, segmentIndexInfo);
                 segmentSize = offset;
 
                 storingUnit = in.readDbUnit();
@@ -70,7 +70,7 @@ public class SegmentInitializer implements Initializer {
     }
 
     private void tableIndexUpdate(TableInitializationContext tableContext, Set<String> keysInSegment, Segment segmentRef) {
-        keysInSegment.forEach(k -> tableContext.getTableIndex().onTableUpdated(k, segmentRef));
+        keysInSegment.forEach(k -> tableContext.getTableIndex().onIndexedEntityUpdated(k, segmentRef));
     }
 
 }

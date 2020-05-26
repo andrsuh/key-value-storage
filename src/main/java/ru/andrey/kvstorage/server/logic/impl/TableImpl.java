@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.index.TableIndex;
+import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
 import ru.andrey.kvstorage.server.logic.Table;
@@ -73,7 +73,7 @@ public class TableImpl implements Table {
             while (true) { // todo sukhoa
                 var s = currentSegment; // cache to local for preventing concurrent issues in future
                 if (!s.isReadOnly() && s.write(objectKey, objectValue)) {
-                    tableIndex.onTableUpdated(objectKey, s);
+                    tableIndex.onIndexedEntityUpdated(objectKey, s);
                     break;
                 }
                 // todo sukhoa use Atomic reference in future
