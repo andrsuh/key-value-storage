@@ -33,6 +33,12 @@ public enum DatabaseCommands {
         }
     };
 
-
+    /**
+     * Формирование команды СУБД из входных аргументов.
+     *
+     * @param env текущее окружение
+     * @param args аргументы
+     * @return сформированная команда СУБД
+     */
     public abstract DatabaseCommand getCommand(ExecutionEnvironment env, String... args);
 }
