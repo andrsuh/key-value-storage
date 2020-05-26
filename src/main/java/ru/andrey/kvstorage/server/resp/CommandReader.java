@@ -16,10 +16,22 @@ public class CommandReader {
     private final RespReader reader;
     private final ExecutionEnvironment env;
 
+    /**
+     * Возвращает {@code true} - если во входном потоке есть команда, {@code false} - в ином случае.
+     *
+     * @return {@code true} - если во входном потоке есть команда, {@code false} - в ином случае
+     * @throws IOException если произошла ошибка ввода-вывода.
+     */
     public boolean hasNextCommand() throws IOException {
         return reader.hasArray();
     }
 
+    /**
+     * Принудительно пытается считать {@code DatabaseCommand} при условии, что первый байт уже был считан.
+     *
+     * @return считанная {@code DatabaseCommand}
+     * @throws IOException если произошла ошибка ввода-вывода или данные не соответствуют формату RESP
+     */
     public DatabaseCommand readCommand() throws IOException {
         final RespObject[] objects = reader.readArray().getObjects();
         if (objects.length < 1) {
