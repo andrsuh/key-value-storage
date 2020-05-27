@@ -22,10 +22,22 @@ public class RespReader {
 
     private final InputStream is;
 
+    /**
+     * Возвращает {@code true} - если в InputStream есть RespArray, {@code false} - в ином случае.
+     *
+     * @return {@code true} - если в InputStream есть RespArray, {@code false} - в ином случае
+     * @throws IOException если произошла ошибка ввода-вывода
+     */
     public boolean hasArray() throws IOException {
         return is.read() == RespArray.CODE;
     }
 
+    /**
+     * Считывает и возвращает считанный {@code RespObject}.
+     *
+     * @return считанный {@code RespObject}
+     * @throws IOException если произошла ошибка ввода-вывода или данные не соответствуют формату RESP
+     */
     public RespObject readObject() throws IOException {
         final int code = is.read();
         if (code == -1) {
@@ -46,14 +58,32 @@ public class RespReader {
         }
     }
 
+    /**
+     * Принудительно пытается считать {@code RespSimpleString} при условии, что первый байт уже был считан.
+     *
+     * @return считанная {@code RespSimpleString}
+     * @throws IOException если произошла ошибка ввода-вывода или данные не соответствуют формату RESP
+     */
     public RespSimpleString readSimpleString() throws IOException {
         return new RespSimpleString(readString());
     }
 
+    /**
+     * Принудительно пытается считать {@code RespError} при условии, что первый байт уже был считан.
+     *
+     * @return считанный {@code RespError}
+     * @throws IOException если произошла ошибка ввода-вывода или данные не соответствуют формату RESP
+     */
     public RespError readError() throws IOException {
         return new RespError(readString());
     }
 
+    /**
+     * Принудительно пытается считать {@code RespBulkString} при условии, что первый байт уже был считан.
+     *
+     * @return считанная {@code RespBulkString}
+     * @throws IOException если произошла ошибка ввода-вывода или данные не соответствуют формату RESP
+     */
     public RespBulkString readBulkString() throws IOException {
         final int size = readInt();
 
@@ -87,6 +117,12 @@ public class RespReader {
         return new RespBulkString(data);
     }
 
+    /**
+     * Принудительно пытается считать {@code RespArray} при условии, что первый байт уже был считан.
+     *
+     * @return считанный {@code RespArray}
+     * @throws IOException если произошла ошибка ввода-вывода или данные не соответствуют формату RESP
+     */
     public RespArray readArray() throws IOException {
         final int size = readInt();
 

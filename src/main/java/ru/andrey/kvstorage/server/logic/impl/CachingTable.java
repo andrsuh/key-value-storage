@@ -4,6 +4,9 @@ import ru.andrey.kvstorage.server.DatabaseCache;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Table;
 
+/**
+ * Декоратор над таблицей, поддерживающий кэширование.
+ */
 public class CachingTable implements Table {
     private final Table table;
     private final DatabaseCache cache;

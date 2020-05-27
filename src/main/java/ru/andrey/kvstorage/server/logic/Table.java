@@ -12,10 +12,30 @@ import ru.andrey.kvstorage.server.exception.DatabaseException;
  * и хранящую файлы-сегменты данной таблицы
  */
 public interface Table {
+
+    /**
+     * Возвращает имя таблицы.
+     *
+     * @return имя таблицы
+     */
     String getName();
 
+    /**
+     * Записывает в таблицу переданное значение по указанному ключу.
+     *
+     * @param objectKey ключ, по которому нужно записать значение
+     * @param objectValue значение, которое нужно записать
+     * @throws DatabaseException если произошла ошибка ввода-вывода
+     */
     void write(String objectKey, String objectValue) throws DatabaseException;
 
+    /**
+     * Считывает значение из таблицы по заданному ключу.
+     *
+     * @param objectKey ключ, по которому нужно получить значение
+     * @return значение, которое находится по ключу
+     * @throws DatabaseException если не была найдена запись по данному ключу или произошла ошибка ввода-вывода
+     */
     String read(String objectKey) throws DatabaseException;
 }
 

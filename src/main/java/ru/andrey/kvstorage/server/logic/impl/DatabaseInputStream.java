@@ -11,6 +11,12 @@ public class DatabaseInputStream extends DataInputStream {
         super(inputStream);
     }
 
+    /**
+     * Считывает из входного потока {@code DatabaseStorageUnit} и возвращает его в виде {@code Optional<DatabaseStorageUnit>}.
+     *
+     * @return {@code Optional<DatabaseStorageUnit>}
+     * @throws IOException если произошла ошибка ввода-вывода.
+     */
     public Optional<DatabaseStoringUnit> readDbUnit() throws IOException {
         try {
             int keySize = readInt();
