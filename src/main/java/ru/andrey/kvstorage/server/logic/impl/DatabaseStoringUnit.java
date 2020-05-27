@@ -1,5 +1,9 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
+/**
+ * Низкоуровневая и атомарная структура, описывающая запись в сегменте в виде ключ-значение.
+ * Ключ и значение в нем хранятся в виде массива байтов.
+ */
 public class DatabaseStoringUnit {
     private final byte[] key;
     private final int keySize;
