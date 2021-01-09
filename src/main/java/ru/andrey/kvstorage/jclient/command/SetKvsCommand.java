@@ -1,8 +1,10 @@
 package ru.andrey.kvstorage.jclient.command;
 
 import ru.andrey.kvstorage.resp.object.RespArray;
-import ru.andrey.kvstorage.resp.object.RespObject;
-import ru.andrey.kvstorage.resp.object.RespSimpleString;
+import ru.andrey.kvstorage.resp.object.RespBulkString;
+import ru.andrey.kvstorage.resp.object.RespCommandId;
+
+import java.nio.charset.StandardCharsets;
 
 public class SetKvsCommand implements KvsCommand {
 
@@ -12,6 +14,7 @@ public class SetKvsCommand implements KvsCommand {
     private final String tableName;
     private final String key;
     private final String value;
+    private final RespCommandId commandId = new RespCommandId();
 
     public SetKvsCommand(String databaseName, String tableName, String key, String value) {
         this.databaseName = databaseName;
@@ -21,13 +24,19 @@ public class SetKvsCommand implements KvsCommand {
     }
 
     @Override
-    public RespObject serialize() {
+    public RespArray serialize() {
         return new RespArray(
-            new RespSimpleString(COMMAND_NAME),
-            new RespSimpleString(databaseName),
-            new RespSimpleString(tableName),
-            new RespSimpleString(key),
-            new RespSimpleString(value)
+                commandId,
+                new RespBulkString(COMMAND_NAME.getBytes(StandardCharsets.UTF_8)),
+                new RespBulkString(databaseName.getBytes(StandardCharsets.UTF_8)),
+                new RespBulkString(tableName.getBytes(StandardCharsets.UTF_8)),
+                new RespBulkString(key.getBytes(StandardCharsets.UTF_8)),
+                new RespBulkString(value.getBytes(StandardCharsets.UTF_8))
         );
+    }
+
+    @Override
+    public int getCommandId() {
+        return commandId.commandId;
     }
 }

@@ -7,6 +7,8 @@ import ru.andrey.kvstorage.jclient.connection.KvsConnection;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 // It is not supposed to be thread-safe
@@ -14,7 +16,9 @@ public class SimpleKvsClient implements KvsClient {
     private final Supplier<KvsConnection> connectionSupplier;
     private final String databaseName; // todo sukhoa make SimpleKvsClient get something like "ConnectionSettings" or "ConnectionConfigurations" class
 
-    private KvsConnection connection;
+    public static final Map<Integer, Object> requests = new ConcurrentHashMap<>();
+    public static final Map<Integer, RespObject> responses = new ConcurrentHashMap<>();
+
 
     public SimpleKvsClient(
             String databaseName,
@@ -22,7 +26,6 @@ public class SimpleKvsClient implements KvsClient {
     ) {
         this.connectionSupplier = connectionSupplier;
         this.databaseName = databaseName;
-        this.connection = connectionSupplier.get();
     }
 
     @Override
@@ -36,20 +39,28 @@ public class SimpleKvsClient implements KvsClient {
     }
 
     private String executeCommand(KvsCommand command) {
-        if (connection == null) {
-            connection = connectionSupplier.get();
-        }
+        KvsConnection connection = connectionSupplier.get();
 
-        try {
-            return handleResponse(connection.send(command.serialize()));
-        } catch (Exception e) {
-            // IO exception in future
+        requests.putIfAbsent(command.getCommandId(), command);
+
+        synchronized (command) {
             try {
-                connection.close();
-            } catch (KvsConnectionException ex) {
-                throw new IllegalStateException("Cannot close the connection", ex);
+                connection.send(command.serialize());
+                command.wait(); // todo sukhoa we can implement awaitility in temporary manner
+
+                return handleResponse(responses.get(command.getCommandId()));
+            } catch (Exception e) {
+                // IO exception in future
+                try {
+                    connection.close(); // todo sukhoa schedule session rebind
+                } catch (KvsConnectionException ex) {
+                    throw new IllegalStateException("Cannot close the connection", ex);
+                }
+                throw new IllegalStateException("Connection io exception", e);
+            } finally {
+                requests.remove(command.getCommandId());
+                responses.remove(command.getCommandId());
             }
-            throw new IllegalStateException("Connection io exception", e);
         }
     }
 

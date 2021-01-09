@@ -6,6 +6,7 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Database;
 
+import java.util.List;
 import java.util.Optional;
 
 public class UpdateKeyCommand implements DatabaseCommand {
@@ -16,15 +17,15 @@ public class UpdateKeyCommand implements DatabaseCommand {
     private final String key;
     private final String value;
 
-    public UpdateKeyCommand(ExecutionEnvironment env, String... args) {
-        if (args.length < 5) {
+    public UpdateKeyCommand(ExecutionEnvironment env, List<String> args) {
+        if (args.size() < 5) {
             throw new IllegalArgumentException("Not enough args");
         }
         this.env = env;
-        this.databaseName = args[1];
-        this.tableName = args[2];
-        this.key = args[3];
-        this.value = args[4];
+        this.databaseName = args.get(1);
+        this.tableName = args.get(2);
+        this.key = args.get(3);
+        this.value = args.get(4);
     }
 
     @Override

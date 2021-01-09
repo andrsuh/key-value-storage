@@ -1,11 +1,7 @@
 package ru.andrey.kvstorage.resp;
 
 import lombok.AllArgsConstructor;
-import ru.andrey.kvstorage.resp.object.RespArray;
-import ru.andrey.kvstorage.resp.object.RespBulkString;
-import ru.andrey.kvstorage.resp.object.RespError;
-import ru.andrey.kvstorage.resp.object.RespObject;
-import ru.andrey.kvstorage.resp.object.RespSimpleString;
+import ru.andrey.kvstorage.resp.object.*;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -135,7 +131,7 @@ public class RespReader {
             b = is.read();
         }
 
-        return new String(buf, 0, count, StandardCharsets.US_ASCII);
+        return new String(buf, 0, count, StandardCharsets.UTF_8);
     }
 
     private int readInt() throws IOException {

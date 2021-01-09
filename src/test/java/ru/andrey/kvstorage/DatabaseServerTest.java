@@ -34,8 +34,8 @@ public class DatabaseServerTest {
         String dbName = "test_" + new Random().nextInt(1_000_000);
         String tableName = "table";
         String[] initCommands = {
-                "CREATE_DATABASE " + dbName,
-                "CREATE_TABLE " + dbName + " " + tableName
+                "0 CREATE_DATABASE " + dbName,
+                "0 CREATE_TABLE " + dbName + " " + tableName
         };
 
         System.out.println(Arrays.toString(initCommands));
@@ -62,7 +62,7 @@ public class DatabaseServerTest {
 
                     String value = key + "_" + i;
                     databaseServer.executeNextCommand(
-                            "UPDATE_KEY " + dbName + " " + tableName + " " + key + " " + value);
+                            "0 UPDATE_KEY " + dbName + " " + tableName + " " + key + " " + value);
                     mapStorage.put(key, value);
 
                     break;
@@ -72,7 +72,7 @@ public class DatabaseServerTest {
                         break;
 
                     DatabaseCommandResult commandResult = databaseServer.executeNextCommand(
-                            "READ_KEY " + dbName + " " + tableName + " " + key);
+                            "0 READ_KEY " + dbName + " " + tableName + " " + key);
 
                     if (commandResult.isSuccess()) {
                         Assert.assertEquals("Key : " + key, mapStorage.get(key), commandResult.getResult().get());

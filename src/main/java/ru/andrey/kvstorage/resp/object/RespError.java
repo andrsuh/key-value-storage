@@ -28,7 +28,7 @@ public class RespError implements RespObject {
     @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
-        os.write(message.getBytes(StandardCharsets.US_ASCII));
+        os.write(message.getBytes(StandardCharsets.UTF_8));
         os.write(CRLF);
     }
 }

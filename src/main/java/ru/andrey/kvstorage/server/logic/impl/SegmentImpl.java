@@ -97,6 +97,7 @@ public class SegmentImpl implements Segment {
              DatabaseOutputStream out = new DatabaseOutputStream(Channels.newOutputStream(byteChannel))) {
 
             var startPosition = byteChannel.position();
+            out.write(storingUnit);
 
             segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentIndexInfoImpl(startPosition));
         }

@@ -10,11 +10,7 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.Initializer;
-import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.InitializationContextImpl;
-import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.*;
 import ru.andrey.kvstorage.server.resp.CommandReader;
 
 import java.io.BufferedInputStream;
@@ -23,8 +19,11 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class DatabaseServer {
 
@@ -69,7 +68,8 @@ public class DatabaseServer {
                 return DatabaseCommandResult.error("Command name is not specified");
             }
 
-            return DatabaseCommands.valueOf(args[0]).getCommand(env, args).execute();
+            List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
+            return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs).execute();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return DatabaseCommandResult.error(e);
@@ -98,8 +98,8 @@ public class DatabaseServer {
         public void run() {
             try {
                 final CommandReader reader = new CommandReader(
-                    new RespReader(new BufferedInputStream(client.getInputStream())),
-                    server.env
+                        new RespReader(new BufferedInputStream(client.getInputStream())),
+                        server.env
                 );
                 final RespWriter writer = new RespWriter(new BufferedOutputStream(client.getOutputStream()));
 

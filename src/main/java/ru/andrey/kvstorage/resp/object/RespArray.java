@@ -7,6 +7,7 @@ import ru.andrey.kvstorage.resp.RespUtil;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class RespArray implements RespObject {
@@ -17,9 +18,13 @@ public class RespArray implements RespObject {
 
     @Getter
     @NonNull
-    private final RespObject[] objects;
+    private final List<RespObject> objects;
 
     public RespArray(RespObject... objects) {
+        this.objects = Arrays.asList(objects);
+    }
+
+    public RespArray(@NonNull List<RespObject> objects) {
         this.objects = objects;
     }
 
@@ -30,19 +35,27 @@ public class RespArray implements RespObject {
 
     @Override
     public String asString() {
-        return Arrays.stream(objects)
-            .map(RespObject::asString)
-            .collect(Collectors.joining(AS_STRING_SEPARATOR));
+        return objects.stream()
+                .map(RespObject::asString)
+                .collect(Collectors.joining(AS_STRING_SEPARATOR));
     }
 
     @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
-        RespUtil.writeInt(os, objects.length);
+        RespUtil.writeInt(os, objects.size());
         os.write(CRLF);
 
         for (RespObject object : objects) {
             object.write(os);
         }
+    }
+
+    @Override
+    public String toString() {
+        return "RespArray{" +
+                "size=" + objects.size() +
+                " objects=" + objects +
+                '}';
     }
 }

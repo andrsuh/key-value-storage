@@ -23,7 +23,7 @@ public class RespBulkString implements RespObject {
 
     @Override
     public String asString() {
-        return new String(data, StandardCharsets.US_ASCII);
+        return new String(data, StandardCharsets.UTF_8);
     }
 
     @Override
@@ -37,5 +37,12 @@ public class RespBulkString implements RespObject {
             os.write(data);
         }
         os.write(CRLF);
+    }
+
+    @Override
+    public String toString() {
+        return "RespBulkString{" +
+                "content=" + this.asString() +
+                '}';
     }
 }

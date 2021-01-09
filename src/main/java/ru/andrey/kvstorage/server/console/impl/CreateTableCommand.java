@@ -6,6 +6,7 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Database;
 
+import java.util.List;
 import java.util.Optional;
 
 public class CreateTableCommand implements DatabaseCommand {
@@ -14,12 +15,12 @@ public class CreateTableCommand implements DatabaseCommand {
     private final String databaseName;
     private final String tableName;
 
-    public CreateTableCommand(ExecutionEnvironment env, String... args) {
-        if (args.length < 3) {
+    public CreateTableCommand(ExecutionEnvironment env, List<String> commandArgs) {
+        if (commandArgs.size() < 3) {
             throw new IllegalArgumentException("Not enough args");
         }
-        this.databaseName = args[1];
-        this.tableName = args[2];
+        this.databaseName = commandArgs.get(1);
+        this.tableName = commandArgs.get(2);
         this.env = env;
     }
 

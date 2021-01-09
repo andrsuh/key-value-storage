@@ -1,7 +1,6 @@
 package ru.andrey.kvstorage.server.console;
 
 import ru.andrey.kvstorage.resp.object.RespBulkString;
-import ru.andrey.kvstorage.resp.object.RespError;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
 import java.nio.charset.StandardCharsets;
@@ -24,8 +23,8 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
     static DatabaseCommandResult error(Exception exception) {
         Objects.requireNonNull(exception);
         String message = exception.getMessage() != null
-            ? exception.getMessage()
-            : Arrays.toString(exception.getStackTrace());
+                ? exception.getMessage()
+                : Arrays.toString(exception.getStackTrace());
         return DatabaseCommandResult.error(message);
     }
 
@@ -76,9 +75,9 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         public RespObject serialize() {
             final Optional<String> result = getResult();
 
-            return result.isPresent()
-                ? new RespBulkString(result.get().getBytes(StandardCharsets.US_ASCII))
-                : new RespError(errorMessage);
+            return result
+                    .map(s -> new RespBulkString(s.getBytes(StandardCharsets.UTF_8)))
+                    .orElseGet(() -> new RespBulkString(errorMessage.getBytes(StandardCharsets.UTF_8)));
         }
     }
 }

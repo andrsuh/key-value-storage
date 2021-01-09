@@ -28,7 +28,7 @@ public class RespSimpleString implements RespObject {
     @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
-        os.write(string.getBytes(StandardCharsets.US_ASCII));
+        os.write(string.getBytes(StandardCharsets.UTF_8));
         os.write(CRLF);
     }
 }
