@@ -16,7 +16,9 @@ public class Main {
                 "test_3",
                 sessionsPool::getClientSession);
 
+
         KvsRepository<Post> postRepository = new PostRepositoryImpl(new PostMapper(), () -> client);
+
 //        Post post = postRepository.get("1");
         Post post1 = postRepository.store("2", new Post("Test", "dakenviy", "Good content"));
         Post post2 = postRepository.get("2");

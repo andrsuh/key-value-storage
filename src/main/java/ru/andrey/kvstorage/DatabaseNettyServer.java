@@ -8,6 +8,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import ru.andrey.kvstorage.resp.ByteToRespCommandDecoder;
 import ru.andrey.kvstorage.resp.RespCommandToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespArray;
@@ -34,7 +35,7 @@ public class DatabaseNettyServer {
     private final ExecutionEnvironment env;
 
 
-    public DatabaseNettyServer(ExecutionEnvironment env, Initializer initializer) throws IOException, DatabaseException, InterruptedException {
+    public DatabaseNettyServer(ExecutionEnvironment env, Initializer initializer) throws DatabaseException, InterruptedException {
         this.env = env;
         this.bs = new DatabaseServerBootstrap(env);
 
@@ -45,22 +46,41 @@ public class DatabaseNettyServer {
         initializer.perform(initializationContext);
     }
 
-    public static void main(String[] args) throws IOException, DatabaseException, InterruptedException {
+    public static void main(String[] args) throws DatabaseException, InterruptedException {
 
         Initializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
         databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
 
-//         databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
-//         databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
+         databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+         databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
 //         databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
     }
 
+    public DatabaseCommandResult executeNextCommand(String commandText) {
+        try {
+            if (StringUtils.isEmpty(commandText)) {
+                return DatabaseCommandResult.error("Command name is not specified");
+            }
+
+            final String[] args = commandText.split(" ");
+            if (args.length < 1) {
+                return DatabaseCommandResult.error("Command name is not specified");
+            }
+
+            List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
+            return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs).execute();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+            return DatabaseCommandResult.error(e);
+        }
+    }
+
     private static class DatabaseServerBootstrap {
-        EventLoopGroup bossGroup = new NioEventLoopGroup();
-        EventLoopGroup workerGroup = new NioEventLoopGroup();
-        ServerBootstrap b;
+        private final EventLoopGroup bossGroup = new NioEventLoopGroup();
+        private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+        private final ServerBootstrap b;
 
         ExecutionEnvironment env;
 
@@ -108,7 +128,7 @@ public class DatabaseNettyServer {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
             RespArray message = (RespArray) msg;
-            System.out.println("цSERVER GOT: " + message);
+            System.out.println("SERVER GOT: " + message);
 
 //            if (objects.isEmpty()) {
 //                throw new IllegalArgumentException("Command name is not specified");
@@ -138,7 +158,7 @@ public class DatabaseNettyServer {
 
         @Override
         public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
-            cause.printStackTrace();
+            cause.printStackTrace(); //
         }
 
         public DatabaseCommandResult executeNextCommand(DatabaseCommand command) {

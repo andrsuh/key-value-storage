@@ -9,7 +9,7 @@ public class RespUtil {
         os.write(intToByteArray(number));
     }
 
-    public static final byte[] intToByteArray(int value) {
+    public static byte[] intToByteArray(int value) {
         return new byte[]{
                 (byte) (value >>> 24),
                 (byte) (value >>> 16),
