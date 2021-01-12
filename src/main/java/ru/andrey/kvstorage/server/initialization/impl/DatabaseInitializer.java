@@ -54,9 +54,9 @@ public class DatabaseInitializer implements Initializer {
                             throw new RuntimeException(e);
                         }
 
-                        initialContext.executionEnvironment()
-                                .addDatabase(DatabaseImpl.initializeFromContext(initialContext.currentDbContext()));
                     });
+            initialContext.executionEnvironment()
+                    .addDatabase(DatabaseImpl.initializeFromContext(initialContext.currentDbContext()));
         } catch (IOException e) {
             throw new DatabaseException("Cannot initialize database: " + databaseContext.getDbName(), e);
         }
