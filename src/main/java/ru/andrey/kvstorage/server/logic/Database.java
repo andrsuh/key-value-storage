@@ -2,6 +2,8 @@ package ru.andrey.kvstorage.server.logic;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 
+import java.util.Optional;
+
 public interface Database {
     String getName();
 
@@ -11,5 +13,5 @@ public interface Database {
 
     void write(String tableName, String objectKey, String objectValue) throws DatabaseException;
 
-    String read(String tableName, String objectKey) throws DatabaseException;
+    Optional<String> read(String tableName, String objectKey) throws DatabaseException;
 }

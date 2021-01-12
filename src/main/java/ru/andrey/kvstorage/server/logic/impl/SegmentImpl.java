@@ -109,11 +109,11 @@ public class SegmentImpl implements Segment {
     }
 
     @Override
-    public String read(String objectKey) throws IOException {
+    public Optional<String> read(String objectKey) throws IOException {
         Optional<SegmentIndexInfo> indexInfo = segmentIndex.searchForKey(objectKey);
 
         if (indexInfo.isEmpty()) {
-            throw new IllegalStateException("Read nonexistent key");
+            return Optional.empty();
         }
 
         try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.READ);
@@ -123,7 +123,8 @@ public class SegmentImpl implements Segment {
 
             DatabaseStoringUnit unit = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
 
-            return new String(unit.getValue()); // todo sukhoa charset, handle separator
+            // todo sukhoa charset, handle separator
+            return Optional.of(new String(unit.getValue()));
         }
     }
 

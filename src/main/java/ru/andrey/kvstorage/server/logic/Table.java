@@ -2,6 +2,8 @@ package ru.andrey.kvstorage.server.logic;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 
+import java.util.Optional;
+
 /**
  * Таблица - логическая сущность, представляющая собой набор файлов-сегментов, которые объединены одним
  * именем и используются для хранения однотипных данных (данных, представляющих собой одну и ту же сущность,
@@ -16,6 +18,6 @@ public interface Table {
 
     void write(String objectKey, String objectValue) throws DatabaseException;
 
-    String read(String objectKey) throws DatabaseException;
+    Optional<String> read(String objectKey) throws DatabaseException;
 }
 
