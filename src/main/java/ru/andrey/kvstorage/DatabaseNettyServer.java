@@ -53,9 +53,10 @@ public class DatabaseNettyServer {
 
         databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
 
-         databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
          databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
-//         databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
+         databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
+        databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+
     }
 
     public DatabaseCommandResult executeNextCommand(String commandText) {
@@ -70,7 +71,7 @@ public class DatabaseNettyServer {
             }
 
             List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-            return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs).execute();
+            return DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs).execute();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return DatabaseCommandResult.error(e);
@@ -140,7 +141,7 @@ public class DatabaseNettyServer {
 
             List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
 
-            DatabaseCommand command = DatabaseCommands.valueOf(args[1]).getCommand(env, commandArgs);
+            DatabaseCommand command = DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs);
 
             DatabaseCommandResult databaseCommandResult = executeNextCommand(command);
 
