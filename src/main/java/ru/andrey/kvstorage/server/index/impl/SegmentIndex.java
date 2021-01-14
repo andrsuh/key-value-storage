@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.server.index.impl;
 
 import ru.andrey.kvstorage.server.index.MapBasedDatabaseIndex;
-import ru.andrey.kvstorage.server.index.SegmentIndexInfo;
+import ru.andrey.kvstorage.server.index.SegmentOffsetInfo;
 
-public class SegmentIndex extends MapBasedDatabaseIndex<String, SegmentIndexInfo> {
+public class SegmentIndex extends MapBasedDatabaseIndex<String, SegmentOffsetInfo> {
 }

@@ -1,9 +1,9 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.index.SegmentIndexInfo;
+import ru.andrey.kvstorage.server.index.SegmentOffsetInfo;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
-import ru.andrey.kvstorage.server.index.impl.SegmentIndexInfoImpl;
+import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
 
@@ -99,7 +99,7 @@ public class SegmentImpl implements Segment {
             var startPosition = byteChannel.position();
             out.write(storingUnit);
 
-            segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentIndexInfoImpl(startPosition));
+            segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(startPosition));
         }
         return true; // todo sukhoa fix
     }
@@ -110,7 +110,7 @@ public class SegmentImpl implements Segment {
 
     @Override
     public String read(String objectKey) throws IOException {
-        Optional<SegmentIndexInfo> indexInfo = segmentIndex.searchForKey(objectKey);
+        Optional<SegmentOffsetInfo> indexInfo = segmentIndex.searchForKey(objectKey);
 
         if (indexInfo.isEmpty()) {
             throw new IllegalStateException("Read nonexistent key");

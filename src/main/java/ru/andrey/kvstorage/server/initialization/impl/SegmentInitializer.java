@@ -2,7 +2,7 @@ package ru.andrey.kvstorage.server.initialization.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
-import ru.andrey.kvstorage.server.index.impl.SegmentIndexInfoImpl;
+import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
@@ -42,7 +42,7 @@ public class SegmentInitializer implements Initializer {
             Optional<DatabaseRow> storingUnit = in.readDbUnit();
             while (storingUnit.isPresent()) {
                 DatabaseRow unit = storingUnit.get();
-                SegmentIndexInfoImpl segmentIndexInfo = new SegmentIndexInfoImpl(offset);
+                SegmentOffsetInfoImpl segmentIndexInfo = new SegmentOffsetInfoImpl(offset);
                 offset += unit.size();
 
                 String keyString = new String(unit.getKey());
