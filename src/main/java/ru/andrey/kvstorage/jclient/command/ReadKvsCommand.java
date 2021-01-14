@@ -6,7 +6,7 @@ import ru.andrey.kvstorage.resp.object.RespCommandId;
 
 import java.nio.charset.StandardCharsets;
 
-public class GetKvsCommand implements KvsCommand {
+public class ReadKvsCommand implements KvsCommand {
 
     private static final String COMMAND_NAME = "READ_KEY";
 
@@ -15,7 +15,7 @@ public class GetKvsCommand implements KvsCommand {
     private final String key;
     private final RespCommandId commandId = new RespCommandId();
 
-    public GetKvsCommand(String databaseName, String tableName, String key) {
+    public ReadKvsCommand(String databaseName, String tableName, String key) {
         this.databaseName = databaseName;
         this.tableName = tableName;
         this.key = key;
