@@ -25,7 +25,7 @@ public class CachingTable implements Table {
     @Override
     public void write(String objectKey, String objectValue) throws DatabaseException {
         table.write(objectKey, objectValue);
-        cache.set(objectKey, objectValue);
+        cache.upsert(objectKey, objectValue);
     }
 
     @Override
@@ -33,7 +33,7 @@ public class CachingTable implements Table {
         String value = cache.get(objectKey);
         if (value == null) {
             value = table.read(objectKey);
-            cache.set(objectKey, value);
+            cache.upsert(objectKey, value);
         }
         return value;
     }

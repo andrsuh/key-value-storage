@@ -53,16 +53,16 @@ public class DatabaseServerTest {
         Collections.shuffle(allowedKeys);
 
         for (int i = 0; i < 300_000; i++) {
-            DatabaseCommands commandType = random.nextDouble() > 0.9 ? DatabaseCommands.UPDATE_KEY : DatabaseCommands.READ_KEY;
+            DatabaseCommands commandType = random.nextDouble() > 0.9 ? DatabaseCommands.UPSERT_KEY : DatabaseCommands.READ_KEY;
 
             String key = allowedKeys.get(random.nextInt(allowedKeys.size()));
 
             switch (commandType) {
-                case UPDATE_KEY: {
+                case UPSERT_KEY: {
 
                     String value = key + "_" + i;
                     databaseServer.executeNextCommand(
-                            "0 UPDATE_KEY " + dbName + " " + tableName + " " + key + " " + value);
+                            "0 UPSERT_KEY " + dbName + " " + tableName + " " + key + " " + value);
                     mapStorage.put(key, value);
 
                     break;

@@ -17,7 +17,7 @@ public class DatabaseCache { // todo sukhoa add interface
         return cache.get(key);
     }
 
-    public void set(String key, String value) {
+    public void upsert(String key, String value) {
         cache.put(key, value);
     }
 }

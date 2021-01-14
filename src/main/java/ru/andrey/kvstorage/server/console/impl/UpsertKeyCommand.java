@@ -9,7 +9,7 @@ import ru.andrey.kvstorage.server.logic.Database;
 import java.util.List;
 import java.util.Optional;
 
-public class UpdateKeyCommand implements DatabaseCommand {
+public class UpsertKeyCommand implements DatabaseCommand {
 
     private final ExecutionEnvironment env;
     private final String databaseName;
@@ -17,7 +17,7 @@ public class UpdateKeyCommand implements DatabaseCommand {
     private final String key;
     private final String value;
 
-    public UpdateKeyCommand(ExecutionEnvironment env, List<String> args) {
+    public UpsertKeyCommand(ExecutionEnvironment env, List<String> args) {
         if (args.size() < 5) {
             throw new IllegalArgumentException("Not enough args");
         }

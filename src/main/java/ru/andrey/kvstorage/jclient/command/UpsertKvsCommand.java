@@ -6,9 +6,9 @@ import ru.andrey.kvstorage.resp.object.RespCommandId;
 
 import java.nio.charset.StandardCharsets;
 
-public class SetKvsCommand implements KvsCommand {
+public class UpsertKvsCommand implements KvsCommand {
 
-    private static final String COMMAND_NAME = "UPDATE_KEY";
+    private static final String COMMAND_NAME = "UPSERT_KEY";
 
     private final String databaseName;
     private final String tableName;
@@ -16,7 +16,7 @@ public class SetKvsCommand implements KvsCommand {
     private final String value;
     private final RespCommandId commandId = new RespCommandId();
 
-    public SetKvsCommand(String databaseName, String tableName, String key, String value) {
+    public UpsertKvsCommand(String databaseName, String tableName, String key, String value) {
         this.databaseName = databaseName;
         this.tableName = tableName;
         this.key = key;
