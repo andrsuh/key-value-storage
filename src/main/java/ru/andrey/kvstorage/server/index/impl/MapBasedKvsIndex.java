@@ -1,4 +1,6 @@
-package ru.andrey.kvstorage.server.index;
+package ru.andrey.kvstorage.server.index.impl;
+
+import ru.andrey.kvstorage.server.index.KvsIndex;
 
 import java.util.HashMap;
 import java.util.Map;
