@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class AbstractDatabaseIndex<K, V> implements DatabaseIndex<K, V> {
+public class MapBasedDatabaseIndex<K, V> implements DatabaseIndex<K, V> {
     private final Map<K, V> index = new HashMap<>(200);
 
     @Override

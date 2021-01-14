@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.server.index.impl;
 
-import ru.andrey.kvstorage.server.index.AbstractDatabaseIndex;
+import ru.andrey.kvstorage.server.index.MapBasedDatabaseIndex;
 import ru.andrey.kvstorage.server.logic.Segment;
 
-public class TableIndex extends AbstractDatabaseIndex<String, Segment> {
+public class TableIndex extends MapBasedDatabaseIndex<String, Segment> {
 }
