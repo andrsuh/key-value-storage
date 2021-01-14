@@ -21,7 +21,7 @@ public class Main {
 
 //        Post post = postRepository.get("1");
         Post post1 = postRepository.upsert("2", new Post("Test", "dakenviy", "Good content"));
-        Post post2 = postRepository.get("2");
+        Post post2 = postRepository.read("2");
 //        System.out.println(post);
         System.out.println(post1);
         System.out.println(post2);

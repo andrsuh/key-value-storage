@@ -13,7 +13,7 @@ public class DatabaseCache { // todo sukhoa add interface
         }
     };
 
-    public String get(String key) {
+    public String read(String key) {
         return cache.get(key);
     }
 

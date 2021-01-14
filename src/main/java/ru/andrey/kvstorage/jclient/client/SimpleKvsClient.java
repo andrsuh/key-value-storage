@@ -29,7 +29,7 @@ public class SimpleKvsClient implements KvsClient {
     }
 
     @Override
-    public String get(String tableName, String key) {
+    public String read(String tableName, String key) {
         return executeCommand(new GetKvsCommand(databaseName, tableName, key));
     }
 

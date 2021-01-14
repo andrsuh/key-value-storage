@@ -18,13 +18,13 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
     Supplier<KvsClient> getClientFactory();
 
     @Override
-    default E get(String id) {
+    default E read(String id) {
         if (id == null) {
             throw new IllegalArgumentException("null id passed");
         }
 
         var client = getClientFactory().get();
-        return getMapper().mapToObject(client.get(getTableName(), id));
+        return getMapper().mapToObject(client.read(getTableName(), id));
     }
 
     @Override

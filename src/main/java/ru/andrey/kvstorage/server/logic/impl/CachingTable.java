@@ -30,7 +30,7 @@ public class CachingTable implements Table {
 
     @Override
     public String read(String objectKey) throws DatabaseException {
-        String value = cache.get(objectKey);
+        String value = cache.read(objectKey);
         if (value == null) {
             value = table.read(objectKey);
             cache.upsert(objectKey, value);
