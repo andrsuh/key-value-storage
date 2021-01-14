@@ -9,7 +9,7 @@ public class DatabaseOutputStream extends DataOutputStream {
         super(outputStream);
     }
 
-    int write(DatabaseStoringUnit storingUnit) throws IOException {
+    int write(DatabaseRow storingUnit) throws IOException {
         int sizeBefore = size();
         writeInt(storingUnit.getKeySize());
         write(storingUnit.getKey());

@@ -11,7 +11,7 @@ public class DatabaseInputStream extends DataInputStream {
         super(inputStream);
     }
 
-    public Optional<DatabaseStoringUnit> readDbUnit() throws IOException {
+    public Optional<DatabaseRow> readDbUnit() throws IOException {
         try {
             int keySize = readInt();
             byte[] key = readNBytes(keySize);
@@ -19,7 +19,7 @@ public class DatabaseInputStream extends DataInputStream {
             int valueSize = readInt();
             byte[] value = readNBytes(valueSize);
 
-            return Optional.of(new DatabaseStoringUnit(key, value));
+            return Optional.of(new DatabaseRow(key, value));
         } catch (EOFException e) {
             return Optional.empty();
         }

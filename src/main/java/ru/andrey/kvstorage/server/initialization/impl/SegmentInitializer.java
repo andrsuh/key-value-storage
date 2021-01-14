@@ -9,7 +9,7 @@ import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
 import ru.andrey.kvstorage.server.logic.impl.DatabaseInputStream;
-import ru.andrey.kvstorage.server.logic.impl.DatabaseStoringUnit;
+import ru.andrey.kvstorage.server.logic.impl.DatabaseRow;
 import ru.andrey.kvstorage.server.logic.impl.SegmentImpl;
 
 import java.io.BufferedInputStream;
@@ -39,9 +39,9 @@ public class SegmentInitializer implements Initializer {
                 new BufferedInputStream(Files.newInputStream(segmentContext.getSegmentPath())))) {
             var offset = 0;
 
-            Optional<DatabaseStoringUnit> storingUnit = in.readDbUnit();
+            Optional<DatabaseRow> storingUnit = in.readDbUnit();
             while (storingUnit.isPresent()) {
-                DatabaseStoringUnit unit = storingUnit.get();
+                DatabaseRow unit = storingUnit.get();
                 SegmentIndexInfoImpl segmentIndexInfo = new SegmentIndexInfoImpl(offset);
                 offset += unit.size();
 

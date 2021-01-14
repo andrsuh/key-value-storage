@@ -83,7 +83,7 @@ public class SegmentImpl implements Segment {
     @Override
     public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
 
-        DatabaseStoringUnit storingUnit = new DatabaseStoringUnit(objectKey, objectValue);
+        DatabaseRow storingUnit = new DatabaseRow(objectKey, objectValue);
 
         if (!canAllocate(storingUnit.size())) {
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
@@ -121,7 +121,7 @@ public class SegmentImpl implements Segment {
 
             byteChannel.position(indexInfo.get().getOffset());
 
-            DatabaseStoringUnit unit = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
+            DatabaseRow unit = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
 
             return new String(unit.getValue()); // todo sukhoa charset, handle separator
         }
