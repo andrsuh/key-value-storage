@@ -3,11 +3,11 @@ package ru.andrey.kvstorage.jclient.connection;
 import ru.andrey.kvstorage.DatabaseServer;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
-public class DirectReferenceConnection implements KvsConnection {
+public class DirectReferenceKvsConnection implements KvsConnection {
 
     private final DatabaseServer databaseServer;
 
-    public DirectReferenceConnection(DatabaseServer databaseServer) {
+    public DirectReferenceKvsConnection(DatabaseServer databaseServer) {
         this.databaseServer = databaseServer;
     }
 
