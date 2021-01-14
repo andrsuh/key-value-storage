@@ -6,6 +6,8 @@ import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
+import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
+import ru.andrey.kvstorage.server.logic.io.DatabaseOutputStream;
 
 import java.io.IOException;
 import java.nio.channels.Channels;

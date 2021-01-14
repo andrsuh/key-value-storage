@@ -1,4 +1,4 @@
-package ru.andrey.kvstorage.server;
+package ru.andrey.kvstorage.server.logic.impl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

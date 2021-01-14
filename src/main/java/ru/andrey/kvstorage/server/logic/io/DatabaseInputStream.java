@@ -1,4 +1,6 @@
-package ru.andrey.kvstorage.server.logic.impl;
+package ru.andrey.kvstorage.server.logic.io;
+
+import ru.andrey.kvstorage.server.logic.impl.DatabaseRow;
 
 import java.io.DataInputStream;
 import java.io.EOFException;

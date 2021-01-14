@@ -1,6 +1,5 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
-import ru.andrey.kvstorage.server.DatabaseCache;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Table;
 
