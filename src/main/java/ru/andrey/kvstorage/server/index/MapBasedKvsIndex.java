@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class MapBasedDatabaseIndex<K, V> implements DatabaseIndex<K, V> {
+public class MapBasedKvsIndex<K, V> implements KvsIndex<K, V> {
     private final Map<K, V> index = new HashMap<>(200);
 
     @Override
