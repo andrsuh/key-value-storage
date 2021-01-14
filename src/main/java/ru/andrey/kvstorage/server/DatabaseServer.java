@@ -1,4 +1,4 @@
-package ru.andrey.kvstorage;
+package ru.andrey.kvstorage.server;
 
 import org.apache.commons.lang3.StringUtils;
 import ru.andrey.kvstorage.resp.RespReader;
