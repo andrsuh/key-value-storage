@@ -16,9 +16,9 @@ public class SocketConnection implements KvsConnection {
     private final RespReader reader;
     private final RespWriter writer;
 
-    public SocketConnection() {
+    public SocketConnection(ConnectionConfig config) {
         try {
-            this.socket = new Socket("127.0.0.1", 4321);// todo sukhoa remove magic constant
+            this.socket = new Socket(config.getHost(), config.getPort());
             this.reader = new RespReader(new BufferedInputStream(this.socket.getInputStream()));
             this.writer = new RespWriter(new BufferedOutputStream(this.socket.getOutputStream()));
         } catch (IOException e) {
