@@ -47,7 +47,7 @@ public class RespReader {
     }
 
     public RespError readError() throws IOException {
-        return new RespError(readString());
+        return new RespError(readString().getBytes(StandardCharsets.UTF_8));
     }
 
     public RespBulkString readBulkString() throws IOException {

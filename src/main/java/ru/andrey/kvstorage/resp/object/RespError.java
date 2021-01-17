@@ -2,6 +2,7 @@ package ru.andrey.kvstorage.resp.object;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -13,7 +14,7 @@ public class RespError implements RespObject {
     public static final byte CODE = '-';
 
     @Getter
-    private final String message;
+    private final byte[] message;
 
     @Override
     public boolean isError() {
@@ -22,13 +23,15 @@ public class RespError implements RespObject {
 
     @Override
     public String asString() {
-        return message;
+        return new String(message, StandardCharsets.UTF_8);
     }
 
     @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
-        os.write(message.getBytes(StandardCharsets.UTF_8));
+        RespUtil.writeInt(os, message.length);
+        os.write(CRLF);
+        os.write(message);
         os.write(CRLF);
     }
 }
