@@ -74,7 +74,9 @@ public class CommandsTest {
     @Test
     public void test_readKey_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        when(database.read(TABLE_NAME, KEY_NAME)).thenReturn(VALUE);
+        Optional<String> result = database.read(TABLE_NAME, KEY_NAME);
+        when(result.isPresent()).thenReturn(true);
+        result.ifPresent(s -> when(s).thenReturn(VALUE));
 
         Command command = Command.builder()
                 .name(DatabaseCommands.READ_KEY.name())
@@ -83,8 +85,8 @@ public class CommandsTest {
                 .key(KEY_NAME)
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
-        assertEquals(SUCCESS, result.getStatus());
+        DatabaseCommandResult commandResult = server.executeNextCommand(command.toString());
+        assertEquals(SUCCESS, commandResult.getStatus());
     }
 
     @Test

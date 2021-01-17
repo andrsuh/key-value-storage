@@ -85,7 +85,7 @@ public class TableImpl implements Table {
     }
 
     @Override
-    public String read(String objectKey) throws DatabaseException {
+    public Optional<String> read(String objectKey) throws DatabaseException {
         try {
             Optional<Segment> segment = tableIndex.searchForKey(objectKey);
             if (segment.isEmpty()) {

@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class DatabaseImpl implements Database {
     private final String dbName;
@@ -83,7 +84,7 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
-    public String read(String tableName, String objectKey) throws DatabaseException {
+    public Optional<String> read(String tableName, String objectKey) throws DatabaseException {
         Table table = tables.get(tableName);
         if (table == null) {
             throw new DatabaseException("There is no such table: " + tableName);
