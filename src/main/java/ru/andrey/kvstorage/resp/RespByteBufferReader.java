@@ -1,10 +1,7 @@
 package ru.andrey.kvstorage.resp;
 
 import io.netty.buffer.ByteBuf;
-import ru.andrey.kvstorage.resp.object.RespArray;
-import ru.andrey.kvstorage.resp.object.RespBulkString;
-import ru.andrey.kvstorage.resp.object.RespCommandId;
-import ru.andrey.kvstorage.resp.object.RespObject;
+import ru.andrey.kvstorage.resp.object.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -62,8 +59,8 @@ public class RespByteBufferReader {
             switch (leadingByte) {
 //                case RespSimpleString.CODE:
 //                    return readSimpleString();
-//                case RespError.CODE:
-//                    return readError();
+                case RespError.CODE:
+                    return new RespErrorReader(buf);
                 case RespCommandId.CODE:
                     return new RespCommandIdReader(buf);
                 case RespBulkString.CODE:
@@ -153,6 +150,27 @@ public class RespByteBufferReader {
             final byte lf = in.readByte();
 
             return Optional.of(new RespCommandId(res));
+        }
+    }
+
+    static class RespErrorReader extends  RespStatefulReader {
+        public RespErrorReader(ByteBuf in) {
+            super(in, RespStatefulReader.readInt(in));
+        }
+
+        @Override
+        Optional<RespError> readNextPortion() {
+            if (!in.isReadable(size)) {
+                return Optional.empty();
+            }
+
+            final byte[] data = new byte[size];
+            in.readBytes(data, 0, size);
+
+            final byte cr = in.readByte();
+            final byte lf = in.readByte();
+
+            return Optional.of(new RespError(data));
         }
     }
 }
