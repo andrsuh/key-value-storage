@@ -54,7 +54,7 @@ public class DatabaseServer {
 
         DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
 
-        // databaseServer.executeNextCommand("UPDATE_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+        // databaseServer.executeNextCommand("SET_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
 
         while (true) {
             executor.submit(new ClientTask(databaseServer.serverSocket.accept(), databaseServer));

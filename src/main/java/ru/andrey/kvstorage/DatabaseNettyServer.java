@@ -63,7 +63,7 @@ public class DatabaseNettyServer {
 
          databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
          databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
-        databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+        databaseServer.executeNextCommand("0 SET_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
 
     }
 
