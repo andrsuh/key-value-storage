@@ -13,11 +13,11 @@ public class DatabaseCache { // todo sukhoa add interface
         }
     };
 
-    public String read(String key) {
+    public String get(String key) {
         return cache.get(key);
     }
 
-    public void upsert(String key, String value) {
+    public void set(String key, String value) {
         cache.put(key, value);
     }
 }

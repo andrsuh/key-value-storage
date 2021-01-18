@@ -6,21 +6,19 @@ import ru.andrey.kvstorage.resp.object.RespCommandId;
 
 import java.nio.charset.StandardCharsets;
 
-public class UpsertKvsCommand implements KvsCommand {
+public class GetKvsCommand implements KvsCommand {
 
-    private static final String COMMAND_NAME = "UPSERT_KEY";
+    private static final String COMMAND_NAME = "READ_KEY";
 
     private final String databaseName;
     private final String tableName;
     private final String key;
-    private final String value;
     private final RespCommandId commandId = new RespCommandId();
 
-    public UpsertKvsCommand(String databaseName, String tableName, String key, String value) {
+    public GetKvsCommand(String databaseName, String tableName, String key) {
         this.databaseName = databaseName;
         this.tableName = tableName;
         this.key = key;
-        this.value = value;
     }
 
     @Override
@@ -30,8 +28,7 @@ public class UpsertKvsCommand implements KvsCommand {
                 new RespBulkString(COMMAND_NAME.getBytes(StandardCharsets.UTF_8)),
                 new RespBulkString(databaseName.getBytes(StandardCharsets.UTF_8)),
                 new RespBulkString(tableName.getBytes(StandardCharsets.UTF_8)),
-                new RespBulkString(key.getBytes(StandardCharsets.UTF_8)),
-                new RespBulkString(value.getBytes(StandardCharsets.UTF_8))
+                new RespBulkString(key.getBytes(StandardCharsets.UTF_8))
         );
     }
 

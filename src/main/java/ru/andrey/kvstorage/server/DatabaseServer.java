@@ -10,7 +10,11 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.Initializer;
-import ru.andrey.kvstorage.server.initialization.impl.*;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.InitializationContextImpl;
+import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 import ru.andrey.kvstorage.server.resp.CommandReader;
 
 import java.io.BufferedInputStream;
@@ -50,7 +54,7 @@ public class DatabaseServer {
 
         DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
 
-        // databaseServer.executeNextCommand("UPSERT_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+        // databaseServer.executeNextCommand("UPDATE_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
 
         while (true) {
             executor.submit(new ClientTask(databaseServer.serverSocket.accept(), databaseServer));

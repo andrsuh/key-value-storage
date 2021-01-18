@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.jclient.connection;
 
-import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.resp.object.RespObject;
+import ru.andrey.kvstorage.server.DatabaseServer;
 
 public class DirectReferenceKvsConnection implements KvsConnection {
 

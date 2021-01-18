@@ -108,14 +108,14 @@ public class CommandsTest {
         assertEquals(message, result.getErrorMessage());
     }
 
-    // ================= upsert key tests =================
+    // ================= update key tests =================
 
     @Test
-    public void test_upsertKey_noSuchDb() {
+    public void test_updateKey_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPSERT_KEY.name())
+                .name(DatabaseCommands.UPDATE_KEY.name())
                 .dbName(DB_NAME)
                 .tableName("table")
                 .key(KEY_NAME)
@@ -127,13 +127,13 @@ public class CommandsTest {
     }
 
     @Test
-    public void test_upsertKey_exception() throws DatabaseException {
+    public void test_updateKey_exception() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
         var message = "Table already exists";
         doThrow(new DatabaseException(message)).when(database).write(TABLE_NAME, KEY_NAME, VALUE);
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPSERT_KEY.name())
+                .name(DatabaseCommands.UPDATE_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
@@ -146,12 +146,12 @@ public class CommandsTest {
     }
 
     @Test
-    public void test_upsertKey_success() throws DatabaseException {
+    public void test_updateKey_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
         doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE);
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPSERT_KEY.name())
+                .name(DatabaseCommands.UPDATE_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)

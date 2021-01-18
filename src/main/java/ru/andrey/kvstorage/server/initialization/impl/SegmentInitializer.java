@@ -8,9 +8,9 @@ import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
-import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
 import ru.andrey.kvstorage.server.logic.impl.DatabaseRow;
 import ru.andrey.kvstorage.server.logic.impl.SegmentImpl;
+import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;

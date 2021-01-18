@@ -5,7 +5,7 @@ import io.netty.buffer.Unpooled;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import ru.andrey.kvstorage.jclient.command.ReadKvsCommand;
+import ru.andrey.kvstorage.jclient.command.GetKvsCommand;
 
 import java.util.ArrayList;
 
@@ -18,7 +18,7 @@ public class RespCommandToByteEncoderTest {
 
     @Test
     public void testEncode() throws Exception {
-        ReadKvsCommand command = new ReadKvsCommand("db", "table", "key");
+        GetKvsCommand command = new GetKvsCommand("db", "table", "key");
 
         encoder.encode(null, command.serialize(), out);
 

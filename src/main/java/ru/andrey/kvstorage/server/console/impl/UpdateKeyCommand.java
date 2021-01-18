@@ -9,7 +9,7 @@ import ru.andrey.kvstorage.server.logic.Database;
 import java.util.List;
 import java.util.Optional;
 
-public class UpsertKeyCommand implements DatabaseCommand {
+public class UpdateKeyCommand implements DatabaseCommand {
 
     private final ExecutionEnvironment env;
     private final String databaseName;
@@ -17,7 +17,7 @@ public class UpsertKeyCommand implements DatabaseCommand {
     private final String key;
     private final String value;
 
-    public UpsertKeyCommand(ExecutionEnvironment env, List<String> args) {
+    public UpdateKeyCommand(ExecutionEnvironment env, List<String> args) {
         if (args.size() < 5) {
             throw new IllegalArgumentException("Not enough args");
         }
@@ -30,15 +30,12 @@ public class UpsertKeyCommand implements DatabaseCommand {
 
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
-        Optional<Database> database = env.getDatabase(databaseName);
-        if (database.isEmpty()) {
-            throw new DatabaseException("No such database: " + databaseName);
-        }
-        Optional<String> prevValue = database.get().read(tableName, key);
-        if (prevValue.isEmpty())
-            throw new IllegalStateException("Read nonexistent key");
+        Database database = env.getDatabase(databaseName)
+                .orElseThrow(() -> new DatabaseException("No such database: " + databaseName));
 
-        database.get().write(tableName, key, value);
-        return DatabaseCommandResult.success(value);
+        //TODO: add specification for null value
+        String prevValue = database.read(tableName, key).orElse("null");
+        database.write(tableName, key, value);
+        return DatabaseCommandResult.success(prevValue);
     }
 }

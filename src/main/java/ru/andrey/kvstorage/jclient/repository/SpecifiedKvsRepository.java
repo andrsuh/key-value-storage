@@ -18,17 +18,17 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
     Supplier<KvsClient> getClientFactory();
 
     @Override
-    default E read(String id) {
+    default E get(String id) {
         if (id == null) {
             throw new IllegalArgumentException("null id passed");
         }
 
         var client = getClientFactory().get();
-        return getMapper().mapToObject(client.read(getTableName(), id));
+        return getMapper().mapToObject(client.get(getTableName(), id));
     }
 
     @Override
-    default E upsert(String id, E entity) {
+    default E store(String id, E entity) {
         if (id == null) {
             throw new IllegalArgumentException("null id passed");
         }
@@ -37,7 +37,7 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
         }
 
         var client = getClientFactory().get();
-        String prevValue = client.upsert(getTableName(), id, getMapper().mapToString(entity));
+        String prevValue = client.set(getTableName(), id, getMapper().mapToString(entity));
 
         return prevValue == null ? null : getMapper().mapToObject(prevValue);
     }

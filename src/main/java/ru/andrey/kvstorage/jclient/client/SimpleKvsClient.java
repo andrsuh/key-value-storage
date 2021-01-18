@@ -1,8 +1,8 @@
 package ru.andrey.kvstorage.jclient.client;
 
-import ru.andrey.kvstorage.jclient.command.ReadKvsCommand;
+import ru.andrey.kvstorage.jclient.command.GetKvsCommand;
 import ru.andrey.kvstorage.jclient.command.KvsCommand;
-import ru.andrey.kvstorage.jclient.command.UpsertKvsCommand;
+import ru.andrey.kvstorage.jclient.command.SetKvsCommand;
 import ru.andrey.kvstorage.jclient.connection.KvsConnection;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
 import ru.andrey.kvstorage.resp.object.RespObject;
@@ -29,13 +29,13 @@ public class SimpleKvsClient implements KvsClient {
     }
 
     @Override
-    public String read(String tableName, String key) {
-        return executeCommand(new ReadKvsCommand(databaseName, tableName, key));
+    public String get(String tableName, String key) {
+        return executeCommand(new GetKvsCommand(databaseName, tableName, key));
     }
 
     @Override
-    public String upsert(String tableName, String key, String value) {
-        return executeCommand(new UpsertKvsCommand(databaseName, tableName, key, value));
+    public String set(String tableName, String key, String value) {
+        return executeCommand(new SetKvsCommand(databaseName, tableName, key, value));
     }
 
     private String executeCommand(KvsCommand command) {

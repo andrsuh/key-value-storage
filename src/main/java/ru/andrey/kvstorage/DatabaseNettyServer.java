@@ -1,7 +1,12 @@
 package ru.andrey.kvstorage;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -20,9 +25,12 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.Initializer;
-import ru.andrey.kvstorage.server.initialization.impl.*;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.InitializationContextImpl;
+import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -55,7 +63,7 @@ public class DatabaseNettyServer {
 
          databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
          databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
-        databaseServer.executeNextCommand("0 UPSERT_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+        databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
 
     }
 
