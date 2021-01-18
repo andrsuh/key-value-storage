@@ -15,22 +15,28 @@ import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 
-import java.io.IOException;
-import java.util.*;
+import java.net.ServerSocket;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static org.mockito.Mockito.mock;
 
 @RunWith(JUnit4.class)
 public class DatabaseServerTest {
     private Map<String, String> mapStorage = new ConcurrentHashMap<>();
 
     @Test
-    public void checkStorageCorrectness() throws IOException, DatabaseException {
+    public void checkStorageCorrectness() throws DatabaseException {
         Initializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer, mock(ServerSocket.class));
 
         String dbName = "test_" + new Random().nextInt(1_000_000);
         String tableName = "table";
@@ -76,6 +82,7 @@ public class DatabaseServerTest {
                             "0 GET_KEY " + dbName + " " + tableName + " " + key);
 
                     if (commandResult.isSuccess()) {
+                        //noinspection OptionalGetWithoutIsPresent
                         Assert.assertEquals("Key : " + key, mapStorage.get(key), commandResult.getResult().get());
                     }
                     break;

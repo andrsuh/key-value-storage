@@ -3,9 +3,11 @@ package ru.andrey.kvstorage;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import ru.andrey.kvstorage.server.DatabaseServer;
@@ -19,14 +21,17 @@ import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 import ru.andrey.kvstorage.server.logic.Database;
 
-import java.io.IOException;
+import java.net.ServerSocket;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.when;
 import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.FAILED;
 import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.SUCCESS;
 
@@ -47,22 +52,31 @@ public class CommandsTest {
     @Mock
     public ExecutionEnvironment env;
 
+    @Mock
+    public ServerSocket serverSocket;
 
-    @InjectMocks
-    public DatabaseServer server = new DatabaseServer(env,
-            new DatabaseServerInitializer(new DatabaseInitializer(new TableInitializer(new SegmentInitializer()))));
+    public DatabaseServer server;
 
-    public CommandsTest() throws IOException, DatabaseException {
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
+
+    @Before
+    public void setUp() throws DatabaseException {
+        when(env.getWorkingPath()).thenReturn(temporaryFolder.getRoot().toPath());
+
+        server = new DatabaseServer(env,
+                new DatabaseServerInitializer(new DatabaseInitializer(new TableInitializer(new SegmentInitializer()))),
+                serverSocket);
     }
 
-    // ================= update key tests =================
+    // ================= set key tests =================
 
     @Test
     public void test_readKey_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
-                .name(DatabaseCommands.READ_KEY.name())
+                .name(DatabaseCommands.GET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName("table")
                 .key("key")
@@ -75,12 +89,10 @@ public class CommandsTest {
     @Test
     public void test_readKey_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        Optional<String> result = database.read(TABLE_NAME, KEY_NAME);
-        when(result.isPresent()).thenReturn(true);
-        result.ifPresent(s -> when(s).thenReturn(VALUE));
+        when(database.read(TABLE_NAME, KEY_NAME)).thenReturn(Optional.of(VALUE));
 
         Command command = Command.builder()
-                .name(DatabaseCommands.READ_KEY.name())
+                .name(DatabaseCommands.GET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
@@ -97,7 +109,7 @@ public class CommandsTest {
         doThrow(new DatabaseException(message)).when(database).read(TABLE_NAME, KEY_NAME);
 
         Command command = Command.builder()
-                .name(DatabaseCommands.READ_KEY.name())
+                .name(DatabaseCommands.GET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
@@ -108,14 +120,14 @@ public class CommandsTest {
         assertEquals(message, result.getErrorMessage());
     }
 
-    // ================= update key tests =================
+    // ================= set key tests =================
 
     @Test
-    public void test_updateKey_noSuchDb() {
+    public void test_setKey_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPDATE_KEY.name())
+                .name(DatabaseCommands.SET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName("table")
                 .key(KEY_NAME)
@@ -127,31 +139,13 @@ public class CommandsTest {
     }
 
     @Test
-    public void test_updateKey_exception() throws DatabaseException {
+    public void test_setKey_noPrevValue_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        var message = "Table already exists";
-        doThrow(new DatabaseException(message)).when(database).write(TABLE_NAME, KEY_NAME, VALUE);
-
-        Command command = Command.builder()
-                .name(DatabaseCommands.UPDATE_KEY.name())
-                .dbName(DB_NAME)
-                .tableName(TABLE_NAME)
-                .key(KEY_NAME)
-                .value(VALUE)
-                .build();
-
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
-        assertEquals(FAILED, result.getStatus());
-        assertEquals(message, result.getErrorMessage());
-    }
-
-    @Test
-    public void test_updateKey_success() throws DatabaseException {
-        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        when(database.read(eq(TABLE_NAME), eq(KEY_NAME))).thenReturn(Optional.empty());
         doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE);
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPDATE_KEY.name())
+                .name(DatabaseCommands.SET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
@@ -160,6 +154,28 @@ public class CommandsTest {
 
         DatabaseCommandResult result = server.executeNextCommand(command.toString());
         assertEquals(SUCCESS, result.getStatus());
+        //noinspection OptionalGetWithoutIsPresent
+        assertEquals("null", result.getResult().get());
+    }
+
+    @Test
+    public void test_setKey_hasPrevValue_success() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        when(database.read(eq(TABLE_NAME), eq(KEY_NAME))).thenReturn(Optional.of("prev"));
+        doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE);
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.SET_KEY.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
+                .value(VALUE)
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        assertEquals(SUCCESS, result.getStatus());
+        //noinspection OptionalGetWithoutIsPresent
+        assertEquals("prev", result.getResult().get());
     }
 
     // ================= create table tests =================
@@ -234,7 +250,7 @@ public class CommandsTest {
 
         @Override
         public String toString() {
-            return Stream.of(name, dbName, tableName, key, value)
+            return Stream.of("0", name, dbName, tableName, key, value)
                     .filter(Objects::nonNull)
                     .collect(Collectors.joining(" "));
         }

@@ -36,8 +36,8 @@ public class DatabaseServer {
     private final ServerSocket serverSocket;
     private final ExecutionEnvironment env;
 
-    public DatabaseServer(ExecutionEnvironment env, Initializer initializer) throws IOException, DatabaseException {
-        this.serverSocket = new ServerSocket(4321);
+    public DatabaseServer(ExecutionEnvironment env, Initializer initializer, ServerSocket serverSocket) throws DatabaseException {
+        this.serverSocket = serverSocket;
         this.env = env;
 
         InitializationContextImpl initializationContext = InitializationContextImpl.builder()
@@ -52,7 +52,7 @@ public class DatabaseServer {
         Initializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer, new ServerSocket(4321));
 
         // databaseServer.executeNextCommand("SET_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
 
@@ -73,7 +73,7 @@ public class DatabaseServer {
             }
 
             List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-            return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs).execute();
+            return DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs).execute();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return DatabaseCommandResult.error(e);
