@@ -28,11 +28,9 @@ public class GetKeyCommand implements DatabaseCommand {
 
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
-        Optional<Database> database = env.getDatabase(databaseName);
-        if (database.isEmpty()) {
-            throw new DatabaseException("No such database: " + databaseName);
-        }
-        Optional<String> result = database.get().read(tableName, key);
+        Database database = env.getDatabase(databaseName)
+                .orElseThrow(() -> new DatabaseException("No such database: " + databaseName));
+        Optional<String> result = database.read(tableName, key);
         return result
                 .map(DatabaseCommandResult::success)
                 //TODO: add specification for null value
