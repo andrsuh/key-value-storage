@@ -3,6 +3,8 @@ package ru.andrey.kvstorage.server.logic.impl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Table;
 
+import java.util.Optional;
+
 public class CachingTable implements Table {
     private final Table table;
     private final DatabaseCache cache;
@@ -24,16 +26,17 @@ public class CachingTable implements Table {
     @Override
     public void write(String objectKey, String objectValue) throws DatabaseException {
         table.write(objectKey, objectValue);
-        cache.upsert(objectKey, objectValue);
+        cache.set(objectKey, objectValue);
     }
 
     @Override
-    public String read(String objectKey) throws DatabaseException {
-        String value = cache.read(objectKey);
+    public Optional<String> read(String objectKey) throws DatabaseException {
+        String value = cache.get(objectKey);
         if (value == null) {
-            value = table.read(objectKey);
-            cache.upsert(objectKey, value);
+            Optional<String> result = table.read(objectKey);
+            result.ifPresent(s -> cache.set(objectKey, s));
+            return result;
         }
-        return value;
+        return Optional.of(value);
     }
 }

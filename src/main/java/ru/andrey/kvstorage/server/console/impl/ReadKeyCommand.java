@@ -32,7 +32,10 @@ public class ReadKeyCommand implements DatabaseCommand {
         if (database.isEmpty()) {
             throw new DatabaseException("No such database: " + databaseName);
         }
-        String result = database.get().read(tableName, key);
-        return DatabaseCommandResult.success(result);
+        Optional<String> result = database.get().read(tableName, key);
+        return result
+                .map(DatabaseCommandResult::success)
+                //TODO: add specification for null value
+                .orElseGet(() -> DatabaseCommandResult.success("null"));
     }
 }
