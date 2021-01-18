@@ -4,6 +4,7 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
@@ -53,26 +54,26 @@ public class DatabaseServerTest {
         Collections.shuffle(allowedKeys);
 
         for (int i = 0; i < 300_000; i++) {
-            DatabaseCommands commandType = random.nextDouble() > 0.9 ? DatabaseCommands.UPDATE_KEY : DatabaseCommands.READ_KEY;
+            DatabaseCommands commandType = random.nextDouble() > 0.9 ? DatabaseCommands.SET_KEY : DatabaseCommands.GET_KEY;
 
             String key = allowedKeys.get(random.nextInt(allowedKeys.size()));
 
             switch (commandType) {
-                case UPDATE_KEY: {
+                case SET_KEY: {
 
                     String value = key + "_" + i;
                     databaseServer.executeNextCommand(
-                            "0 UPDATE_KEY " + dbName + " " + tableName + " " + key + " " + value);
+                            "0 SET_KEY " + dbName + " " + tableName + " " + key + " " + value);
                     mapStorage.put(key, value);
 
                     break;
                 }
-                case READ_KEY: {
+                case GET_KEY: {
                     if (!mapStorage.containsKey(key))
                         break;
 
                     DatabaseCommandResult commandResult = databaseServer.executeNextCommand(
-                            "0 READ_KEY " + dbName + " " + tableName + " " + key);
+                            "0 GET_KEY " + dbName + " " + tableName + " " + key);
 
                     if (commandResult.isSuccess()) {
                         Assert.assertEquals("Key : " + key, mapStorage.get(key), commandResult.getResult().get());

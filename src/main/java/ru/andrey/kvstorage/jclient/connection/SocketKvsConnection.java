@@ -10,13 +10,13 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
-public class SocketConnection implements KvsConnection {
+public class SocketKvsConnection implements KvsConnection {
 
     private final Socket socket;
     private final RespReader reader;
     private final RespWriter writer;
 
-    public SocketConnection(ConnectionConfig config) {
+    public SocketKvsConnection(ConnectionConfig config) {
         try {
             this.socket = new Socket(config.getHost(), config.getPort());
             this.reader = new RespReader(new BufferedInputStream(this.socket.getInputStream()));

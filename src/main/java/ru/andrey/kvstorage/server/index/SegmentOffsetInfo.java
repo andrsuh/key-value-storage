@@ -1,5 +1,5 @@
 package ru.andrey.kvstorage.server.index;
 
-public interface SegmentIndexInfo {
+public interface SegmentOffsetInfo {
     long getOffset();
 }

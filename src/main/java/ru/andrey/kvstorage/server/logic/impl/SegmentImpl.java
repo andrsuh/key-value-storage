@@ -1,11 +1,13 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.index.SegmentIndexInfo;
+import ru.andrey.kvstorage.server.index.SegmentOffsetInfo;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
-import ru.andrey.kvstorage.server.index.impl.SegmentIndexInfoImpl;
+import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
+import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
+import ru.andrey.kvstorage.server.logic.io.DatabaseOutputStream;
 
 import java.io.IOException;
 import java.nio.channels.Channels;
@@ -83,7 +85,7 @@ public class SegmentImpl implements Segment {
     @Override
     public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
 
-        DatabaseStoringUnit storingUnit = new DatabaseStoringUnit(objectKey, objectValue);
+        DatabaseRow storingUnit = new DatabaseRow(objectKey, objectValue);
 
         if (!canAllocate(storingUnit.size())) {
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
@@ -99,7 +101,7 @@ public class SegmentImpl implements Segment {
             var startPosition = byteChannel.position();
             out.write(storingUnit);
 
-            segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentIndexInfoImpl(startPosition));
+            segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(startPosition));
         }
         return true; // todo sukhoa fix
     }
@@ -110,7 +112,7 @@ public class SegmentImpl implements Segment {
 
     @Override
     public Optional<String> read(String objectKey) throws IOException {
-        Optional<SegmentIndexInfo> indexInfo = segmentIndex.searchForKey(objectKey);
+        Optional<SegmentOffsetInfo> indexInfo = segmentIndex.searchForKey(objectKey);
 
         if (indexInfo.isEmpty()) {
             return Optional.empty();
@@ -121,7 +123,7 @@ public class SegmentImpl implements Segment {
 
             byteChannel.position(indexInfo.get().getOffset());
 
-            DatabaseStoringUnit unit = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
+            DatabaseRow unit = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
 
             // todo sukhoa charset, handle separator
             return Optional.of(new String(unit.getValue()));
