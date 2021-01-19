@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import ru.andrey.kvstorage.resp.object.*;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -57,8 +58,8 @@ public class RespByteBufferReader {
             byte leadingByte = buf.readByte();
 
             switch (leadingByte) {
-//                case RespSimpleString.CODE:
-//                    return readSimpleString();
+                case RespSimpleString.CODE:
+                    return new RespSimpleStringReader(buf);
                 case RespError.CODE:
                     return new RespErrorReader(buf);
                 case RespCommandId.CODE:
@@ -171,6 +172,27 @@ public class RespByteBufferReader {
             final byte lf = in.readByte();
 
             return Optional.of(new RespError(data));
+        }
+    }
+
+    static class RespSimpleStringReader extends  RespStatefulReader {
+        public RespSimpleStringReader(ByteBuf in) {
+            super(in, RespStatefulReader.readInt(in));
+        }
+
+        @Override
+        Optional<RespSimpleString> readNextPortion() {
+            if (!in.isReadable(size)) {
+                return Optional.empty();
+            }
+
+            final byte[] data = new byte[size];
+            in.readBytes(data, 0, size);
+
+            final byte cr = in.readByte();
+            final byte lf = in.readByte();
+
+            return Optional.of(new RespSimpleString(new String(data, StandardCharsets.UTF_8)));
         }
     }
 }
