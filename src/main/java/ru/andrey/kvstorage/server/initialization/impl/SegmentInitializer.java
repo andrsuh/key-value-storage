@@ -39,18 +39,18 @@ public class SegmentInitializer implements Initializer {
                 new BufferedInputStream(Files.newInputStream(segmentContext.getSegmentPath())))) {
             var offset = 0;
 
-            Optional<DatabaseRow> storingUnit = in.readDbUnit();
-            while (storingUnit.isPresent()) {
-                DatabaseRow unit = storingUnit.get();
-                SegmentOffsetInfoImpl segmentIndexInfo = new SegmentOffsetInfoImpl(offset);
+            Optional<DatabaseRow> databaseRow = in.readDbUnit();
+            while (databaseRow.isPresent()) {
+                DatabaseRow unit = databaseRow.get();
+                SegmentOffsetInfoImpl segmentOffsetInfo = new SegmentOffsetInfoImpl(offset);
                 offset += unit.size();
 
                 String keyString = new String(unit.getKey());
                 keys.add(keyString);
-                index.onIndexedEntityUpdated(keyString, segmentIndexInfo);
+                index.onIndexedEntityUpdated(keyString, segmentOffsetInfo);
                 segmentSize = offset;
 
-                storingUnit = in.readDbUnit();
+                databaseRow = in.readDbUnit();
             }
         } catch (IOException e) {
             throw new DatabaseException("Cannot read segment: " + segmentContext.getSegmentPath(), e);

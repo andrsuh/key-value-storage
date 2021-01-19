@@ -11,12 +11,12 @@ public class DatabaseOutputStream extends DataOutputStream {
         super(outputStream);
     }
 
-    public int write(DatabaseRow storingUnit) throws IOException {
+    public int write(DatabaseRow databaseRow) throws IOException {
         int sizeBefore = size();
-        writeInt(storingUnit.getKeySize());
-        write(storingUnit.getKey());
-        writeInt(storingUnit.getValueSize());
-        write(storingUnit.getValue());
+        writeInt(databaseRow.getKeySize());
+        write(databaseRow.getKey());
+        writeInt(databaseRow.getValueSize());
+        write(databaseRow.getValue());
         return size() - sizeBefore;
     }
 }

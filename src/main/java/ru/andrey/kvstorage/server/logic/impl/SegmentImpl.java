@@ -85,21 +85,21 @@ public class SegmentImpl implements Segment {
     @Override
     public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
 
-        DatabaseRow storingUnit = new DatabaseRow(objectKey, objectValue);
+        DatabaseRow databaseRow = new DatabaseRow(objectKey, objectValue);
 
-        if (!canAllocate(storingUnit.size())) {
+        if (!canAllocate(databaseRow.size())) {
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
             readOnly = true;
             return false;
         }
 
-        currentSizeInBytes = currentSizeInBytes + storingUnit.size();
+        currentSizeInBytes = currentSizeInBytes + databaseRow.size();
 
         try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.APPEND);
              DatabaseOutputStream out = new DatabaseOutputStream(Channels.newOutputStream(byteChannel))) {
 
             var startPosition = byteChannel.position();
-            out.write(storingUnit);
+            out.write(databaseRow);
 
             segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(startPosition));
         }
