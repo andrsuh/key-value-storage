@@ -3,6 +3,7 @@ package ru.andrey.kvstorage.resp;
 import io.netty.buffer.ByteBuf;
 import ru.andrey.kvstorage.resp.object.*;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ public class RespByteBufferReader {
         return respObject;
     }
 
+    //fkats: this code linked with RespReader. Is it okay?
     static abstract class RespStatefulReader {
         protected int size;
         protected ByteBuf in;
@@ -48,7 +50,7 @@ public class RespByteBufferReader {
             this.in = in;
         }
 
-        abstract Optional<? extends RespObject> readNextPortion();
+        abstract Optional<? extends RespObject> readNextPortion() throws IOException;
 
         public static RespStatefulReader getNextReader(ByteBuf buf) {
             if (!buf.isReadable()) {
@@ -90,7 +92,7 @@ public class RespByteBufferReader {
         }
 
         @Override
-        Optional<RespArray> readNextPortion() {
+        Optional<RespArray> readNextPortion() throws IOException {
             while (parsed.size() < size && in.isReadable()) {
                 if (nextElementReader == null) {
                     nextElementReader = RespStatefulReader.getNextReader(in);
@@ -156,22 +158,17 @@ public class RespByteBufferReader {
 
     static class RespErrorReader extends  RespStatefulReader {
         public RespErrorReader(ByteBuf in) {
-            super(in, RespStatefulReader.readInt(in));
+            super(in);
         }
 
         @Override
-        Optional<RespError> readNextPortion() {
+        Optional<RespError> readNextPortion() throws IOException {
             if (!in.isReadable(size)) {
                 return Optional.empty();
             }
 
-            final byte[] data = new byte[size];
-            in.readBytes(data, 0, size);
-
-            final byte cr = in.readByte();
-            final byte lf = in.readByte();
-
-            return Optional.of(new RespError(data));
+            String result = readString(in);
+            return Optional.of(new RespError(result.getBytes(StandardCharsets.UTF_8)));
         }
     }
 
@@ -181,18 +178,49 @@ public class RespByteBufferReader {
         }
 
         @Override
-        Optional<RespSimpleString> readNextPortion() {
+        Optional<RespSimpleString> readNextPortion() throws IOException {
             if (!in.isReadable(size)) {
                 return Optional.empty();
             }
 
-            final byte[] data = new byte[size];
-            in.readBytes(data, 0, size);
-
-            final byte cr = in.readByte();
-            final byte lf = in.readByte();
-
-            return Optional.of(new RespSimpleString(new String(data, StandardCharsets.UTF_8)));
+            String result = readString(in);
+            return Optional.of(new RespSimpleString(result));
         }
+    }
+
+    private static String readString(ByteBuf is) throws IOException {
+        byte[] buf = new byte[128];
+        int room = buf.length;
+        int count = 0;
+        byte b = is.readByte();
+
+        while (true) {
+            if (b == -1) {
+                throw new EOFException("Unexpected end of stream");
+            }
+
+            if (b == CR) {
+                final int b1 = is.readByte();
+                if (b1 == -1) {
+                    throw new EOFException("Unexpected end of stream");
+                }
+                if (b1 != LF) {
+                    throw new EOFException(String.format("Unexpected character after CR: %1$x", b1));
+                }
+                break;
+            }
+
+            if (--room < 0) {
+                final byte[] prevBuf = buf;
+                buf = new byte[count + 128];
+                room = buf.length - count - 1;
+                System.arraycopy(prevBuf, 0, buf, 0, count);
+            }
+
+            buf[count++] = b;
+            b = is.readByte();
+        }
+
+        return new String(buf, 0, count, StandardCharsets.UTF_8);
     }
 }
