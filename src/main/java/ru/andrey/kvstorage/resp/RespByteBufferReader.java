@@ -1,14 +1,14 @@
 package ru.andrey.kvstorage.resp;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import ru.andrey.kvstorage.resp.object.*;
 
-import java.io.EOFException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class RespByteBufferReader {
 
@@ -61,9 +61,9 @@ public class RespByteBufferReader {
 
             switch (leadingByte) {
                 case RespSimpleString.CODE:
-                    return new RespSimpleStringReader(buf);
+                    return new RespSimpleStringReader(buf, RespSimpleString::new);
                 case RespError.CODE:
-                    return new RespErrorReader(buf);
+                    return new RespSimpleStringReader(buf, RespError::new);
                 case RespCommandId.CODE:
                     return new RespCommandIdReader(buf);
                 case RespBulkString.CODE:
@@ -156,71 +156,56 @@ public class RespByteBufferReader {
         }
     }
 
-    static class RespErrorReader extends  RespStatefulReader {
-        public RespErrorReader(ByteBuf in) {
+//    static class RespErrorReader extends RespStatefulReader {
+//        public RespErrorReader(ByteBuf in) {
+//            super(in);
+//        }
+//
+//        @Override
+//        Optional<RespError> readNextPortion() throws IOException {
+//            if (!in.isReadable(size)) {
+//                return Optional.empty();
+//            }
+//
+//            String result = readString(in);
+//            return Optional.of(new RespError(result.getBytes(StandardCharsets.UTF_8)));
+//        }
+//    }
+
+    static class RespSimpleStringReader extends RespStatefulReader {
+        private final ByteBuf readSoFar = Unpooled.buffer(128);
+        private final Function<byte[], RespObject> desiredTypeConstructor;
+
+        public RespSimpleStringReader(ByteBuf in, Function<byte[], RespObject> desiredTypeConstructor) {
             super(in);
+            this.desiredTypeConstructor = desiredTypeConstructor;
         }
 
         @Override
-        Optional<RespError> readNextPortion() throws IOException {
-            if (!in.isReadable(size)) {
-                return Optional.empty();
-            }
+        Optional<RespObject> readNextPortion() {
+            boolean aboutTheEnd = false;
+            while (in.isReadable()) {
+                byte readByte = in.readByte();
 
-            String result = readString(in);
-            return Optional.of(new RespError(result.getBytes(StandardCharsets.UTF_8)));
-        }
-    }
+                if (aboutTheEnd) { // if "/r" byte was previously read
+                    if (readByte == LF) { // and the current one is the "\n"
+                        byte[] result = new byte[readSoFar.readableBytes()];
+                        readSoFar.readBytes(result);
 
-    static class RespSimpleStringReader extends  RespStatefulReader {
-        public RespSimpleStringReader(ByteBuf in) {
-            super(in, RespStatefulReader.readInt(in));
-        }
-
-        @Override
-        Optional<RespSimpleString> readNextPortion() throws IOException {
-            if (!in.isReadable(size)) {
-                return Optional.empty();
-            }
-
-            String result = readString(in);
-            return Optional.of(new RespSimpleString(result));
-        }
-    }
-
-    private static String readString(ByteBuf is) throws IOException {
-        byte[] buf = new byte[128];
-        int room = buf.length;
-        int count = 0;
-        byte b = is.readByte();
-
-        while (true) {
-            if (b == -1) {
-                throw new EOFException("Unexpected end of stream");
-            }
-
-            if (b == CR) {
-                final int b1 = is.readByte();
-                if (b1 == -1) {
-                    throw new EOFException("Unexpected end of stream");
+                        return Optional.of(desiredTypeConstructor.apply(result));
+                    } else { // if it's not the end
+                        aboutTheEnd = false; // cancel the flag
+                        readSoFar.writeByte(CR); // and add previously read "\r" that was skipped before
+                    }
                 }
-                if (b1 != LF) {
-                    throw new EOFException(String.format("Unexpected character after CR: %1$x", b1));
+
+                if (readByte == CR) {
+                    aboutTheEnd = true; // it might be the beginning of the end
+                } else {
+                    readSoFar.writeByte(readByte); // or just usual byte
                 }
-                break;
             }
-
-            if (--room < 0) {
-                final byte[] prevBuf = buf;
-                buf = new byte[count + 128];
-                room = buf.length - count - 1;
-                System.arraycopy(prevBuf, 0, buf, 0, count);
-            }
-
-            buf[count++] = b;
-            b = is.readByte();
+            return Optional.empty();
         }
-
-        return new String(buf, 0, count, StandardCharsets.UTF_8);
     }
 }

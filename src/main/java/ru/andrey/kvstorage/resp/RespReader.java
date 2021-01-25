@@ -47,7 +47,7 @@ public class RespReader {
     }
 
     public RespError readError() throws IOException {
-        return new RespError(readString().getBytes(StandardCharsets.UTF_8));
+        return new RespError(readString());
     }
 
     public RespBulkString readBulkString() throws IOException {
@@ -98,7 +98,7 @@ public class RespReader {
         return new RespArray(objects);
     }
 
-    private String readString() throws IOException {
+    private byte[] readString() throws IOException {
         byte[] buf = new byte[128];
         int room = buf.length;
         int count = 0;
@@ -131,7 +131,7 @@ public class RespReader {
             b = is.read();
         }
 
-        return new String(buf, 0, count, StandardCharsets.UTF_8);
+        return buf;
     }
 
     private int readInt() throws IOException {

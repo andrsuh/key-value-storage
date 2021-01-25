@@ -22,7 +22,6 @@ import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.impl.*;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,8 +52,8 @@ public class DatabaseNettyServer {
 
         databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
 
-         databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
-         databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
+        databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
+        databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
         databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
 
     }

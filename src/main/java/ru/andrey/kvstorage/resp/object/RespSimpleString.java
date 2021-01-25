@@ -13,7 +13,7 @@ public class RespSimpleString implements RespObject {
     public static final byte CODE = '+';
 
     @Getter
-    private final String string;
+    private final byte[] message;
 
     @Override
     public boolean isError() {
@@ -22,13 +22,13 @@ public class RespSimpleString implements RespObject {
 
     @Override
     public String asString() {
-        return string;
+        return new String(message, StandardCharsets.UTF_8);
     }
 
     @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
-        os.write(string.getBytes(StandardCharsets.UTF_8));
+        os.write(message);
         os.write(CRLF);
     }
 }
