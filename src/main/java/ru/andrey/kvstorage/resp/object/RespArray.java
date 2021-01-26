@@ -2,6 +2,7 @@ package ru.andrey.kvstorage.resp.object;
 
 import lombok.Getter;
 import lombok.NonNull;
+import ru.andrey.kvstorage.resp.CommandByte;
 import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
@@ -11,8 +12,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class RespArray implements RespObject {
-
-    public static final byte CODE = '*';
 
     private static final String AS_STRING_SEPARATOR = " ";
 
@@ -42,7 +41,7 @@ public class RespArray implements RespObject {
 
     @Override
     public void write(OutputStream os) throws IOException {
-        os.write(CODE);
+        os.write(CommandByte.ARRAY_IDENTIFIER.getSymbolByte());
         RespUtil.writeInt(os, objects.size());
         os.write(CRLF);
 

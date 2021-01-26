@@ -62,7 +62,7 @@ public class CommandsTest {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
-                .name(DatabaseCommands.READ_KEY.name())
+                .name(DatabaseCommands.GET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName("table")
                 .key("key")
@@ -80,7 +80,7 @@ public class CommandsTest {
         result.ifPresent(s -> when(s).thenReturn(VALUE));
 
         Command command = Command.builder()
-                .name(DatabaseCommands.READ_KEY.name())
+                .name(DatabaseCommands.GET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
@@ -97,7 +97,7 @@ public class CommandsTest {
         doThrow(new DatabaseException(message)).when(database).read(TABLE_NAME, KEY_NAME);
 
         Command command = Command.builder()
-                .name(DatabaseCommands.READ_KEY.name())
+                .name(DatabaseCommands.GET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
@@ -115,7 +115,7 @@ public class CommandsTest {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPDATE_KEY.name())
+                .name(DatabaseCommands.SET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName("table")
                 .key(KEY_NAME)
@@ -133,7 +133,7 @@ public class CommandsTest {
         doThrow(new DatabaseException(message)).when(database).write(TABLE_NAME, KEY_NAME, VALUE);
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPDATE_KEY.name())
+                .name(DatabaseCommands.SET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
@@ -151,7 +151,7 @@ public class CommandsTest {
         doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE);
 
         Command command = Command.builder()
-                .name(DatabaseCommands.UPDATE_KEY.name())
+                .name(DatabaseCommands.SET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)

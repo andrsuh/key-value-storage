@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
@@ -21,6 +22,7 @@ import java.util.Optional;
  * - представляет из себя директорию в файловой системе, именованную как таблица
  * и хранящую файлы-сегменты данной таблицы
  */
+@Slf4j
 public class TableImpl implements Table {
     private final String tableName;
     private final Path tablePath;
@@ -45,9 +47,9 @@ public class TableImpl implements Table {
     }
 
     static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
-        TableImpl tb = new TableImpl(tableName, pathToDatabaseRoot, tableIndex);
-        tb.initializeAsNew();
-        return new CachingTable(tb);
+        TableImpl table = new TableImpl(tableName, pathToDatabaseRoot, tableIndex);
+        table.initializeAsNew();
+        return new CachingTable(table);
     }
 
     public static Table initializeFromContext(TableInitializationContext context) {
@@ -56,13 +58,16 @@ public class TableImpl implements Table {
 
     private void initializeAsNew() throws DatabaseException {
         if (Files.exists(tablePath)) { // todo sukhoa race condition
+            log.error("Table with name {} already exists", tableName);
             throw new DatabaseException("Table with such name already exists: " + tableName);
         }
 
         try {
+            log.info("Creating table {}", tablePath);
             Files.createDirectory(tablePath);
             currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
         } catch (IOException e) {
+            log.error("Can't create table with path {}", tablePath, e);
             throw new DatabaseException("Cannot create table directory for path: " + tablePath, e);
         }
     }

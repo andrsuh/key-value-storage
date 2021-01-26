@@ -13,6 +13,7 @@ import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ru.andrey.kvstorage.resp.ByteToRespCommandDecoder;
 import ru.andrey.kvstorage.resp.RespCommandToByteEncoder;
@@ -35,6 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class DatabaseNettyServer {
 
     private static DatabaseNettyServer databaseServer;
@@ -61,8 +63,8 @@ public class DatabaseNettyServer {
 
         databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
 
-         databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
-         databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
+        databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
+        databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
         databaseServer.executeNextCommand("0 SET_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
 
     }
@@ -114,7 +116,7 @@ public class DatabaseNettyServer {
             // Bind and start to accept incoming connections.
             ChannelFuture f = b.bind("127.0.0.1", 8080).sync();
 
-            System.out.println("Трррр Сервер стартанулллллллл");
+            log.info("Server successful started");
 
             f.channel().closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
                 @Override

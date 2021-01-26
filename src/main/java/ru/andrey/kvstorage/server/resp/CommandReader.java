@@ -1,6 +1,7 @@
 package ru.andrey.kvstorage.server.resp;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @AllArgsConstructor
+@Slf4j
 public class CommandReader {
 
     private final RespReader reader;
@@ -25,6 +27,7 @@ public class CommandReader {
     public DatabaseCommand readCommand() throws IOException {
         final List<RespObject> objects = reader.readArray().getObjects();
         if (objects.isEmpty()) {
+            log.error("Command name is not specified");
             throw new IllegalArgumentException("Command name is not specified");
         }
 

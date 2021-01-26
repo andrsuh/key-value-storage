@@ -3,6 +3,7 @@ package ru.andrey.kvstorage.resp.object;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 import ru.andrey.kvstorage.jclient.command.KvsCommand;
+import ru.andrey.kvstorage.resp.CommandByte;
 import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
@@ -11,9 +12,6 @@ import java.io.OutputStream;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RespCommandId implements RespObject {
-
-    public static final byte CODE = '!';
-
     public int commandId = KvsCommand.idGen.getAndIncrement();
 
     @Override
@@ -28,7 +26,7 @@ public class RespCommandId implements RespObject {
 
     @Override
     public void write(OutputStream os) throws IOException {
-        os.write(CODE);
+        os.write(CommandByte.COMMAND_ID.getSymbolByte());
         RespUtil.writeInt(os, commandId);
         os.write(CRLF);
     }

@@ -12,12 +12,6 @@ import java.util.List;
 import java.util.Optional;
 
 public class RespByteBufferReader {
-
-    private static final byte CR = '\r';
-    private static final byte LF = '\n';
-    private static final byte MINUS = '-';
-    private static final byte ZERO = '0';
-
     private final ByteBuf buf;
 
     private RespStatefulReader nextReader;
@@ -59,16 +53,16 @@ public class RespByteBufferReader {
 
             byte leadingByte = buf.readByte();
 
-            switch (leadingByte) {
+            switch (CommandByte.getFromValue(leadingByte)) {
 //                case RespSimpleString.CODE:
 //                    return readSimpleString();
 //                case RespError.CODE:
 //                    return readError();
-                case RespCommandId.CODE:
+                case COMMAND_ID:
                     return new RespCommandIdReader(buf);
-                case RespBulkString.CODE:
+                case BULK_STRING_IDENTIFIER:
                     return new RespStringReader(buf);
-                case RespArray.CODE:
+                case ARRAY_IDENTIFIER:
                     return new RespArrayReader(buf);
                 default:
                     throw new IllegalArgumentException("Unknown type character in stream:");

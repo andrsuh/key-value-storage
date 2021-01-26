@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.app;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.app.domain.Post;
 import ru.andrey.kvstorage.app.domain.PostMapper;
 import ru.andrey.kvstorage.app.repo.PostRepositoryImpl;
@@ -9,9 +10,11 @@ import ru.andrey.kvstorage.jclient.connection.ConnectionConfig;
 import ru.andrey.kvstorage.jclient.connection.ConnectionPool;
 import ru.andrey.kvstorage.jclient.repository.KvsRepository;
 
+@Slf4j
 public class Main {
     public static void main(String[] args) throws InterruptedException {
         ConnectionPool connectionPool = new ConnectionPool(new ConnectionConfig());
+        log.info("New session pool created");
 
         KvsClient client = new SimpleKvsClient(
                 "test_3",

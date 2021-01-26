@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
@@ -29,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class DatabaseServer {
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -51,11 +53,10 @@ public class DatabaseServer {
 
         Initializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
-
+        log.debug("Initializer created");
         DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
-
+        log.debug("Database server created");
         // databaseServer.executeNextCommand("SET_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
-
         while (true) {
             executor.submit(new ClientTask(databaseServer.serverSocket.accept(), databaseServer));
         }
@@ -64,18 +65,20 @@ public class DatabaseServer {
     public DatabaseCommandResult executeNextCommand(String commandText) {
         try {
             if (StringUtils.isEmpty(commandText)) {
+                log.error("Command name is not specified");
                 return DatabaseCommandResult.error("Command name is not specified");
             }
 
             final String[] args = commandText.split(" ");
             if (args.length < 1) {
+                log.error("Command name is not specified");
                 return DatabaseCommandResult.error("Command name is not specified");
             }
 
             List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
             return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs).execute();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Error while executing", e);
             return DatabaseCommandResult.error(e);
         }
     }
@@ -84,7 +87,7 @@ public class DatabaseServer {
         try {
             return command.execute();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error("Error executing next command", e);
             return DatabaseCommandResult.error(e);
         }
     }
@@ -113,7 +116,7 @@ public class DatabaseServer {
                     writer.write(server.executeNextCommand(reader.readCommand()).serialize());
                 }
             } catch (IOException e) {
-                System.out.println("Client socket threw IO Exception " + e.getMessage());
+                log.error("Client socket threw IO Exception {}", e.getMessage());
             } finally {
                 close();
             }

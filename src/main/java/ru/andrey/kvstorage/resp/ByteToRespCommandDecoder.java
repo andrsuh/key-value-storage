@@ -4,32 +4,32 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
+@Slf4j
 public class ByteToRespCommandDecoder extends ByteToMessageDecoder {
-    private static final byte CR = '\r';
-    private static final byte LF = '\n';
 
-    private final ByteBuf buf = Unpooled.buffer();
-    private final RespByteBufferReader reader = new RespByteBufferReader(buf);
+    private final ByteBuf byteBuffer = Unpooled.buffer();
+    private final RespByteBufferReader reader = new RespByteBufferReader(byteBuffer);
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        System.out.println("SERVER GOT: " + in.readableBytes());
+        log.info("Server got {}", in.readableBytes());
 
         boolean aboutTheMessage = false;
         while (in.isReadable() || out.isEmpty()) {
-            byte b = in.readByte();
-            buf.writeByte(b);
+            byte readByte = in.readByte();
+            byteBuffer.writeByte(readByte);
 
-            if (b == CR) {
+            if (readByte == CommandByte.CR.getSymbolByte()) {
                 aboutTheMessage = true;
                 continue;
             }
 
             if (aboutTheMessage) {
-                if (b == LF) {
+                if (readByte == CommandByte.LF.getSymbolByte()) {
                     reader.readObject().ifPresent(out::add);
                 }
                 aboutTheMessage = false;

@@ -1,6 +1,7 @@
 package ru.andrey.kvstorage.resp;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespBulkString;
 import ru.andrey.kvstorage.resp.object.RespError;
@@ -13,33 +14,31 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 @AllArgsConstructor
+@Slf4j
 public class RespReader {
-
-    private static final byte CR = '\r';
-    private static final byte LF = '\n';
-    private static final byte MINUS = '-';
     private static final byte ZERO = '0';
 
     private final InputStream is;
 
     public boolean hasArray() throws IOException {
-        return is.read() == RespArray.CODE;
+        return is.read() == CommandByte.ARRAY_IDENTIFIER.getSymbolByte();
     }
 
     public RespObject readObject() throws IOException {
         final int code = is.read();
         if (code == -1) {
-            throw new EOFException("Unexpected end of stream");
+            log.error("Unexpected end of the stream");
+            throw new EOFException("Unexpected end of the stream");
         }
 
-        switch (code) {
-            case RespSimpleString.CODE:
+        switch (CommandByte.getFromValue((byte) code)) {
+            case SIMPLE_STRING_IDENTIFIER:
                 return readSimpleString();
-            case RespError.CODE:
+            case MINUS:
                 return readError();
-            case RespBulkString.CODE:
+            case BULK_STRING_IDENTIFIER:
                 return readBulkString();
-            case RespArray.CODE:
+            case ARRAY_IDENTIFIER:
                 return readArray();
             default:
                 throw new IOException(String.format("Unknown type character in stream: %1$x", code));
@@ -61,6 +60,7 @@ public class RespReader {
             return new RespBulkString(null);
         }
         if (size < 0) {
+            log.error("Invalid bulk string size: {}", size);
             throw new IOException(String.format("Invalid bulk string size: %1$d", size));
         }
 
@@ -68,9 +68,11 @@ public class RespReader {
         final int read = is.read(data, 0, size);
 
         if (read == -1) {
-            throw new EOFException("Unexpected end of stream");
+            log.error("Unexpected end of the stream");
+            throw new EOFException("Unexpected end of the stream");
         }
         if (read != size) {
+            log.error("Failed to read enough chars. Read: {}, Expected: {}", read, size);
             throw new IOException(String.format("Failed to read enough chars. Read: %1$d, Expected: %2$d", read, size));
         }
 
@@ -78,9 +80,11 @@ public class RespReader {
         final int lf = is.read();
 
         if (cr == -1 || lf == -1) {
-            throw new EOFException("Unexpected end of stream");
+            log.error("Unexpected end of the stream");
+            throw new EOFException("Unexpected end of the stream");
         }
-        if (cr != CR || lf != LF) {
+        if (cr != CommandByte.CR.getSymbolByte() || lf != CommandByte.LF.getSymbolByte()) {
+            log.error("Unexpected line ending of bulk string: {}, {}", cr, lf);
             throw new IOException(String.format("Unexpected line ending of bulk string: %1$x, %2$x", cr, lf));
         }
 
@@ -91,6 +95,7 @@ public class RespReader {
         final int size = readInt();
 
         if (size < 0) {
+            log.error("Invalid array size: {}", size);
             throw new IOException(String.format("Invalid array size: %1$d", size));
         }
 
@@ -110,15 +115,18 @@ public class RespReader {
 
         while (true) {
             if (b == -1) {
-                throw new EOFException("Unexpected end of stream");
+                log.error("Unexpected end of the stream");
+                throw new EOFException("Unexpected end of the stream");
             }
 
-            if (b == CR) {
+            if (b == CommandByte.CR.getSymbolByte()) {
                 final int b1 = is.read();
                 if (b1 == -1) {
-                    throw new EOFException("Unexpected end of stream");
+                    log.error("Unexpected end of the stream");
+                    throw new EOFException("Unexpected end of the stream");
                 }
-                if (b1 != LF) {
+                if (b1 != CommandByte.LF.getSymbolByte()) {
+                    log.error("Unexpected character after CR: {}", b1);
                     throw new EOFException(String.format("Unexpected character after CR: %1$x", b1));
                 }
                 break;
@@ -142,7 +150,7 @@ public class RespReader {
         final int sign;
 
         int b = is.read();
-        if (b == MINUS) {
+        if (b == CommandByte.MINUS.getSymbolByte()) {
             b = is.read();
             sign = -1;
         } else {
@@ -152,18 +160,21 @@ public class RespReader {
         int number = 0;
         while (true) {
             if (b == -1) {
-                throw new EOFException("Unexpected end of stream");
+                log.error("Unexpected end of the stream");
+                throw new EOFException("Unexpected end of the stream");
             }
 
-            if (b == CR) {
-                if (is.read() == LF) {
+            if (b == CommandByte.CR.getSymbolByte()) {
+                if (is.read() == CommandByte.LF.getSymbolByte()) {
                     return sign * number;
                 }
+                log.error("Invalid character in integer");
                 throw new IOException("Invalid character in integer");
             }
 
             final int digit = b - ZERO;
             if (digit < 0 || 10 <= digit) {
+                log.error("Invalid character in integer");
                 throw new IOException("Invalid character in integer");
             }
 

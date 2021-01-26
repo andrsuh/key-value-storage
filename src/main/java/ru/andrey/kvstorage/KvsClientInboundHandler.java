@@ -2,16 +2,18 @@ package ru.andrey.kvstorage;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.jclient.client.SimpleKvsClient;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespCommandId;
 
+@Slf4j
 public class KvsClientInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         RespArray message = (RespArray) msg;
-        System.out.println("CLIENT GOT: " + message.asString());
+        log.info("Client got {}", message.asString());
         RespCommandId respId = (RespCommandId) message.getObjects().get(0);
 
         SimpleKvsClient.responses.put(respId.commandId, message.getObjects().get(1));
@@ -22,9 +24,9 @@ public class KvsClientInboundHandler extends ChannelInboundHandlerAdapter {
                 monitor.notify();
             }
         } else {
-            System.out.println("емае дупликаты");
+            log.warn("Duplicates ёмаё");
         }
 
-        System.out.println("Получили ответик на : " + respId.commandId);
+        log.info("Got answer on {}", respId.commandId);
     }
 }

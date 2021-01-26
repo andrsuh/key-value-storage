@@ -12,6 +12,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.KvsClientInboundHandler;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
 import ru.andrey.kvstorage.resp.ByteToRespCommandDecoder;
@@ -23,6 +24,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+@Slf4j
 public class ConnectionPool {
 
     private final List<NettyKvsConnection> connections;
@@ -48,7 +50,7 @@ public class ConnectionPool {
 
         private final EventLoopGroup workerGroup = new NioEventLoopGroup();
 
-        private final Bootstrap bs = new Bootstrap()
+        private final Bootstrap bootstrap = new Bootstrap()
                 .group(workerGroup)
                 .channel(NioSocketChannel.class)
                 .option(ChannelOption.SO_KEEPALIVE, true)
@@ -69,13 +71,15 @@ public class ConnectionPool {
 
         private NettyKvsConnection initiateSession() {
 //            try {
-            ChannelFuture f = null;
+            log.info("Creating connection pool");
+            ChannelFuture channelFuture;
             try {
-                f = bs.connect(config.getHost(), config.getPort()).sync();
+                channelFuture = bootstrap.connect(config.getHost(), config.getPort()).sync();
             } catch (InterruptedException e) {
+                log.error("Exception while creating connection", e);
                 throw new IllegalArgumentException("Exception while creating connection");
             }
-            return new NettyKvsConnection(f.channel());
+            return new NettyKvsConnection(channelFuture.channel());
 //            } finally {
 //                workerGroup.shutdownGracefully();
 //            }
@@ -89,8 +93,8 @@ public class ConnectionPool {
             this.channel = channel;
             channel.closeFuture().addListener(new GenericFutureListener() {
                 @Override
-                public void operationComplete(Future future) throws Exception {
-                    System.out.println("SESSION CLOSED");
+                public void operationComplete(Future future) {
+                    log.info("Session closed");
                 }
             });
         }
@@ -106,7 +110,7 @@ public class ConnectionPool {
             channel.close().addListener(new GenericFutureListener<Future<? super Void>>() {
                 @Override
                 public void operationComplete(Future<? super Void> future) throws Exception {
-                    System.out.println("REALLY SESSION CLOSED BY CLIENT");
+                    log.info("Session closed by client");
                 }
             });
         }

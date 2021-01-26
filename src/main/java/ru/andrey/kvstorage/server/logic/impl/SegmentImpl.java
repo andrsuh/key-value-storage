@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.SegmentOffsetInfo;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
@@ -24,6 +25,7 @@ import java.util.Optional;
  * - именование файла-сегмента должно позволять установить очередность их появления
  * - является неизменяемым после появления более нового сегмента
  */
+@Slf4j
 public class SegmentImpl implements Segment {
     private static final long MAX_SEGMENT_SIZE = 100_000L; // todo sukhoa use properties
 
@@ -57,12 +59,15 @@ public class SegmentImpl implements Segment {
 
     private void initializeAsNew() throws DatabaseException {
         if (Files.exists(segmentPath)) { // todo sukhoa race condition
+            log.error("Segment with name {} already exist", segmentName);
             throw new DatabaseException("Segment with such name already exists: " + segmentName);
         }
 
         try {
+            log.info("Creating segment file {}", segmentPath);
             Files.createFile(segmentPath);
         } catch (IOException e) {
+            log.error("Can't create the segment file with path {}", segmentPath, e);
             throw new DatabaseException("Cannot create segment file for path: " + segmentPath, e);
         }
     }
@@ -74,7 +79,10 @@ public class SegmentImpl implements Segment {
         //        } catch (InterruptedException e) {
         //            e.printStackTrace();
         //        }
-        return tableName + "_" + System.currentTimeMillis();
+
+        String segmentName = tableName + "_" + System.currentTimeMillis();
+        log.debug("Current segment name {}", segmentName);
+        return segmentName;
     }
 
     @Override
@@ -88,7 +96,7 @@ public class SegmentImpl implements Segment {
         DatabaseRow storingUnit = new DatabaseRow(objectKey, objectValue);
 
         if (!canAllocate(storingUnit.size())) {
-            System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
+            log.info("Segment {} is full. Current size {}", segmentName, currentSizeInBytes);
             readOnly = true;
             return false;
         }
