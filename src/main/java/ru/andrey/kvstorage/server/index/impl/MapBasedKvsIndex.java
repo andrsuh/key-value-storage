@@ -1,10 +1,12 @@
-package ru.andrey.kvstorage.server.index;
+package ru.andrey.kvstorage.server.index.impl;
+
+import ru.andrey.kvstorage.server.index.KvsIndex;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class AbstractDatabaseIndex<K, V> implements DatabaseIndex<K, V> {
+public class MapBasedKvsIndex<K, V> implements KvsIndex<K, V> {
     private final Map<K, V> index = new HashMap<>(200);
 
     @Override

@@ -2,8 +2,8 @@ package ru.andrey.kvstorage.server.console;
 
 import ru.andrey.kvstorage.server.console.impl.CreateDatabaseCommand;
 import ru.andrey.kvstorage.server.console.impl.CreateTableCommand;
-import ru.andrey.kvstorage.server.console.impl.ReadKeyCommand;
-import ru.andrey.kvstorage.server.console.impl.UpdateKeyCommand;
+import ru.andrey.kvstorage.server.console.impl.GetKeyCommand;
+import ru.andrey.kvstorage.server.console.impl.SetKeyCommand;
 import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
 
 import java.util.List;
@@ -22,16 +22,16 @@ public enum DatabaseCommands {
             return new CreateTableCommand(env, commandArgs);
         }
     },
-    UPDATE_KEY {
+    SET_KEY {
         @Override
         public DatabaseCommand getCommand(ExecutionEnvironment env, List<String> commandArgs) {
-            return new UpdateKeyCommand(env, commandArgs);
+            return new SetKeyCommand(env, commandArgs);
         }
     },
-    READ_KEY {
+    GET_KEY {
         @Override
         public DatabaseCommand getCommand(ExecutionEnvironment env, List<String> commandArgs) {
-            return new ReadKeyCommand(env, commandArgs);
+            return new GetKeyCommand(env, commandArgs);
         }
     };
 

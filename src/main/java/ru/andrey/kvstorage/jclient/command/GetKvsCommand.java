@@ -8,7 +8,7 @@ import java.nio.charset.StandardCharsets;
 
 public class GetKvsCommand implements KvsCommand {
 
-    private static final String COMMAND_NAME = "READ_KEY";
+    private static final String COMMAND_NAME = "GET_KEY";
 
     private final String databaseName;
     private final String tableName;

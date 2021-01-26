@@ -2,15 +2,15 @@ package ru.andrey.kvstorage.server.initialization.impl;
 
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
-import ru.andrey.kvstorage.server.index.impl.SegmentIndexInfoImpl;
+import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
-import ru.andrey.kvstorage.server.logic.impl.DatabaseInputStream;
-import ru.andrey.kvstorage.server.logic.impl.DatabaseStoringUnit;
+import ru.andrey.kvstorage.server.logic.impl.DatabaseRow;
 import ru.andrey.kvstorage.server.logic.impl.SegmentImpl;
+import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -39,10 +39,10 @@ public class SegmentInitializer implements Initializer {
                 new BufferedInputStream(Files.newInputStream(segmentContext.getSegmentPath())))) {
             var offset = 0;
 
-            Optional<DatabaseStoringUnit> storingUnit = in.readDbUnit();
+            Optional<DatabaseRow> storingUnit = in.readDbUnit();
             while (storingUnit.isPresent()) {
-                DatabaseStoringUnit unit = storingUnit.get();
-                SegmentIndexInfoImpl segmentIndexInfo = new SegmentIndexInfoImpl(offset);
+                DatabaseRow unit = storingUnit.get();
+                SegmentOffsetInfoImpl segmentIndexInfo = new SegmentOffsetInfoImpl(offset);
                 offset += unit.size();
 
                 String keyString = new String(unit.getKey());

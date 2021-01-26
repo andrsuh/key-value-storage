@@ -28,7 +28,7 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
     }
 
     @Override
-    default E store(String id, E entity) {
+    default E set(String id, E entity) {
         if (id == null) {
             throw new IllegalArgumentException("null id passed");
         }
