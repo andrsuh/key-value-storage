@@ -5,6 +5,7 @@ import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
 
+import java.io.IOException;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -23,6 +24,16 @@ public class DatabaseServerInitializer implements Initializer {
         System.out.println("Starting initialization process... ");
 
         ExecutionEnvironment env = context.executionEnvironment();
+
+        try {
+            if (!env.getWorkingPath().toFile().exists()) {
+                boolean success = env.getWorkingPath().toFile().mkdirs();
+                if (!success)
+                    throw new IOException("Directory was not created");
+            }
+        } catch (IOException ex) {
+            throw new DatabaseException("Cannot create working directory (" + env.getWorkingPath().toString() + ")", ex);
+        }
 
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(env.getWorkingPath(), p -> Files.isDirectory(p)); // todo sukhoa make faster by making parallel
              Stream<Path> directoryStream = StreamSupport.stream(ds.spliterator(), true)) {
