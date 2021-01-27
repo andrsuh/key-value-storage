@@ -8,6 +8,8 @@ import java.util.Optional;
 public interface ExecutionEnvironment {
     Path getWorkingPath();
 
+    int getPort();
+
     Optional<Database> getDatabase(String name);
 
     void addDatabase(Database db);

@@ -37,7 +37,9 @@ public class DatabaseServer {
     private final ExecutionEnvironment env;
 
     public DatabaseServer(ExecutionEnvironment env, Initializer initializer) throws IOException, DatabaseException {
-        this.serverSocket = new ServerSocket(4321);
+        System.out.println("Server port is " + env.getPort());
+
+        this.serverSocket = new ServerSocket(env.getPort());
         this.env = env;
 
         InitializationContextImpl initializationContext = InitializationContextImpl.builder()

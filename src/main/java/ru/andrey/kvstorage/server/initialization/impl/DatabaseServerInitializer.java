@@ -27,9 +27,12 @@ public class DatabaseServerInitializer implements Initializer {
 
         try {
             if (!env.getWorkingPath().toFile().exists()) {
+                System.out.println("Creating working directory " + env.getWorkingPath().toString());
                 boolean success = env.getWorkingPath().toFile().mkdirs();
                 if (!success)
                     throw new IOException("Directory was not created");
+            } else {
+                System.out.println("Using existing working directory " + env.getWorkingPath().toString());
             }
         } catch (IOException ex) {
             throw new DatabaseException("Cannot create working directory (" + env.getWorkingPath().toString() + ")", ex);
