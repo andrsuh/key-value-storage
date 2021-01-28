@@ -8,6 +8,9 @@ import ru.andrey.kvstorage.server.logic.Database;
 
 import java.util.List;
 
+/**
+ * Удаляет значение по ключу. Возвращает удаленное значение
+ */
 public class DeleteKeyCommand implements DatabaseCommand {
     private final ExecutionEnvironment env;
     private final String databaseName;
