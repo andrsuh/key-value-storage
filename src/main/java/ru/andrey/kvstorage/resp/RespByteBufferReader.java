@@ -125,6 +125,9 @@ public class RespByteBufferReader {
             if (!in.isReadable(size)) {
                 return Optional.empty();
             }
+            if (size == RespBulkString.MINUS_ONE) {
+                return Optional.of(new RespBulkString());
+            }
 
             final byte[] data = new byte[size];
             in.readBytes(data, 0, size);

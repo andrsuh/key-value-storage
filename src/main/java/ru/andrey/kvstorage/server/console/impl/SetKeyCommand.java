@@ -7,6 +7,7 @@ import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Database;
 
 import java.util.List;
+import java.util.Optional;
 
 public class SetKeyCommand implements DatabaseCommand {
 
@@ -32,9 +33,8 @@ public class SetKeyCommand implements DatabaseCommand {
         Database database = env.getDatabase(databaseName)
                 .orElseThrow(() -> new DatabaseException("No such database: " + databaseName));
 
-        //TODO: add specification for null value
-        String prevValue = database.read(tableName, key).orElse("null");
+        Optional<String> prevValue = database.read(tableName, key);
         database.write(tableName, key, value);
-        return DatabaseCommandResult.success(prevValue);
+        return DatabaseCommandResult.success(prevValue.orElse(null));
     }
 }
