@@ -6,10 +6,10 @@ import ru.andrey.kvstorage.server.logic.WritableDatabaseRecord;
  * Запись в БД, означающая удаление значения по ключу
  */
 public class RemoveDatabaseRecord implements WritableDatabaseRecord {
+    private static final byte[] EMPTY_VALUE = new byte[0];
+
     private final byte[] keyValue;
     private final int keySize;
-
-    private static final byte[] EMPTY_VALUE = new byte[0];
 
     public RemoveDatabaseRecord(String key) {
         this(key.getBytes());

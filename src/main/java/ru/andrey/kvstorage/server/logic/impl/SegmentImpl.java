@@ -86,8 +86,8 @@ public class SegmentImpl implements Segment {
 
     @Override
     public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
-        WritableDatabaseRecord databaseRow = new SetDatabaseRecord(objectKey, objectValue);
-        return updateSegment(databaseRow);
+        WritableDatabaseRecord databaseRecord = new SetDatabaseRecord(objectKey, objectValue);
+        return updateSegment(databaseRecord);
     }
 
     private boolean isSegmentFull(long additionalLength) {

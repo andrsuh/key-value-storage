@@ -21,7 +21,7 @@ public class DatabaseOutputStream extends DataOutputStream {
      * - Ключ
      * - Размер записи в байтах {@link WritableDatabaseRecord#getValueSize()}
      * - Запись
-     * Например,
+     * Например при использовании UTF_8,
      * "key" : "value"
      * 3key5value
      * Метод вернет 10

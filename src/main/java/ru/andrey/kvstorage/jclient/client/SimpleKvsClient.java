@@ -4,6 +4,7 @@ import ru.andrey.kvstorage.jclient.command.DeleteKvsCommand;
 import ru.andrey.kvstorage.jclient.command.GetKvsCommand;
 import ru.andrey.kvstorage.jclient.command.KvsCommand;
 import ru.andrey.kvstorage.jclient.command.SetKvsCommand;
+import ru.andrey.kvstorage.jclient.command.StringKsvCommand;
 import ru.andrey.kvstorage.jclient.connection.KvsConnection;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
 import ru.andrey.kvstorage.resp.object.RespArray;
@@ -50,6 +51,11 @@ public class SimpleKvsClient implements KvsClient {
         return executeCommand(new DeleteKvsCommand(databaseName, tableName, key));
     }
 
+    @Override
+    public String executeCommand(String commandString) {
+        return executeCommand(new StringKsvCommand(commandString));
+    }
+
     private String executeCommand(KvsCommand command) {
         KvsConnection connection = connectionSupplier.get();
 
@@ -76,27 +82,6 @@ public class SimpleKvsClient implements KvsClient {
         }
     }
 
-    @Override
-    public String executeCommand(String commandString) {
-        RespCommandId commandId = new RespCommandId();
-        Stream<RespBulkString> respBulkStringStream = Arrays.stream(commandString.split(" "))
-                .map(str -> new RespBulkString(str.getBytes(StandardCharsets.UTF_8)));
-
-        RespArray respCommand = new RespArray(Stream.concat(Stream.of(commandId), respBulkStringStream).toArray(RespObject[]::new));
-
-        return executeCommand(new KvsCommand() {
-            @Override
-            public RespObject serialize() {
-                return respCommand;
-            }
-
-            @Override
-            public int getCommandId() {
-                return commandId.commandId;
-            }
-        });
-    }
-
     private String handleResponse(RespObject response) {
         if (response.isError()) {
             throw new RuntimeException(response.asString());
@@ -104,4 +89,5 @@ public class SimpleKvsClient implements KvsClient {
 
         return response.asString();
     }
+
 }
