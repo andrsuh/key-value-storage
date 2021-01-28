@@ -17,4 +17,6 @@ public interface Segment {
     Optional<String> read(String objectKey) throws IOException;
 
     boolean isReadOnly();
+
+    boolean delete(String objectKey) throws IOException;
 }

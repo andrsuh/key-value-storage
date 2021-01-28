@@ -19,5 +19,7 @@ public interface Table {
     void write(String objectKey, String objectValue) throws DatabaseException;
 
     Optional<String> read(String objectKey) throws DatabaseException;
+
+    void delete(String objectKey) throws DatabaseException;
 }
 
