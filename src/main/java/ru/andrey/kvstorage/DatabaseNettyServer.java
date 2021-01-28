@@ -112,7 +112,7 @@ public class DatabaseNettyServer {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             // Bind and start to accept incoming connections.
-            ChannelFuture f = b.bind("127.0.0.1", 8080).sync();
+            ChannelFuture f = b.bind(env.getHost(), env.getPort()).sync();
 
             System.out.println("Трррр Сервер стартанулллллллл");
 
