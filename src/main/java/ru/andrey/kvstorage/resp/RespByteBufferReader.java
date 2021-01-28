@@ -1,15 +1,14 @@
 package ru.andrey.kvstorage.resp;
 
 import io.netty.buffer.ByteBuf;
-import ru.andrey.kvstorage.resp.object.RespArray;
-import ru.andrey.kvstorage.resp.object.RespBulkString;
-import ru.andrey.kvstorage.resp.object.RespCommandId;
-import ru.andrey.kvstorage.resp.object.RespObject;
+import io.netty.buffer.Unpooled;
+import ru.andrey.kvstorage.resp.object.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class RespByteBufferReader {
 
@@ -37,6 +36,7 @@ public class RespByteBufferReader {
         return respObject;
     }
 
+    //fkats: this code linked with RespReader. Is it okay?
     static abstract class RespStatefulReader {
         protected int size;
         protected ByteBuf in;
@@ -50,7 +50,7 @@ public class RespByteBufferReader {
             this.in = in;
         }
 
-        abstract Optional<? extends RespObject> readNextPortion();
+        abstract Optional<? extends RespObject> readNextPortion() throws IOException;
 
         public static RespStatefulReader getNextReader(ByteBuf buf) {
             if (!buf.isReadable()) {
@@ -60,10 +60,10 @@ public class RespByteBufferReader {
             byte leadingByte = buf.readByte();
 
             switch (leadingByte) {
-//                case RespSimpleString.CODE:
-//                    return readSimpleString();
-//                case RespError.CODE:
-//                    return readError();
+                case RespSimpleString.CODE:
+                    return new RespSimpleStringReader(buf, RespSimpleString::new);
+                case RespError.CODE:
+                    return new RespSimpleStringReader(buf, RespError::new);
                 case RespCommandId.CODE:
                     return new RespCommandIdReader(buf);
                 case RespBulkString.CODE:
@@ -92,7 +92,7 @@ public class RespByteBufferReader {
         }
 
         @Override
-        Optional<RespArray> readNextPortion() {
+        Optional<RespArray> readNextPortion() throws IOException {
             while (parsed.size() < size && in.isReadable()) {
                 if (nextElementReader == null) {
                     nextElementReader = RespStatefulReader.getNextReader(in);
@@ -153,6 +153,59 @@ public class RespByteBufferReader {
             final byte lf = in.readByte();
 
             return Optional.of(new RespCommandId(res));
+        }
+    }
+
+//    static class RespErrorReader extends RespStatefulReader {
+//        public RespErrorReader(ByteBuf in) {
+//            super(in);
+//        }
+//
+//        @Override
+//        Optional<RespError> readNextPortion() throws IOException {
+//            if (!in.isReadable(size)) {
+//                return Optional.empty();
+//            }
+//
+//            String result = readString(in);
+//            return Optional.of(new RespError(result.getBytes(StandardCharsets.UTF_8)));
+//        }
+//    }
+
+    static class RespSimpleStringReader extends RespStatefulReader {
+        private final ByteBuf readSoFar = Unpooled.buffer(128);
+        private final Function<byte[], RespObject> desiredTypeConstructor;
+
+        public RespSimpleStringReader(ByteBuf in, Function<byte[], RespObject> desiredTypeConstructor) {
+            super(in);
+            this.desiredTypeConstructor = desiredTypeConstructor;
+        }
+
+        @Override
+        Optional<RespObject> readNextPortion() {
+            boolean aboutTheEnd = false;
+            while (in.isReadable()) {
+                byte readByte = in.readByte();
+
+                if (aboutTheEnd) { // if "/r" byte was previously read
+                    if (readByte == LF) { // and the current one is the "\n"
+                        byte[] result = new byte[readSoFar.readableBytes()];
+                        readSoFar.readBytes(result);
+
+                        return Optional.of(desiredTypeConstructor.apply(result));
+                    } else { // if it's not the end
+                        aboutTheEnd = false; // cancel the flag
+                        readSoFar.writeByte(CR); // and add previously read "\r" that was skipped before
+                    }
+                }
+
+                if (readByte == CR) {
+                    aboutTheEnd = true; // it might be the beginning of the end
+                } else {
+                    readSoFar.writeByte(readByte); // or just usual byte
+                }
+            }
+            return Optional.empty();
         }
     }
 }

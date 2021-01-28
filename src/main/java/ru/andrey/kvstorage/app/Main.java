@@ -24,7 +24,10 @@ public class Main {
         Post post1 = postRepository.set("2", new Post("Test", "dakenviy", "Good content"));
         Post post2 = postRepository.get("2");
 //        System.out.println(post);
-        System.out.println(post1);
-        System.out.println(post2);
+//        System.out.println(post1);
+//        System.out.println(post2);
+
+        Post post = postRepository.get("1");
+        System.out.println(post);
     }
 }
