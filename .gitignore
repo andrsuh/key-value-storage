@@ -1,6 +1,9 @@
 # Project related fils
 db_files/*
 
+# Maven build directory
+target
+
 # Compiled class file
 *.class
 
