@@ -90,8 +90,8 @@ public class SegmentImpl implements Segment {
         return updateSegment(databaseRecord);
     }
 
-    private boolean isSegmentFull(long additionalLength) {
-        return currentSizeInBytes + additionalLength > MAX_SEGMENT_SIZE;
+    private boolean canAllocate(long length) {
+        return length + currentSizeInBytes <= MAX_SEGMENT_SIZE;
     }
 
     @Override
@@ -126,7 +126,7 @@ public class SegmentImpl implements Segment {
     }
 
     private boolean updateSegment(WritableDatabaseRecord databaseRecord) throws IOException {
-        if (isSegmentFull(databaseRecord.size())) {
+        if (!canAllocate(databaseRecord.size())) {
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
             readOnly = true;
             return false;
