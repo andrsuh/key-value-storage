@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-public class DatabaseServer {
+public class DatabaseServer implements AutoCloseable{
 
     private static ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -73,7 +73,7 @@ public class DatabaseServer {
             }
 
             List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-            return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs).execute();
+            return DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs).execute();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return DatabaseCommandResult.error(e);
@@ -87,6 +87,11 @@ public class DatabaseServer {
             System.out.println(e.getMessage());
             return DatabaseCommandResult.error(e);
         }
+    }
+
+    @Override
+    public void close() throws Exception {
+        serverSocket.close();
     }
 
     static class ClientTask implements Runnable, Closeable {

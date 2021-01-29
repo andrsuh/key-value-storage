@@ -89,11 +89,28 @@ public class TableImpl implements Table {
         try {
             Optional<Segment> segment = tableIndex.searchForKey(objectKey);
             if (segment.isEmpty()) {
-                throw new DatabaseException("No such key: " + objectKey);
+                return Optional.empty();
             }
             return segment.get().read(objectKey);
         } catch (IOException e) {
             throw new DatabaseException(e);
+        }
+    }
+
+    @Override
+    public void delete(String objectKey) throws DatabaseException {
+        try {
+            while (true) { // todo sukhoa
+                var s = currentSegment; // cache to local for preventing concurrent issues in future
+                if (!s.isReadOnly() && s.delete(objectKey)) {
+                    tableIndex.onIndexedEntityUpdated(objectKey, s);
+                    break;
+                }
+                // todo sukhoa use Atomic reference in future
+                currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
+            }
+        } catch (IOException e) {
+            throw new DatabaseException(e); // todo sukhoa review exceptions
         }
     }
 

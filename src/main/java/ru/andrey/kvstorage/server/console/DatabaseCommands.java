@@ -2,6 +2,7 @@ package ru.andrey.kvstorage.server.console;
 
 import ru.andrey.kvstorage.server.console.impl.CreateDatabaseCommand;
 import ru.andrey.kvstorage.server.console.impl.CreateTableCommand;
+import ru.andrey.kvstorage.server.console.impl.DeleteKeyCommand;
 import ru.andrey.kvstorage.server.console.impl.GetKeyCommand;
 import ru.andrey.kvstorage.server.console.impl.SetKeyCommand;
 import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
@@ -32,6 +33,12 @@ public enum DatabaseCommands {
         @Override
         public DatabaseCommand getCommand(ExecutionEnvironment env, List<String> commandArgs) {
             return new GetKeyCommand(env, commandArgs);
+        }
+    },
+    DELETE_KEY {
+        @Override
+        public DatabaseCommand getCommand(ExecutionEnvironment env, List<String> commandArgs) {
+            return new DeleteKeyCommand(env, commandArgs);
         }
     };
 

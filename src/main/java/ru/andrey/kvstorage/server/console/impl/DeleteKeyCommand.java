@@ -8,23 +8,23 @@ import ru.andrey.kvstorage.server.logic.Database;
 
 import java.util.List;
 
-public class SetKeyCommand implements DatabaseCommand {
-
+/**
+ * Удаляет значение по ключу. Возвращает удаленное значение
+ */
+public class DeleteKeyCommand implements DatabaseCommand {
     private final ExecutionEnvironment env;
     private final String databaseName;
     private final String tableName;
     private final String key;
-    private final String value;
 
-    public SetKeyCommand(ExecutionEnvironment env, List<String> args) {
-        if (args.size() < 5) {
+    public DeleteKeyCommand(ExecutionEnvironment env, List<String> args) {
+        if (args.size() < 4) {
             throw new IllegalArgumentException("Not enough args");
         }
         this.env = env;
         this.databaseName = args.get(1);
         this.tableName = args.get(2);
         this.key = args.get(3);
-        this.value = args.get(4);
     }
 
     @Override
@@ -32,9 +32,10 @@ public class SetKeyCommand implements DatabaseCommand {
         Database database = env.getDatabase(databaseName)
                 .orElseThrow(() -> new DatabaseException("No such database: " + databaseName));
 
-        //TODO: add specification for null value
-        String prevValue = database.read(tableName, key).orElse("null");
-        database.write(tableName, key, value);
+        String prevValue = database.read(tableName, key).orElseThrow(() ->
+                new DatabaseException("Unable to delete key \"" + key + "\". Key does not exist."));
+
+        database.delete(tableName, key);
         return DatabaseCommandResult.success(prevValue);
     }
 }

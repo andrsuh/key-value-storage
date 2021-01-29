@@ -1,15 +1,23 @@
 package ru.andrey.kvstorage.jclient.client;
 
+import ru.andrey.kvstorage.jclient.command.DeleteKvsCommand;
 import ru.andrey.kvstorage.jclient.command.GetKvsCommand;
 import ru.andrey.kvstorage.jclient.command.KvsCommand;
 import ru.andrey.kvstorage.jclient.command.SetKvsCommand;
+import ru.andrey.kvstorage.jclient.command.StringKsvCommand;
 import ru.andrey.kvstorage.jclient.connection.KvsConnection;
 import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
+import ru.andrey.kvstorage.resp.object.RespArray;
+import ru.andrey.kvstorage.resp.object.RespBulkString;
+import ru.andrey.kvstorage.resp.object.RespCommandId;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 // It is not supposed to be thread-safe
 public class SimpleKvsClient implements KvsClient {
@@ -36,6 +44,16 @@ public class SimpleKvsClient implements KvsClient {
     @Override
     public String set(String tableName, String key, String value) {
         return executeCommand(new SetKvsCommand(databaseName, tableName, key, value));
+    }
+
+    @Override
+    public String delete(String tableName, String key) {
+        return executeCommand(new DeleteKvsCommand(databaseName, tableName, key));
+    }
+
+    @Override
+    public String executeCommand(String commandString) {
+        return executeCommand(new StringKsvCommand(commandString));
     }
 
     private String executeCommand(KvsCommand command) {
@@ -71,4 +89,5 @@ public class SimpleKvsClient implements KvsClient {
 
         return response.asString();
     }
+
 }

@@ -10,8 +10,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.Future;
-import io.netty.util.concurrent.GenericFutureListener;
 import lombok.AllArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import ru.andrey.kvstorage.resp.ByteToRespCommandDecoder;
@@ -61,9 +59,12 @@ public class DatabaseNettyServer {
 
         databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
 
-        databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
-        databaseServer.executeNextCommand("0 CREATE_TABLE test_3 Post");
-        databaseServer.executeNextCommand("0 UPDATE_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+//        databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
+//        databaseServer.executeNextCommand("1 CREATE_TABLE test_3 Post");
+//        databaseServer.executeNextCommand("2 SET_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
+//        databaseServer.executeNextCommand("3 GET_KEY test_3 Post 2");
+//        databaseServer.executeNextCommand("4 DELETE_KEY test_3 Post 2");
+//        databaseServer.executeNextCommand("4 GET_KEY test_3 Post 2");
 
     }
 
@@ -101,7 +102,7 @@ public class DatabaseNettyServer {
                     .channel(NioServerSocketChannel.class)
                     .childHandler(new ChannelInitializer<SocketChannel>() { // (4)
                         @Override
-                        public void initChannel(SocketChannel ch) throws Exception {
+                        public void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(
                                     new ByteToRespCommandDecoder(),
                                     new KvsServerInboundHandler(env),
@@ -116,12 +117,7 @@ public class DatabaseNettyServer {
 
             System.out.println("Трррр Сервер стартанулллллллл");
 
-            f.channel().closeFuture().addListener(new GenericFutureListener<Future<? super Void>>() {
-                @Override
-                public void operationComplete(Future<? super Void> future) throws Exception {
-                    System.out.println("епац сессия серверная дропнулафсь");
-                }
-            });
+            f.channel().closeFuture().addListener(future -> System.out.println("епац сессия серверная дропнулафсь"));
 //            }
 //            finally {
 //                workerGroup.shutdownGracefully();
@@ -135,7 +131,7 @@ public class DatabaseNettyServer {
         ExecutionEnvironment env;
 
         @Override
-        public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        public void channelRead(ChannelHandlerContext ctx, Object msg) {
             RespArray message = (RespArray) msg;
             System.out.println("SERVER GOT: " + message);
 
@@ -157,16 +153,11 @@ public class DatabaseNettyServer {
 
             RespArray serverResponse = new RespArray(message.getObjects().get(0), commandResult);
 
-            ctx.channel().writeAndFlush(serverResponse).addListener(new GenericFutureListener<Future<? super Void>>() {
-                @Override
-                public void operationComplete(Future<? super Void> future) throws Exception {
-                    System.out.println("Опппана сообщение-то ушло!");
-                }
-            });
+            ctx.channel().writeAndFlush(serverResponse).addListener(future -> System.out.println("Опппана сообщение-то ушло!"));
         }
 
         @Override
-        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
             cause.printStackTrace(); //
         }
 

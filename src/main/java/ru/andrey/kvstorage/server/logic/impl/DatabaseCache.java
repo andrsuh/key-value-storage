@@ -20,4 +20,8 @@ public class DatabaseCache { // todo sukhoa add interface
     public void set(String key, String value) {
         cache.put(key, value);
     }
+
+    public void delete(String key) {
+        cache.remove(key);
+    }
 }

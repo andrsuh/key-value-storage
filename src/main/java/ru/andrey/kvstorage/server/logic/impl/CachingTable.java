@@ -5,6 +5,9 @@ import ru.andrey.kvstorage.server.logic.Table;
 
 import java.util.Optional;
 
+/**
+ * Декторато для таблицы. Кэширует данные
+ */
 public class CachingTable implements Table {
     private final Table table;
     private final DatabaseCache cache;
@@ -38,5 +41,11 @@ public class CachingTable implements Table {
             return result;
         }
         return Optional.of(value);
+    }
+
+    @Override
+    public void delete(String objectKey) throws DatabaseException {
+        table.delete(objectKey);
+        cache.delete(objectKey);
     }
 }
