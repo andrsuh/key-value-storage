@@ -14,8 +14,6 @@ public class RespByteBufferReader {
 
     private static final byte CR = '\r';
     private static final byte LF = '\n';
-    private static final byte MINUS = '-';
-    private static final byte ZERO = '0';
 
     private final ByteBuf buf;
 
@@ -67,7 +65,7 @@ public class RespByteBufferReader {
                 case RespCommandId.CODE:
                     return new RespCommandIdReader(buf);
                 case RespBulkString.CODE:
-                    return new RespStringReader(buf);
+                    return new RespBulkStringReader(buf);
                 case RespArray.CODE:
                     return new RespArrayReader(buf);
                 default:
@@ -80,6 +78,13 @@ public class RespByteBufferReader {
             in.readByte();
             in.readByte();
             return res;
+        }
+
+        protected void readEndBytes() {
+            final byte cr = in.readByte();
+            if (cr != CR) throw new IllegalArgumentException("Read something different from CR: " + cr);
+            final byte lf = in.readByte();
+            if (lf != LF) throw new IllegalArgumentException("Read something different from LF: " + lf);
         }
     }
 
@@ -115,13 +120,19 @@ public class RespByteBufferReader {
         }
     }
 
-    static class RespStringReader extends RespStatefulReader {
-        public RespStringReader(ByteBuf in) {
+    static class RespBulkStringReader extends RespStatefulReader {
+        private static final Optional<RespBulkString> NULL_BULK_STRING = Optional.of(new RespBulkString());
+
+        public RespBulkStringReader(ByteBuf in) {
             super(in, RespStatefulReader.readInt(in));
         }
 
         @Override
         Optional<RespBulkString> readNextPortion() {
+            if (size == RespBulkString.NULL_STRING_SIZE) {
+                return NULL_BULK_STRING;
+            }
+
             if (!in.isReadable(size)) {
                 return Optional.empty();
             }
@@ -129,8 +140,7 @@ public class RespByteBufferReader {
             final byte[] data = new byte[size];
             in.readBytes(data, 0, size);
 
-            final byte cr = in.readByte();
-            final byte lf = in.readByte();
+            readEndBytes();
 
             return Optional.of(new RespBulkString(data));
         }
@@ -149,28 +159,11 @@ public class RespByteBufferReader {
 
             int res = in.readInt();
 
-            final byte cr = in.readByte();
-            final byte lf = in.readByte();
+            readEndBytes();
 
             return Optional.of(new RespCommandId(res));
         }
     }
-
-//    static class RespErrorReader extends RespStatefulReader {
-//        public RespErrorReader(ByteBuf in) {
-//            super(in);
-//        }
-//
-//        @Override
-//        Optional<RespError> readNextPortion() throws IOException {
-//            if (!in.isReadable(size)) {
-//                return Optional.empty();
-//            }
-//
-//            String result = readString(in);
-//            return Optional.of(new RespError(result.getBytes(StandardCharsets.UTF_8)));
-//        }
-//    }
 
     static class RespSimpleStringReader extends RespStatefulReader {
         private final ByteBuf readSoFar = Unpooled.buffer(128);

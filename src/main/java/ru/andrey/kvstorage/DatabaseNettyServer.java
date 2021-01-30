@@ -133,7 +133,7 @@ public class DatabaseNettyServer {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             RespArray message = (RespArray) msg;
-            System.out.println("SERVER GOT: " + message);
+            System.out.println("Server got client request: [ " + message + "]");
 
 //            if (objects.isEmpty()) {
 //                throw new IllegalArgumentException("Command name is not specified");
@@ -153,7 +153,7 @@ public class DatabaseNettyServer {
 
             RespArray serverResponse = new RespArray(message.getObjects().get(0), commandResult);
 
-            ctx.channel().writeAndFlush(serverResponse).addListener(future -> System.out.println("Опппана сообщение-то ушло!"));
+            ctx.channel().writeAndFlush(serverResponse).addListener(future -> System.out.println("Server sent: " + serverResponse));
         }
 
         @Override

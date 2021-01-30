@@ -9,12 +9,11 @@ import java.io.IOException;
 import java.io.OutputStream;
 
 @AllArgsConstructor
-@NoArgsConstructor
 public class RespCommandId implements RespObject {
 
     public static final byte CODE = '!';
 
-    public int commandId = KvsCommand.idGen.getAndIncrement();
+    public final int commandId;
 
     @Override
     public boolean isError() {

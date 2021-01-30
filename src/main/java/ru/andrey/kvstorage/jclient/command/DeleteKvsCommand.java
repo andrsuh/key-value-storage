@@ -13,7 +13,7 @@ public class DeleteKvsCommand implements KvsCommand {
     private final String databaseName;
     private final String tableName;
     private final String key;
-    private final RespCommandId commandId = new RespCommandId();
+    private final RespCommandId commandId = new RespCommandId(KvsCommand.idGen.getAndIncrement());
 
     public DeleteKvsCommand(String databaseName, String tableName, String key) {
         this.databaseName = databaseName;

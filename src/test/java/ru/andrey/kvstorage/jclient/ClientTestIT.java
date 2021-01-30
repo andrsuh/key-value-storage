@@ -19,6 +19,7 @@ import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @RunWith(MockitoJUnitRunner.class)
 public class ClientTestIT {
@@ -46,14 +47,14 @@ public class ClientTestIT {
 
     @Test
     public void test() {
-        assertEquals("null", client.get(TABLE_NAME, "key"));
-        assertEquals("null", client.set(TABLE_NAME, "key", "oldValue"));
+        assertNull(client.get(TABLE_NAME, "key"));
+        assertNull(client.set(TABLE_NAME, "key", "oldValue"));
         assertEquals("oldValue", client.set(TABLE_NAME, "key", "newValue"));
-        assertEquals("null", client.set(TABLE_NAME, "key1", "value1"));
+        assertNull(client.set(TABLE_NAME, "key1", "value1"));
         assertEquals("newValue", client.get(TABLE_NAME, "key"));
         assertEquals("value1", client.get(TABLE_NAME, "key1"));
         assertEquals("newValue", client.delete(TABLE_NAME, "key"));
-        assertEquals("null", client.get(TABLE_NAME, "key"));
+        assertNull(client.get(TABLE_NAME, "key"));
     }
 
 

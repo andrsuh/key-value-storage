@@ -33,7 +33,6 @@ public class GetKeyCommand implements DatabaseCommand {
         Optional<String> result = database.read(tableName, key);
         return result
                 .map(DatabaseCommandResult::success)
-                //TODO: add specification for null value
-                .orElseGet(() -> DatabaseCommandResult.success("null"));
+                .orElseGet(() -> DatabaseCommandResult.success(null));
     }
 }

@@ -14,7 +14,7 @@ import java.util.stream.Stream;
  * Произвольная строковая команда
  */
 public class StringKsvCommand implements KvsCommand {
-    private final RespCommandId commandId = new RespCommandId();
+    private final RespCommandId commandId = new RespCommandId(KvsCommand.idGen.getAndIncrement());
     private final String command;
 
     public StringKsvCommand(String command) {

@@ -16,8 +16,6 @@ public class ByteToRespCommandDecoder extends ByteToMessageDecoder {
 
     @Override
     protected void decode(ChannelHandlerContext ctx, ByteBuf in, List<Object> out) throws Exception {
-        System.out.println("SERVER GOT: " + in.readableBytes());
-
         boolean aboutTheMessage = false;
         while (in.isReadable() || out.isEmpty()) {
             byte b = in.readByte();

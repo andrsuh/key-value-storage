@@ -12,7 +12,6 @@ import java.util.Optional;
 public interface DatabaseCommandResult extends DatabaseApiSerializable {
 
     static DatabaseCommandResult success(String result) {
-        Objects.requireNonNull(result);
         return new DatabaseCommandResultImpl(result, null, DatabaseCommandStatus.SUCCESS);
     }
 
@@ -74,12 +73,11 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
 
         @Override
         public RespObject serialize() {
-            final Optional<String> result = getResult();
-
-            if (result.isPresent())
-                return new RespBulkString(result.get().getBytes(StandardCharsets.UTF_8));
-            else
+            if (isSuccess()) {
+                return new RespBulkString(getResult().map(s -> s.getBytes(StandardCharsets.UTF_8)).orElse(null));
+            } else {
                 return new RespError(errorMessage.getBytes(StandardCharsets.UTF_8));
+            }
         }
     }
 }

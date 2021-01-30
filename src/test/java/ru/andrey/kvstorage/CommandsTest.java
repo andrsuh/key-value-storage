@@ -5,13 +5,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import ru.andrey.kvstorage.server.DatabaseServer;
@@ -32,6 +29,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.FAILED;
 import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.SUCCESS;
@@ -103,6 +101,25 @@ public class CommandsTest {
 
         DatabaseCommandResult commandResult = server.executeNextCommand(command.toString());
         assertEquals(SUCCESS, commandResult.getStatus());
+        //noinspection OptionalGetWithoutIsPresent
+        assertEquals(VALUE, commandResult.getResult().get());
+    }
+
+    @Test
+    public void test_getKey_noSuchKey() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        when(database.read(eq(TABLE_NAME), eq(KEY_NAME))).thenReturn(Optional.empty());
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.GET_KEY.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
+                .build();
+
+        DatabaseCommandResult commandResult = server.executeNextCommand(command.toString());
+        assertEquals(SUCCESS, commandResult.getStatus());
+        assertTrue(commandResult.getResult().isEmpty());
     }
 
     @Test
@@ -157,8 +174,7 @@ public class CommandsTest {
 
         DatabaseCommandResult result = server.executeNextCommand(command.toString());
         assertEquals(SUCCESS, result.getStatus());
-        //noinspection OptionalGetWithoutIsPresent
-        assertEquals("null", result.getResult().get());
+        assertTrue(result.getResult().isEmpty());
     }
 
     @Test
