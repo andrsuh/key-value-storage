@@ -139,6 +139,8 @@ public class DatabaseServer implements AutoCloseable {
                 System.out.println("Got interrupted exception " + e.getMessage()); // todo sukhoa bad
             } catch (ExecutionException e) {
                 System.out.println("Got execution exception " + e.getMessage()); // todo sukhoa bad
+            } catch (Throwable t) {
+                System.out.println("Unexpected exception" + t);
             } finally {
                 close();
             }

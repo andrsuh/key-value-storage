@@ -48,6 +48,6 @@ public class Main {
 //        System.out.println(post2);
 
 //        Post post = postRepository.get("1");
-//        System.out.println(post);
+        System.out.println(post1);
     }
 }

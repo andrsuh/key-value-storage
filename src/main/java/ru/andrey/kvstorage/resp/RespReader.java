@@ -56,11 +56,14 @@ public class RespReader {
         final int size = readInt();
 
         if (size == -1) {
-            return new RespBulkString(null);
+            return RespBulkString.NULL_BULK_STRING;
         }
         if (size < 0) {
             throw new IOException(String.format("Invalid bulk string size: %1$d", size));
         }
+
+        int cr = is.read();
+        int lf = is.read();
 
         final byte[] data = new byte[size];
         final int read = is.read(data, 0, size);
@@ -72,8 +75,8 @@ public class RespReader {
             throw new IOException(String.format("Failed to read enough chars. Read: %1$d, Expected: %2$d", read, size));
         }
 
-        final int cr = is.read();
-        final int lf = is.read();
+        cr = is.read();
+        lf = is.read();
 
         if (cr == -1 || lf == -1) {
             throw new EOFException("Unexpected end of stream");
@@ -91,6 +94,9 @@ public class RespReader {
         if (size < 0) {
             throw new IOException(String.format("Invalid array size: %1$d", size));
         }
+
+        final int cr = is.read();
+        final int lf = is.read();
 
         final RespObject[] objects = new RespObject[size];
         for (int i = 0; i < size; ++i) {

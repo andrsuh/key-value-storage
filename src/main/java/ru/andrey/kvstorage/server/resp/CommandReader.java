@@ -33,6 +33,6 @@ public class CommandReader {
                 .toArray(String[]::new);
 
         List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-        return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs);
+        return DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs);
     }
 }
