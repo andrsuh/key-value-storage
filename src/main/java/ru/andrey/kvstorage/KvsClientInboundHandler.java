@@ -11,7 +11,7 @@ public class KvsClientInboundHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RespArray message = (RespArray) msg;
-        System.out.println("CLIENT GOT: " + message.asString());
+        System.out.println("Server  responded: [" + message.asString()  + "]");
         RespCommandId respId = (RespCommandId) message.getObjects().get(0);
 
         SimpleKvsClient.responses.put(respId.commandId, message.getObjects().get(1));
