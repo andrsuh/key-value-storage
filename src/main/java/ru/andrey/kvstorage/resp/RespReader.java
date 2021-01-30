@@ -1,16 +1,12 @@
 package ru.andrey.kvstorage.resp;
 
 import lombok.AllArgsConstructor;
-import ru.andrey.kvstorage.resp.object.RespArray;
-import ru.andrey.kvstorage.resp.object.RespBulkString;
-import ru.andrey.kvstorage.resp.object.RespError;
-import ru.andrey.kvstorage.resp.object.RespObject;
-import ru.andrey.kvstorage.resp.object.RespSimpleString;
+import ru.andrey.kvstorage.resp.object.*;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 
 @AllArgsConstructor
 public class RespReader {
@@ -41,6 +37,8 @@ public class RespReader {
                 return readBulkString();
             case RespArray.CODE:
                 return readArray();
+            case RespCommandId.CODE:
+                return readCommandId();
             default:
                 throw new IOException(String.format("Unknown type character in stream: %1$x", code));
         }
@@ -138,37 +136,16 @@ public class RespReader {
         return buf;
     }
 
+    private RespCommandId readCommandId() throws IOException {
+        int commandId = readInt();
+
+        final int cr = is.read();
+        final int lf = is.read();
+
+        return new RespCommandId(commandId);
+    }
+
     private int readInt() throws IOException {
-        final int sign;
-
-        int b = is.read();
-        if (b == MINUS) {
-            b = is.read();
-            sign = -1;
-        } else {
-            sign = 1;
-        }
-
-        int number = 0;
-        while (true) {
-            if (b == -1) {
-                throw new EOFException("Unexpected end of stream");
-            }
-
-            if (b == CR) {
-                if (is.read() == LF) {
-                    return sign * number;
-                }
-                throw new IOException("Invalid character in integer");
-            }
-
-            final int digit = b - ZERO;
-            if (digit < 0 || 10 <= digit) {
-                throw new IOException("Invalid character in integer");
-            }
-
-            number = number * 10 + digit;
-            b = is.read();
-        }
+        return ByteBuffer.wrap(is.readNBytes(4)).getInt(); // todo sukhoa what is not enough bytes?
     }
 }

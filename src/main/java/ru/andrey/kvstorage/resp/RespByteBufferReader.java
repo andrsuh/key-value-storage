@@ -121,7 +121,7 @@ public class RespByteBufferReader {
     }
 
     static class RespBulkStringReader extends RespStatefulReader {
-        private static final Optional<RespBulkString> NULL_BULK_STRING = Optional.of(new RespBulkString());
+        private static final Optional<RespBulkString> NULL_BULK_STRING = Optional.of(RespBulkString.NULL_BULK_STRING);
 
         public RespBulkStringReader(ByteBuf in) {
             super(in, RespStatefulReader.readInt(in));

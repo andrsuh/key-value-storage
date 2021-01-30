@@ -7,6 +7,7 @@ import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Database;
 
 import java.util.List;
+import java.util.Optional;
 
 public class SetKeyCommand implements DatabaseCommand {
 

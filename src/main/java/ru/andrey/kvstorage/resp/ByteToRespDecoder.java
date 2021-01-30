@@ -7,7 +7,7 @@ import io.netty.handler.codec.ByteToMessageDecoder;
 
 import java.util.List;
 
-public class ByteToRespCommandDecoder extends ByteToMessageDecoder {
+public class ByteToRespDecoder extends ByteToMessageDecoder {
     private static final byte CR = '\r';
     private static final byte LF = '\n';
 

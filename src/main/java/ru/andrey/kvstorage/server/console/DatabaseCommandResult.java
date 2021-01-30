@@ -74,7 +74,10 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         @Override
         public RespObject serialize() {
             if (isSuccess()) {
-                return new RespBulkString(getResult().map(s -> s.getBytes(StandardCharsets.UTF_8)).orElse(null));
+                if (getResult().isPresent()) {
+                    return new RespBulkString(result.getBytes(StandardCharsets.UTF_8));
+                }
+                return RespBulkString.NULL_BULK_STRING;
             } else {
                 return new RespError(errorMessage.getBytes(StandardCharsets.UTF_8));
             }
