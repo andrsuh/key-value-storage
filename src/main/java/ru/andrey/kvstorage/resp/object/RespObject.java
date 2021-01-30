@@ -21,7 +21,7 @@ public interface RespObject {
         try {
             write(os);
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // todo sukhoa baaaaaaad
             return null;
         }
 
