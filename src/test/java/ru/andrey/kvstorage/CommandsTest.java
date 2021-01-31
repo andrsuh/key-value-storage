@@ -13,6 +13,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import ru.andrey.kvstorage.resp.object.*;
 import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.connector.JavaSocketServerConnector;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
@@ -58,15 +59,17 @@ public class CommandsTest {
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    public DatabaseServer server;
+    public JavaSocketServerConnector server;
 
     @Before
     public void setUp() throws IOException, DatabaseException {
         env = mock(ExecutionEnvironment.class);
         when(env.getWorkingPath()).thenReturn(temporaryFolder.getRoot().toPath());
 
-        server = new DatabaseServer(env,
+        DatabaseServer databaseServer = new DatabaseServer(env,
                 new DatabaseServerInitializer(new DatabaseInitializer(new TableInitializer(new SegmentInitializer()))));
+
+        server = new JavaSocketServerConnector(databaseServer);
     }
 
     @After

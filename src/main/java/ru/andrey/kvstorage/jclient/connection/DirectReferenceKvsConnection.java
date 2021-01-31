@@ -1,13 +1,13 @@
 package ru.andrey.kvstorage.jclient.connection;
 
 import ru.andrey.kvstorage.resp.object.RespObject;
-import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.connector.JavaSocketServerConnector;
 
 public class DirectReferenceKvsConnection implements KvsConnection {
 
-    private final DatabaseServer databaseServer;
+    private final JavaSocketServerConnector databaseServer;
 
-    public DirectReferenceKvsConnection(DatabaseServer databaseServer) {
+    public DirectReferenceKvsConnection(JavaSocketServerConnector databaseServer) {
         this.databaseServer = databaseServer;
     }
 

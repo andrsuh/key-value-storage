@@ -1,4 +1,4 @@
-package ru.andrey.kvstorage;
+package ru.andrey.kvstorage.server.connector;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
@@ -10,43 +10,30 @@ import ru.andrey.kvstorage.resp.ByteToRespDecoder;
 import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
+import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.initialization.Initializer;
-import ru.andrey.kvstorage.server.initialization.impl.*;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 
 import java.util.List;
 
 import static ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions.COMMAND_NAME;
 
-public class DatabaseNettyServer {
-
-    private static DatabaseNettyServer databaseServer;
+public class NettyServerConnector {
 
     private final DatabaseServerBootstrap bs;
-    private final ExecutionEnvironment env;
+    private final DatabaseServer databaseServer;
 
-    public DatabaseNettyServer(ExecutionEnvironment env, Initializer initializer) throws DatabaseException, InterruptedException {
-        this.env = env;
-        this.bs = new DatabaseServerBootstrap(env);
-
-        InitializationContextImpl initializationContext = InitializationContextImpl.builder()
-                .executionEnvironment(env)
-                .build();
-
-        initializer.perform(initializationContext);
-    }
-
-    public static void main(String[] args) throws DatabaseException, InterruptedException {
-
-        Initializer initializer = new DatabaseServerInitializer(
-                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
-
-        databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
+    public NettyServerConnector(DatabaseServer databaseServer) throws InterruptedException {
+        this.databaseServer = databaseServer;
+        this.bs = new DatabaseServerBootstrap(databaseServer.getEnv());
     }
 
     private static class DatabaseServerBootstrap implements AutoCloseable {
@@ -54,10 +41,7 @@ public class DatabaseNettyServer {
         private final EventLoopGroup workerGroup = new NioEventLoopGroup(1);
         private final ServerBootstrap b;
 
-        ExecutionEnvironment env;
-
         public DatabaseServerBootstrap(ExecutionEnvironment env) throws InterruptedException {
-            this.env = env;
             b = new ServerBootstrap()
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
@@ -85,12 +69,13 @@ public class DatabaseNettyServer {
         public void close() {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
+            System.out.println("Netty server stopped.");
         }
     }
 
     @AllArgsConstructor
     static class KvsServerInboundHandler extends ChannelInboundHandlerAdapter {
-        ExecutionEnvironment env;
+        private final ExecutionEnvironment env;
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
@@ -125,5 +110,15 @@ public class DatabaseNettyServer {
                 return DatabaseCommandResult.error(e);
             }
         }
+    }
+
+    public static void main(String[] args) throws InterruptedException, DatabaseException {
+
+        DatabaseServerInitializer initializer = new DatabaseServerInitializer(
+                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
+
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
+
+        new NettyServerConnector(databaseServer);
     }
 }

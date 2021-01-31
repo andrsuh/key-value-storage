@@ -6,13 +6,13 @@ import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
-import ru.andrey.kvstorage.DatabaseNettyServer;
 import ru.andrey.kvstorage.jclient.client.SimpleKvsClient;
 import ru.andrey.kvstorage.jclient.connection.ConnectionConfig;
 import ru.andrey.kvstorage.jclient.connection.SocketKvsConnection;
+import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.connector.NettyServerConnector;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
@@ -34,9 +34,12 @@ public class ClientJavaSocketConnectorTestIT {
 
     @Before
     public void setUp() throws DatabaseException, InterruptedException {
-        Initializer initializer = new DatabaseServerInitializer(
+        DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
-        new DatabaseNettyServer(new ExecutionEnvironmentImpl(temporaryFolder.getRoot().toPath()), initializer);
+
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(temporaryFolder.getRoot().toPath()), initializer);
+
+        new NettyServerConnector(databaseServer);
 
         this.client = new SimpleKvsClient(DATABASE_NAME, () -> new SocketKvsConnection(new ConnectionConfig()));
         client.executeCommand("CREATE_DATABASE " + DATABASE_NAME);
