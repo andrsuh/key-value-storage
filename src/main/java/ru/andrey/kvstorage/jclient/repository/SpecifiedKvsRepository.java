@@ -24,7 +24,8 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
         }
 
         var client = getClientFactory().get();
-        return getMapper().mapToObject(client.get(getTableName(), id));
+        String result = client.get(getTableName(), id);
+        return result != null ? getMapper().mapToObject(result) : null;
     }
 
     @Override
@@ -39,6 +40,6 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
         var client = getClientFactory().get();
         String prevValue = client.set(getTableName(), id, getMapper().mapToString(entity));
 
-        return prevValue == null ? null : getMapper().mapToObject(prevValue);
+        return prevValue != null ? getMapper().mapToObject(prevValue) : null;
     }
 }

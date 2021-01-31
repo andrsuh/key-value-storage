@@ -11,9 +11,8 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.AllArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
-import ru.andrey.kvstorage.resp.ByteToRespCommandDecoder;
-import ru.andrey.kvstorage.resp.RespCommandToByteEncoder;
+import ru.andrey.kvstorage.resp.ByteToRespDecoder;
+import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
@@ -40,7 +39,6 @@ public class DatabaseNettyServer {
     private final DatabaseServerBootstrap bs;
     private final ExecutionEnvironment env;
 
-
     public DatabaseNettyServer(ExecutionEnvironment env, Initializer initializer) throws DatabaseException, InterruptedException {
         this.env = env;
         this.bs = new DatabaseServerBootstrap(env);
@@ -58,45 +56,17 @@ public class DatabaseNettyServer {
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
         databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
-
-//        databaseServer.executeNextCommand("0 CREATE_DATABASE test_3");
-//        databaseServer.executeNextCommand("1 CREATE_TABLE test_3 Post");
-//        databaseServer.executeNextCommand("2 SET_KEY test_3 Post 2 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
-//        databaseServer.executeNextCommand("3 GET_KEY test_3 Post 2");
-//        databaseServer.executeNextCommand("4 DELETE_KEY test_3 Post 2");
-//        databaseServer.executeNextCommand("4 GET_KEY test_3 Post 2");
-
     }
 
-    public DatabaseCommandResult executeNextCommand(String commandText) {
-        try {
-            if (StringUtils.isEmpty(commandText)) {
-                return DatabaseCommandResult.error("Command name is not specified");
-            }
-
-            final String[] args = commandText.split(" ");
-            if (args.length < 1) {
-                return DatabaseCommandResult.error("Command name is not specified");
-            }
-
-            List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-            return DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs).execute();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return DatabaseCommandResult.error(e);
-        }
-    }
-
-    private static class DatabaseServerBootstrap {
-        private final EventLoopGroup bossGroup = new NioEventLoopGroup();
-        private final EventLoopGroup workerGroup = new NioEventLoopGroup();
+    private static class DatabaseServerBootstrap implements AutoCloseable {
+        private final EventLoopGroup bossGroup = new NioEventLoopGroup(1);
+        private final EventLoopGroup workerGroup = new NioEventLoopGroup(1);
         private final ServerBootstrap b;
 
         ExecutionEnvironment env;
 
         public DatabaseServerBootstrap(ExecutionEnvironment env) throws InterruptedException {
             this.env = env;
-//            try {
             b = new ServerBootstrap()
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
@@ -104,9 +74,9 @@ public class DatabaseNettyServer {
                         @Override
                         public void initChannel(SocketChannel ch) {
                             ch.pipeline().addLast(
-                                    new ByteToRespCommandDecoder(),
+                                    new ByteToRespDecoder(),
                                     new KvsServerInboundHandler(env),
-                                    new RespCommandToByteEncoder());
+                                    new RespToByteEncoder());
                         }
                     })
                     .option(ChannelOption.SO_BACKLOG, 128)
@@ -115,14 +85,15 @@ public class DatabaseNettyServer {
             // Bind and start to accept incoming connections.
             ChannelFuture f = b.bind("127.0.0.1", 8080).sync();
 
-            System.out.println("Трррр Сервер стартанулллллллл");
+            System.out.println("Netty server started.");
 
-            f.channel().closeFuture().addListener(future -> System.out.println("епац сессия серверная дропнулафсь"));
-//            }
-//            finally {
-//                workerGroup.shutdownGracefully();
-//                bossGroup.shutdownGracefully();
-//            }
+            f.channel().closeFuture().addListener(future -> System.out.println("Server shut down server acceptor closed."));
+        }
+
+        @Override
+        public void close() {
+            workerGroup.shutdownGracefully();
+            bossGroup.shutdownGracefully();
         }
     }
 

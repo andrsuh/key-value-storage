@@ -10,11 +10,7 @@ import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.Initializer;
-import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.InitializationContextImpl;
-import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
+import ru.andrey.kvstorage.server.initialization.impl.*;
 import ru.andrey.kvstorage.server.resp.CommandReader;
 
 import java.io.BufferedInputStream;
@@ -25,19 +21,24 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
-public class DatabaseServer implements AutoCloseable{
+public class DatabaseServer implements AutoCloseable {
 
-    private static ExecutorService executor = Executors.newSingleThreadExecutor();
+    private static ExecutorService clientIOWorkers = new ThreadPoolExecutor(
+            100, 100, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1),
+            (rejected, pool) -> {
+                System.out.println("Client connection has been rejected. Number of clients exceeded: " + pool.getTaskCount());
+            });
 
+    private final ExecutorService connectionAcceptorExecutor = Executors.newSingleThreadExecutor();
+    private final ExecutorService dbCommandExecutor = Executors.newSingleThreadExecutor();
     private final ServerSocket serverSocket;
     private final ExecutionEnvironment env;
 
     public DatabaseServer(ExecutionEnvironment env, Initializer initializer) throws IOException, DatabaseException {
-        this.serverSocket = new ServerSocket(4321);
+        this.serverSocket = new ServerSocket(8080);
         this.env = env;
 
         InitializationContextImpl initializationContext = InitializationContextImpl.builder()
@@ -45,6 +46,26 @@ public class DatabaseServer implements AutoCloseable{
                 .build();
 
         initializer.perform(initializationContext);
+
+        connectionAcceptorExecutor.submit(() -> {
+            while (!Thread.currentThread().isInterrupted()) {
+                try {
+                    Socket clientSocket = DatabaseServer.this.serverSocket.accept();
+                    clientIOWorkers.submit(new ClientTask(clientSocket, this));
+                } catch (Throwable t) {
+                    System.out.println("Server acceptor thread exception: " + t);
+                }
+            }
+            System.out.println("Server acceptor stopped.");
+        });
+    }
+
+    @Override
+    public void close() throws Exception {
+        connectionAcceptorExecutor.shutdownNow();
+        dbCommandExecutor.shutdownNow();
+        clientIOWorkers.shutdownNow();
+        serverSocket.close();
     }
 
     public static void main(String[] args) throws IOException, DatabaseException {
@@ -55,10 +76,6 @@ public class DatabaseServer implements AutoCloseable{
         DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
 
         // databaseServer.executeNextCommand("SET_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
-
-        while (true) {
-            executor.submit(new ClientTask(databaseServer.serverSocket.accept(), databaseServer));
-        }
     }
 
     public DatabaseCommandResult executeNextCommand(String commandText) {
@@ -89,11 +106,6 @@ public class DatabaseServer implements AutoCloseable{
         }
     }
 
-    @Override
-    public void close() throws Exception {
-        serverSocket.close();
-    }
-
     static class ClientTask implements Runnable, Closeable {
         private final Socket client;
         private final DatabaseServer server;
@@ -112,13 +124,23 @@ public class DatabaseServer implements AutoCloseable{
                 );
                 final RespWriter writer = new RespWriter(new BufferedOutputStream(client.getOutputStream()));
 
-                while (!client.isClosed()) {
+                while (!client.isClosed() && !Thread.currentThread().isInterrupted()) {
                     if (!reader.hasNextCommand()) continue;
 
-                    writer.write(server.executeNextCommand(reader.readCommand()).serialize());
+                    DatabaseCommand databaseCommand = reader.readCommand();
+
+                    DatabaseCommandResult databaseCommandResult = server.dbCommandExecutor.submit(() -> server.executeNextCommand(databaseCommand)).get();
+
+                    writer.write(databaseCommandResult.serialize());
                 }
             } catch (IOException e) {
                 System.out.println("Client socket threw IO Exception " + e.getMessage());
+            } catch (InterruptedException e) {
+                System.out.println("Got interrupted exception " + e.getMessage()); // todo sukhoa bad
+            } catch (ExecutionException e) {
+                System.out.println("Got execution exception " + e.getMessage()); // todo sukhoa bad
+            } catch (Throwable t) {
+                System.out.println("Unexpected exception" + t);
             } finally {
                 close();
             }
@@ -128,8 +150,9 @@ public class DatabaseServer implements AutoCloseable{
         public void close() {
             try {
                 client.close();
+                System.out.println("Client has been disconnected: " + client.getInetAddress());
             } catch (IOException e) {
-                e.printStackTrace();
+                e.printStackTrace(); // todo sukhoa mmmmm
             }
         }
     }

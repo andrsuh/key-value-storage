@@ -11,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RespBulkString implements RespObject {
+    public static final RespBulkString NULL_BULK_STRING = new RespBulkString();
+
     public static final int NULL_STRING_SIZE = -1;
 
     public static final byte CODE = '$';
