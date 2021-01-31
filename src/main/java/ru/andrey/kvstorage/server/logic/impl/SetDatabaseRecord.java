@@ -12,8 +12,8 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
     private final byte[] value;
     private final int valueSize;
 
-    public SetDatabaseRecord(String objectKey, String objectValue) {
-        this(objectKey.getBytes(), objectValue.getBytes());
+    public SetDatabaseRecord(String objectKey, byte[] objectValue) {
+        this(objectKey.getBytes(), objectValue);
     }
 
     public SetDatabaseRecord(byte[] key, byte[] value) {

@@ -22,7 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 @RunWith(MockitoJUnitRunner.class)
-public class ClientTestIT {
+public class ClientNettyConnectorTestIT {
 
     @Rule
     public TemporaryFolder temporaryFolder = new TemporaryFolder();
@@ -56,6 +56,4 @@ public class ClientTestIT {
         assertEquals("newValue", client.delete(TABLE_NAME, "key"));
         assertNull(client.get(TABLE_NAME, "key"));
     }
-
-
 }

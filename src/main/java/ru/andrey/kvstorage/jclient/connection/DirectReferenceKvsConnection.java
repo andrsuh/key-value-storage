@@ -13,7 +13,7 @@ public class DirectReferenceKvsConnection implements KvsConnection {
 
     @Override
     public RespObject send(int commandId, RespObject command) {
-        return databaseServer.executeNextCommand(command.asString()).serialize();
+        return databaseServer.executeNextCommand(command).serialize();
     }
 
     @Override

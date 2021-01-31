@@ -15,6 +15,11 @@ public interface RespObject {
 
     void write(OutputStream os) throws IOException;
 
+    /**
+     * Returns the byte payload for types it might be reasonable
+     */
+    byte[] getPayloadBytes();
+
     default byte[] getBytes() {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
 

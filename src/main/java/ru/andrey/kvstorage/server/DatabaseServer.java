@@ -1,8 +1,9 @@
 package ru.andrey.kvstorage.server;
 
-import org.apache.commons.lang3.StringUtils;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
+import ru.andrey.kvstorage.resp.object.RespArray;
+import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
@@ -19,10 +20,10 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.stream.Collectors;
+
+import static ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions.COMMAND_NAME;
 
 public class DatabaseServer implements AutoCloseable {
 
@@ -78,19 +79,18 @@ public class DatabaseServer implements AutoCloseable {
         // databaseServer.executeNextCommand("SET_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
     }
 
-    public DatabaseCommandResult executeNextCommand(String commandText) {
+    public DatabaseCommandResult executeNextCommand(RespObject msg) {
         try {
-            if (StringUtils.isEmpty(commandText)) {
-                return DatabaseCommandResult.error("Command name is not specified");
-            }
+            RespArray message = (RespArray) msg;
+            System.out.println("Server got client request: [ " + message + "]");
 
-            final String[] args = commandText.split(" ");
-            if (args.length < 1) {
-                return DatabaseCommandResult.error("Command name is not specified");
-            }
+            List<RespObject> commandArgs = message.getObjects();
 
-            List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-            return DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs).execute();
+            DatabaseCommand command = DatabaseCommands
+                    .valueOf(commandArgs.get(COMMAND_NAME.getPositionIndex()).asString())
+                    .getCommand(env, commandArgs);
+
+            return command.execute();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return DatabaseCommandResult.error(e);

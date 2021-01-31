@@ -27,18 +27,18 @@ public class CachingTable implements Table {
     }
 
     @Override
-    public void write(String objectKey, String objectValue) throws DatabaseException {
+    public void write(String objectKey, byte[] objectValue) throws DatabaseException {
         table.write(objectKey, objectValue);
         cache.set(objectKey, objectValue);
     }
 
     @Override
-    public Optional<String> read(String objectKey) throws DatabaseException {
-        String value = cache.get(objectKey);
+    public Optional<byte[]> read(String objectKey) throws DatabaseException {
+        byte[] value = cache.get(objectKey);
         if (value == null) {
-            Optional<String> result = table.read(objectKey);
-            result.ifPresent(s -> cache.set(objectKey, s));
-            return result;
+            Optional<byte[]> optionalValue = table.read(objectKey);
+            optionalValue.ifPresent(s -> cache.set(objectKey, s));
+            return optionalValue;
         }
         return Optional.of(value);
     }

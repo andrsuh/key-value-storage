@@ -2,7 +2,6 @@ package ru.andrey.kvstorage.resp.object;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -24,6 +23,11 @@ public class RespError implements RespObject {
     @Override
     public String asString() {
         return new String(message, StandardCharsets.UTF_8);
+    }
+
+    @Override
+    public byte[] getPayloadBytes() {
+        return message;
     }
 
     @Override
