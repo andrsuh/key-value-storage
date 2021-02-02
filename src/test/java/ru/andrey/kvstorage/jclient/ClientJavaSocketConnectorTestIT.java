@@ -37,7 +37,7 @@ public class ClientJavaSocketConnectorTestIT {
 
     private SimpleKvsClient client;
 
-    private NettyServerConnector connector;
+    private JavaSocketServerConnector connector;
 
     private static final String DATABASE_NAME = "test";
     private static final String TABLE_NAME = "test_table";
@@ -55,7 +55,7 @@ public class ClientJavaSocketConnectorTestIT {
         ExecutionEnvironment env = new ExecutionEnvironmentImpl(testConfig.getDbConfig());
         DatabaseServer databaseServer = new DatabaseServer(env, initializer);
 
-        connector = new NettyServerConnector(databaseServer, testConfig.getServerConfig());
+        connector = new JavaSocketServerConnector(databaseServer, testConfig.getServerConfig());
 
         this.client = new SimpleKvsClient(DATABASE_NAME, () -> new SocketKvsConnection(new ConnectionConfig()));
         client.executeCommand("CREATE_DATABASE " + DATABASE_NAME);
