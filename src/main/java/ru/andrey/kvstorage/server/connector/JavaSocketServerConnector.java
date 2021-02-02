@@ -5,7 +5,7 @@ import ru.andrey.kvstorage.resp.RespWriter;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.ConfigLoader;
-import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
 import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
@@ -62,7 +62,7 @@ public class JavaSocketServerConnector implements AutoCloseable {
     public static void main(String[] args) throws IOException, DatabaseException {
 
         ConfigLoader loader = new ConfigLoader();
-        KvsConfig config = loader.readConfig();
+        DatabaseServerConfig config = loader.readConfig();
 
         DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));

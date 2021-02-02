@@ -14,13 +14,12 @@ import org.mockito.runners.MockitoJUnitRunner;
 import ru.andrey.kvstorage.resp.object.*;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.DatabaseConfig;
-import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
 import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.connector.JavaSocketServerConnector;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
-import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
@@ -68,7 +67,7 @@ public class CommandsTest {
 
     @Before
     public void setUp() throws IOException, DatabaseException {
-        KvsConfig testConfig = KvsConfig.builder()
+        DatabaseServerConfig testConfig = DatabaseServerConfig.builder()
                 .dbConfig(new DatabaseConfig(temporaryFolder.getRoot().getAbsolutePath()))
                 .serverConfig(new ServerConfig("127.0.0.1", 8080))
                 .build();

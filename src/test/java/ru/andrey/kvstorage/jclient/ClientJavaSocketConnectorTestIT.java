@@ -12,10 +12,9 @@ import ru.andrey.kvstorage.jclient.connection.ConnectionConfig;
 import ru.andrey.kvstorage.jclient.connection.SocketKvsConnection;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.DatabaseConfig;
-import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
 import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.connector.JavaSocketServerConnector;
-import ru.andrey.kvstorage.server.connector.NettyServerConnector;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
@@ -44,7 +43,7 @@ public class ClientJavaSocketConnectorTestIT {
 
     @Before
     public void setUp() throws DatabaseException, IOException, InterruptedException {
-        KvsConfig testConfig = KvsConfig.builder()
+        DatabaseServerConfig testConfig = DatabaseServerConfig.builder()
                 .dbConfig(new DatabaseConfig(temporaryFolder.getRoot().getAbsolutePath()))
                 .serverConfig(new ServerConfig("localhost", 8080))
                 .build();

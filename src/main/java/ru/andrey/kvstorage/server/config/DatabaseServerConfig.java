@@ -5,7 +5,7 @@ import lombok.Value;
 
 @Value
 @Builder
-public class KvsConfig {
+public class DatabaseServerConfig {
     ServerConfig serverConfig;
 
     DatabaseConfig dbConfig;

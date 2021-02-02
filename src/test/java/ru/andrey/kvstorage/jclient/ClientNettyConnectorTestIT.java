@@ -12,7 +12,7 @@ import ru.andrey.kvstorage.jclient.connection.ConnectionConfig;
 import ru.andrey.kvstorage.jclient.connection.ConnectionPool;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.DatabaseConfig;
-import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
 import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.connector.NettyServerConnector;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
@@ -41,7 +41,7 @@ public class ClientNettyConnectorTestIT {
 
     @Before
     public void setUp() throws DatabaseException, InterruptedException {
-        KvsConfig testConfig = KvsConfig.builder()
+        DatabaseServerConfig testConfig = DatabaseServerConfig.builder()
                 .dbConfig(new DatabaseConfig(temporaryFolder.getRoot().getAbsolutePath()))
                 .serverConfig(new ServerConfig("127.0.0.1", 8080))
                 .build();

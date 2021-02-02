@@ -12,7 +12,7 @@ import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.ConfigLoader;
-import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
 import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
@@ -122,7 +122,7 @@ public class NettyServerConnector {
 
     public static void main(String[] args) throws InterruptedException, DatabaseException {
         ConfigLoader loader = new ConfigLoader();
-        KvsConfig config = loader.readConfig();
+        DatabaseServerConfig config = loader.readConfig();
 
         DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));

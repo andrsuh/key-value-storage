@@ -14,7 +14,7 @@ public class ConfigLoader {
         this("server.properties");
     }
 
-    public KvsConfig readConfig() {
+    public DatabaseServerConfig readConfig() {
         Properties serverProperties = new Properties();
         try {
             serverProperties.load(this.getClass().getClassLoader().getResourceAsStream("server.properties"));
@@ -27,7 +27,7 @@ public class ConfigLoader {
         String portString = serverProperties.getProperty("kvs.port", String.valueOf(ServerConfig.DEFAULT_PORT));
         int port = Integer.parseInt(portString);
 
-        return KvsConfig.builder()
+        return DatabaseServerConfig.builder()
                 .dbConfig(new DatabaseConfig(workingPath))
                 .serverConfig(new ServerConfig(host, port))
                 .build();
