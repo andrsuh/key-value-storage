@@ -61,6 +61,7 @@ public class NettyServerConnector {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             // Bind and start to accept incoming connections.
+            System.out.println("Starting server on port " + config.getPort() + " (host " + config.getHost() + ")");
             ChannelFuture f = b.bind(config.getHost(), config.getPort()).sync();
 
             System.out.println("Netty server started.");
