@@ -11,6 +11,9 @@ import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.config.ConfigLoader;
+import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
@@ -31,9 +34,9 @@ public class NettyServerConnector {
     private final DatabaseServerBootstrap bs;
     private final DatabaseServer databaseServer;
 
-    public NettyServerConnector(DatabaseServer databaseServer) throws InterruptedException {
+    public NettyServerConnector(DatabaseServer databaseServer, ServerConfig config) throws InterruptedException {
         this.databaseServer = databaseServer;
-        this.bs = new DatabaseServerBootstrap(databaseServer.getEnv());
+        this.bs = new DatabaseServerBootstrap(config, databaseServer.getEnv());
     }
 
     private static class DatabaseServerBootstrap implements AutoCloseable {
@@ -41,7 +44,7 @@ public class NettyServerConnector {
         private final EventLoopGroup workerGroup = new NioEventLoopGroup(1);
         private final ServerBootstrap b;
 
-        public DatabaseServerBootstrap(ExecutionEnvironment env) throws InterruptedException {
+        public DatabaseServerBootstrap(ServerConfig config, ExecutionEnvironment env) throws InterruptedException {
             b = new ServerBootstrap()
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
@@ -58,7 +61,7 @@ public class NettyServerConnector {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             // Bind and start to accept incoming connections.
-            ChannelFuture f = b.bind("127.0.0.1", 8080).sync();
+            ChannelFuture f = b.bind(config.getHost(), config.getPort()).sync();
 
             System.out.println("Netty server started.");
 
@@ -71,6 +74,10 @@ public class NettyServerConnector {
             bossGroup.shutdownGracefully();
             System.out.println("Netty server stopped.");
         }
+    }
+
+    public void close() {
+        bs.close();
     }
 
     @AllArgsConstructor
@@ -113,12 +120,14 @@ public class NettyServerConnector {
     }
 
     public static void main(String[] args) throws InterruptedException, DatabaseException {
+        ConfigLoader loader = new ConfigLoader();
+        KvsConfig config = loader.readConfig();
 
         DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(config.getDbConfig()), initializer);
 
-        new NettyServerConnector(databaseServer);
+        new NettyServerConnector(databaseServer, config.getServerConfig());
     }
 }

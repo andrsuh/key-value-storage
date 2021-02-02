@@ -4,6 +4,9 @@ import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.config.ConfigLoader;
+import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
@@ -33,9 +36,11 @@ public class JavaSocketServerConnector implements AutoCloseable {
     private final ServerSocket serverSocket;
     private final DatabaseServer databaseServer;
 
-    public JavaSocketServerConnector(DatabaseServer databaseServer) throws IOException, DatabaseException {
+    public JavaSocketServerConnector(DatabaseServer databaseServer, ServerConfig config) throws IOException, DatabaseException {
+        System.out.println("Starting server on port " + config.getPort() + " (host " + config.getHost() + ")");
+
         this.databaseServer = databaseServer;
-        this.serverSocket = new ServerSocket(8080);
+        this.serverSocket = new ServerSocket(config.getPort());
 
         connectionAcceptorExecutor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -59,12 +64,15 @@ public class JavaSocketServerConnector implements AutoCloseable {
 
     public static void main(String[] args) throws IOException, DatabaseException {
 
+        ConfigLoader loader = new ConfigLoader();
+        KvsConfig config = loader.readConfig();
+
         DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(config.getDbConfig()), initializer);
 
-        new JavaSocketServerConnector(databaseServer);
+        new JavaSocketServerConnector(databaseServer, config.getServerConfig());
     }
 
     public DatabaseCommandResult executeNextCommand(RespObject msg) {

@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.jclient;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -10,7 +11,11 @@ import ru.andrey.kvstorage.jclient.client.SimpleKvsClient;
 import ru.andrey.kvstorage.jclient.connection.ConnectionConfig;
 import ru.andrey.kvstorage.jclient.connection.ConnectionPool;
 import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.config.DatabaseConfig;
+import ru.andrey.kvstorage.server.config.KvsConfig;
+import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.connector.NettyServerConnector;
+import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
@@ -29,23 +34,36 @@ public class ClientNettyConnectorTestIT {
 
     private SimpleKvsClient client;
 
+    private NettyServerConnector connector;
+
     private static final String DATABASE_NAME = "test";
     private static final String TABLE_NAME = "test_table";
 
     @Before
     public void setUp() throws DatabaseException, InterruptedException {
+        KvsConfig testConfig = KvsConfig.builder()
+                .dbConfig(new DatabaseConfig(temporaryFolder.getRoot().getAbsolutePath()))
+                .serverConfig(new ServerConfig("127.0.0.1", 8080))
+                .build();
+
         DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(temporaryFolder.getRoot().toPath()), initializer);
+        ExecutionEnvironment env = new ExecutionEnvironmentImpl(testConfig.getDbConfig());
+        DatabaseServer databaseServer = new DatabaseServer(env, initializer);
 
-        new NettyServerConnector(databaseServer);
+        connector = new NettyServerConnector(databaseServer, testConfig.getServerConfig());
 
         ConnectionPool connectionPool = new ConnectionPool(new ConnectionConfig());
         this.client = new SimpleKvsClient(DATABASE_NAME, connectionPool::getClientConnection);
 
         client.executeCommand("CREATE_DATABASE " + DATABASE_NAME);
         client.executeCommand("CREATE_TABLE " + DATABASE_NAME + " " + TABLE_NAME);
+    }
+
+    @After
+    public void tearDown() {
+        connector.close();
     }
 
     @Test
