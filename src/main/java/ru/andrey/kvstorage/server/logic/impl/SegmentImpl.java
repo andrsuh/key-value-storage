@@ -70,12 +70,6 @@ public class SegmentImpl implements Segment {
     }
 
     static String createSegmentName(String tableName) {
-        // todo sukhoa remove this shit after min allowed segment size is set
-        //        try {
-        //            Thread.sleep(1);
-        //        } catch (InterruptedException e) {
-        //            e.printStackTrace();
-        //        }
         return tableName + "_" + System.currentTimeMillis();
     }
 
@@ -85,7 +79,7 @@ public class SegmentImpl implements Segment {
     }
 
     @Override
-    public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
+    public boolean write(String objectKey, byte[] objectValue) throws IOException {
         WritableDatabaseRecord databaseRecord = new SetDatabaseRecord(objectKey, objectValue);
         return updateSegment(databaseRecord);
     }
@@ -95,7 +89,7 @@ public class SegmentImpl implements Segment {
     }
 
     @Override
-    public Optional<String> read(String objectKey) throws IOException {
+    public Optional<byte[]> read(String objectKey) throws IOException {
         Optional<SegmentOffsetInfo> indexInfo = segmentIndex.searchForKey(objectKey);
 
         if (indexInfo.isEmpty()) {
@@ -109,8 +103,7 @@ public class SegmentImpl implements Segment {
 
             DatabaseRecord record = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
 
-            // todo sukhoa charset, handle separator
-            return Optional.ofNullable(record.isValuePresented()? new String(record.getValue()) : null);
+            return Optional.ofNullable(record.isValuePresented() ? record.getValue() : null);
         }
     }
 
@@ -142,6 +135,6 @@ public class SegmentImpl implements Segment {
 
             segmentIndex.onIndexedEntityUpdated(new String(databaseRecord.getKey()), new SegmentOffsetInfoImpl(startPosition));
         }
-        return true; // todo sukhoa fix
+        return true;
     }
 }

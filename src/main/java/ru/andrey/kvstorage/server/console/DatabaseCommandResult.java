@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface DatabaseCommandResult extends DatabaseApiSerializable {
 
-    static DatabaseCommandResult success(String result) {
+    static DatabaseCommandResult success(byte[] result) {
         return new DatabaseCommandResultImpl(result, null, DatabaseCommandStatus.SUCCESS);
     }
 
@@ -28,7 +28,7 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         return DatabaseCommandResult.error(message);
     }
 
-    Optional<String> getResult();
+    Optional<byte[]> getResult();
 
     DatabaseCommandStatus getStatus();
 
@@ -41,11 +41,11 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
     }
 
     class DatabaseCommandResultImpl implements DatabaseCommandResult {
-        private final String result;
+        private final byte[] result;
         private final String errorMessage;
         private final DatabaseCommandStatus status;
 
-        private DatabaseCommandResultImpl(String result, String errorMessage, DatabaseCommandStatus status) {
+        private DatabaseCommandResultImpl(byte[] result, String errorMessage, DatabaseCommandStatus status) {
             this.result = result;
             this.errorMessage = errorMessage;
             this.status = status;
@@ -67,7 +67,7 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         }
 
         @Override
-        public Optional<String> getResult() {
+        public Optional<byte[]> getResult() {
             return Optional.ofNullable(result);
         }
 
@@ -75,7 +75,7 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         public RespObject serialize() {
             if (isSuccess()) {
                 if (getResult().isPresent()) {
-                    return new RespBulkString(result.getBytes(StandardCharsets.UTF_8));
+                    return new RespBulkString(result);
                 }
                 return RespBulkString.NULL_BULK_STRING;
             } else {

@@ -2,6 +2,7 @@ package ru.andrey.kvstorage.jclient.connection;
 
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
+import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
 import java.io.BufferedInputStream;
@@ -32,7 +33,9 @@ public class SocketKvsConnection implements KvsConnection {
         }
         try {
             writer.write(command);
-            return reader.readObject();
+            RespArray arrayResponse =  (RespArray) reader.readObject();
+            System.out.println("Client got response to command id: " + arrayResponse.getObjects().get(0).asString());
+            return arrayResponse.getObjects().get(1);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to send command to server");
         }

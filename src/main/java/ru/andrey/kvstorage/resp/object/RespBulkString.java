@@ -33,6 +33,11 @@ public class RespBulkString implements RespObject {
     }
 
     @Override
+    public byte[] getPayloadBytes() {
+        return data;
+    }
+
+    @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
 

@@ -1,12 +1,7 @@
-package ru.andrey.kvstorage;
+package ru.andrey.kvstorage.server.connector;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
@@ -15,47 +10,30 @@ import ru.andrey.kvstorage.resp.ByteToRespDecoder;
 import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
+import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.InitializationContextImpl;
 import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class DatabaseNettyServer {
+import static ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions.COMMAND_NAME;
 
-    private static DatabaseNettyServer databaseServer;
+public class NettyServerConnector {
 
     private final DatabaseServerBootstrap bs;
-    private final ExecutionEnvironment env;
+    private final DatabaseServer databaseServer;
 
-    public DatabaseNettyServer(ExecutionEnvironment env, Initializer initializer) throws DatabaseException, InterruptedException {
-        this.env = env;
-        this.bs = new DatabaseServerBootstrap(env);
-
-        InitializationContextImpl initializationContext = InitializationContextImpl.builder()
-                .executionEnvironment(env)
-                .build();
-
-        initializer.perform(initializationContext);
-    }
-
-    public static void main(String[] args) throws DatabaseException, InterruptedException {
-
-        Initializer initializer = new DatabaseServerInitializer(
-                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
-
-        databaseServer = new DatabaseNettyServer(new ExecutionEnvironmentImpl(), initializer);
+    public NettyServerConnector(DatabaseServer databaseServer) throws InterruptedException {
+        this.databaseServer = databaseServer;
+        this.bs = new DatabaseServerBootstrap(databaseServer.getEnv());
     }
 
     private static class DatabaseServerBootstrap implements AutoCloseable {
@@ -63,10 +41,7 @@ public class DatabaseNettyServer {
         private final EventLoopGroup workerGroup = new NioEventLoopGroup(1);
         private final ServerBootstrap b;
 
-        ExecutionEnvironment env;
-
         public DatabaseServerBootstrap(ExecutionEnvironment env) throws InterruptedException {
-            this.env = env;
             b = new ServerBootstrap()
                     .group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
@@ -94,29 +69,24 @@ public class DatabaseNettyServer {
         public void close() {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
+            System.out.println("Netty server stopped.");
         }
     }
 
     @AllArgsConstructor
     static class KvsServerInboundHandler extends ChannelInboundHandlerAdapter {
-        ExecutionEnvironment env;
+        private final ExecutionEnvironment env;
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             RespArray message = (RespArray) msg;
             System.out.println("Server got client request: [ " + message + "]");
 
-//            if (objects.isEmpty()) {
-//                throw new IllegalArgumentException("Command name is not specified");
-//            }
+            List<RespObject> commandArgs = message.getObjects();
 
-            final String[] args = message.getObjects().stream()
-                    .map(RespObject::asString)
-                    .toArray(String[]::new);
-
-            List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-
-            DatabaseCommand command = DatabaseCommands.valueOf(commandArgs.get(0)).getCommand(env, commandArgs);
+            DatabaseCommand command = DatabaseCommands
+                    .valueOf(commandArgs.get(COMMAND_NAME.getPositionIndex()).asString())
+                    .getCommand(env, commandArgs);
 
             DatabaseCommandResult databaseCommandResult = executeNextCommand(command);
 
@@ -140,5 +110,15 @@ public class DatabaseNettyServer {
                 return DatabaseCommandResult.error(e);
             }
         }
+    }
+
+    public static void main(String[] args) throws InterruptedException, DatabaseException {
+
+        DatabaseServerInitializer initializer = new DatabaseServerInitializer(
+                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
+
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
+
+        new NettyServerConnector(databaseServer);
     }
 }

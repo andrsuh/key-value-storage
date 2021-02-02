@@ -74,7 +74,7 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
-    public void write(String tableName, String objectKey, String objectValue) throws DatabaseException {
+    public void write(String tableName, String objectKey, byte[] objectValue) throws DatabaseException {
         Table table = tables.get(tableName);
         if (table == null) {
             throw new DatabaseException("There is no such table: " + tableName);
@@ -84,7 +84,7 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
-    public Optional<String> read(String tableName, String objectKey) throws DatabaseException {
+    public Optional<byte[]> read(String tableName, String objectKey) throws DatabaseException {
         Table table = tables.get(tableName);
         if (table == null) {
             throw new DatabaseException("There is no such table: " + tableName);

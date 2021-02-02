@@ -16,9 +16,9 @@ import java.util.Optional;
 public interface Table {
     String getName();
 
-    void write(String objectKey, String objectValue) throws DatabaseException;
+    void write(String objectKey, byte[] objectValue) throws DatabaseException;
 
-    Optional<String> read(String objectKey) throws DatabaseException;
+    Optional<byte[]> read(String objectKey) throws DatabaseException;
 
     void delete(String objectKey) throws DatabaseException;
 }

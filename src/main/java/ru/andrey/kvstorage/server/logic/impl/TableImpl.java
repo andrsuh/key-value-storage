@@ -68,7 +68,7 @@ public class TableImpl implements Table {
     }
 
     @Override
-    public void write(String objectKey, String objectValue) throws DatabaseException {
+    public void write(String objectKey, byte[] objectValue) throws DatabaseException {
         try {
             while (true) { // todo sukhoa
                 var s = currentSegment; // cache to local for preventing concurrent issues in future
@@ -85,7 +85,7 @@ public class TableImpl implements Table {
     }
 
     @Override
-    public Optional<String> read(String objectKey) throws DatabaseException {
+    public Optional<byte[]> read(String objectKey) throws DatabaseException {
         try {
             Optional<Segment> segment = tableIndex.searchForKey(objectKey);
             if (segment.isEmpty()) {

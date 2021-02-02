@@ -8,10 +8,10 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import ru.andrey.kvstorage.KvsClientInboundHandler;
 import ru.andrey.kvstorage.resp.ByteToRespDecoder;
 import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespObject;
+import ru.andrey.kvstorage.server.connector.KvsClientInboundHandler;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
