@@ -7,6 +7,7 @@ import ru.andrey.kvstorage.server.logic.Database;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
@@ -15,6 +16,7 @@ public class ExecutionEnvironmentImpl implements ExecutionEnvironment {
     private final Path workingPath;
 
     public ExecutionEnvironmentImpl(DatabaseConfig config) {
+        Objects.requireNonNull(config, "config");
         workingPath = Path.of("", config.getWorkingPath());
     }
 
