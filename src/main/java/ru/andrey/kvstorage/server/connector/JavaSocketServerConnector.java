@@ -26,11 +26,7 @@ import java.util.concurrent.*;
 
 public class JavaSocketServerConnector implements AutoCloseable {
 
-    private static final ExecutorService clientIOWorkers = new ThreadPoolExecutor(
-            100, 100, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1),
-            (rejected, pool) -> {
-                System.out.println("Client connection has been rejected. Number of clients exceeded: " + pool.getTaskCount());
-            });
+    private final ExecutorService clientIOWorkers = Executors.newSingleThreadExecutor();
 
     private final ExecutorService connectionAcceptorExecutor = Executors.newSingleThreadExecutor();
     private final ServerSocket serverSocket;
@@ -57,6 +53,7 @@ public class JavaSocketServerConnector implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        System.out.println("Stopping socket connector");
         connectionAcceptorExecutor.shutdownNow();
         clientIOWorkers.shutdownNow();
         serverSocket.close();
