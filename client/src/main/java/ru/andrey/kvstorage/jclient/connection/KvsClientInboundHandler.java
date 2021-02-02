@@ -1,8 +1,7 @@
-package ru.andrey.kvstorage.server.connector;
+package ru.andrey.kvstorage.jclient.connection;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import ru.andrey.kvstorage.jclient.connection.ConnectionPool;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespCommandId;
 import ru.andrey.kvstorage.resp.object.RespObject;
