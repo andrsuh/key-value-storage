@@ -11,7 +11,9 @@ public interface Database {
 
     void createTableIfNotExists(String tableName, int segmentSizeInBytes) throws DatabaseException;
 
-    void write(String tableName, String objectKey, String objectValue) throws DatabaseException;
+    void write(String tableName, String objectKey, byte[] objectValue) throws DatabaseException;
 
-    Optional<String> read(String tableName, String objectKey) throws DatabaseException;
+    Optional<byte[]> read(String tableName, String objectKey) throws DatabaseException;
+
+    void delete(String tableName, String objectKey) throws DatabaseException;
 }

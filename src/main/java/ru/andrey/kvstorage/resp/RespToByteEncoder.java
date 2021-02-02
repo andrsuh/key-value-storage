@@ -5,10 +5,11 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
-public class RespCommandToByteEncoder extends MessageToByteEncoder<RespObject> {
+public class RespToByteEncoder extends MessageToByteEncoder<RespObject> {
     @Override
     protected void encode(ChannelHandlerContext ctx, RespObject msg, ByteBuf out) throws Exception {
-        System.out.println("опаньки сереализуем респ в байты");
-        out.writeBytes(msg.getBytes());
+        byte[] msgBytes = msg.getBytes();
+        System.out.println("Serializing: " + msg + ", bytes num :" + msgBytes.length);
+        out.writeBytes(msgBytes);
     }
 }

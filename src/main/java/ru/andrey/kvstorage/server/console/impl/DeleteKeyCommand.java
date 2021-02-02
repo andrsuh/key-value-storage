@@ -8,18 +8,19 @@ import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.logic.Database;
 
 import java.util.List;
-import java.util.Optional;
 
 import static ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions.*;
 
-public class GetKeyCommand implements DatabaseCommand {
-
+/**
+ * Удаляет значение по ключу. Возвращает удаленное значение
+ */
+public class DeleteKeyCommand implements DatabaseCommand {
     private final ExecutionEnvironment env;
     private final String databaseName;
     private final String tableName;
     private final String key;
 
-    public GetKeyCommand(ExecutionEnvironment env, List<RespObject> args) {
+    public DeleteKeyCommand(ExecutionEnvironment env, List<RespObject> args) {
         if (args.size() < 4) {
             throw new IllegalArgumentException("Not enough args");
         }
@@ -33,9 +34,11 @@ public class GetKeyCommand implements DatabaseCommand {
     public DatabaseCommandResult execute() throws DatabaseException {
         Database database = env.getDatabase(databaseName)
                 .orElseThrow(() -> new DatabaseException("No such database: " + databaseName));
-        Optional<byte[]> result = database.read(tableName, key);
-        return result
-                .map(DatabaseCommandResult::success)
-                .orElseGet(() -> DatabaseCommandResult.success(null));
+
+        byte[] prevValue = database.read(tableName, key)
+                .orElseThrow(() -> new DatabaseException("Unable to delete key \"" + key + "\". Key does not exist.")); // todo sukhoa array to string
+
+        database.delete(tableName, key);
+        return DatabaseCommandResult.success(prevValue);
     }
 }

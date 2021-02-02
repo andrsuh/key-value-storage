@@ -3,12 +3,17 @@ package ru.andrey.kvstorage;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import ru.andrey.kvstorage.resp.object.*;
 import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.connector.JavaSocketServerConnector;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
@@ -20,12 +25,14 @@ import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 import ru.andrey.kvstorage.server.logic.Database;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.FAILED;
 import static ru.andrey.kvstorage.server.console.DatabaseCommandResult.DatabaseCommandStatus.SUCCESS;
@@ -39,7 +46,9 @@ public class CommandsTest {
 
     private static final String KEY_NAME = "key";
 
-    private static final String VALUE = "value";
+    private static final byte[] VALUE_BYTES = "value".getBytes();
+
+    private static final String VALUE_STRING = "value";
 
     @Mock
     public Database database;
@@ -47,18 +56,31 @@ public class CommandsTest {
     @Mock
     public ExecutionEnvironment env;
 
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
 
-    @InjectMocks
-    public DatabaseServer server = new DatabaseServer(env,
-            new DatabaseServerInitializer(new DatabaseInitializer(new TableInitializer(new SegmentInitializer()))));
+    public JavaSocketServerConnector server;
 
-    public CommandsTest() throws IOException, DatabaseException {
+    @Before
+    public void setUp() throws IOException, DatabaseException {
+        env = mock(ExecutionEnvironment.class);
+        when(env.getWorkingPath()).thenReturn(temporaryFolder.getRoot().toPath());
+
+        DatabaseServer databaseServer = new DatabaseServer(env,
+                new DatabaseServerInitializer(new DatabaseInitializer(new TableInitializer(new SegmentInitializer()))));
+
+        server = new JavaSocketServerConnector(databaseServer);
     }
 
-    // ================= update key tests =================
+    @After
+    public void closeSocket() throws Exception {
+        server.close();
+    }
+
+    // ================= read key tests =================
 
     @Test
-    public void test_readKey_noSuchDb() {
+    public void test_getKey_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
@@ -68,16 +90,14 @@ public class CommandsTest {
                 .key("key")
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
         assertEquals(FAILED, result.getStatus());
     }
 
     @Test
-    public void test_readKey_success() throws DatabaseException {
+    public void test_getKey_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        Optional<String> result = database.read(TABLE_NAME, KEY_NAME);
-        when(result.isPresent()).thenReturn(true);
-        result.ifPresent(s -> when(s).thenReturn(VALUE));
+        when(database.read(eq(TABLE_NAME), eq(KEY_NAME))).thenReturn(Optional.of(VALUE_BYTES));
 
         Command command = Command.builder()
                 .name(DatabaseCommands.GET_KEY.name())
@@ -86,12 +106,31 @@ public class CommandsTest {
                 .key(KEY_NAME)
                 .build();
 
-        DatabaseCommandResult commandResult = server.executeNextCommand(command.toString());
+        DatabaseCommandResult commandResult = server.executeNextCommand(command.toRespObject());
         assertEquals(SUCCESS, commandResult.getStatus());
+        //noinspection OptionalGetWithoutIsPresent
+        assertEquals(VALUE_BYTES, commandResult.getResult().get());
     }
 
     @Test
-    public void test_readKey_exception() throws DatabaseException {
+    public void test_getKey_noSuchKey() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        when(database.read(eq(TABLE_NAME), eq(KEY_NAME))).thenReturn(Optional.empty());
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.GET_KEY.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
+                .build();
+
+        DatabaseCommandResult commandResult = server.executeNextCommand(command.toRespObject());
+        assertEquals(SUCCESS, commandResult.getStatus());
+        assertTrue(commandResult.getResult().isEmpty());
+    }
+
+    @Test
+    public void test_getKey_exception() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
         var message = "Table already exists";
         doThrow(new DatabaseException(message)).when(database).read(TABLE_NAME, KEY_NAME);
@@ -103,15 +142,15 @@ public class CommandsTest {
                 .key(KEY_NAME)
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
         assertEquals(FAILED, result.getStatus());
         assertEquals(message, result.getErrorMessage());
     }
 
-    // ================= update key tests =================
+    // ================= set key tests =================
 
     @Test
-    public void test_updateKey_noSuchDb() {
+    public void test_setKey_noSuchDb() {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.empty());
 
         Command command = Command.builder()
@@ -119,47 +158,50 @@ public class CommandsTest {
                 .dbName(DB_NAME)
                 .tableName("table")
                 .key(KEY_NAME)
-                .value(VALUE)
+                .value(VALUE_STRING)
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
         assertEquals(FAILED, result.getStatus());
     }
 
     @Test
-    public void test_updateKey_exception() throws DatabaseException {
+    public void test_setKey_noPrevValue_success() throws DatabaseException {
         when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        var message = "Table already exists";
-        doThrow(new DatabaseException(message)).when(database).write(TABLE_NAME, KEY_NAME, VALUE);
+        when(database.read(eq(TABLE_NAME), eq(KEY_NAME))).thenReturn(Optional.empty());
+        doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE_BYTES);
 
         Command command = Command.builder()
                 .name(DatabaseCommands.SET_KEY.name())
                 .dbName(DB_NAME)
                 .tableName(TABLE_NAME)
                 .key(KEY_NAME)
-                .value(VALUE)
+                .value(VALUE_STRING)
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
-        assertEquals(FAILED, result.getStatus());
-        assertEquals(message, result.getErrorMessage());
-    }
-
-    @Test
-    public void test_updateKey_success() throws DatabaseException {
-        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
-        doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE);
-
-        Command command = Command.builder()
-                .name(DatabaseCommands.SET_KEY.name())
-                .dbName(DB_NAME)
-                .tableName(TABLE_NAME)
-                .key(KEY_NAME)
-                .value(VALUE)
-                .build();
-
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
         assertEquals(SUCCESS, result.getStatus());
+        assertTrue(result.getResult().isEmpty());
+    }
+
+    @Test
+    public void test_setKey_hasPrevValue_success() throws DatabaseException {
+        when(env.getDatabase(DB_NAME)).thenReturn(Optional.of(database));
+        when(database.read(eq(TABLE_NAME), eq(KEY_NAME))).thenReturn(Optional.of("prev".getBytes()));
+        doNothing().when(database).write(TABLE_NAME, KEY_NAME, VALUE_BYTES);
+
+        Command command = Command.builder()
+                .name(DatabaseCommands.SET_KEY.name())
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .key(KEY_NAME)
+                .value(VALUE_STRING)
+                .build();
+
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
+        assertEquals(SUCCESS, result.getStatus());
+        //noinspection OptionalGetWithoutIsPresent
+        assertEquals("prev", new String(result.getResult().get(), StandardCharsets.UTF_8));
     }
 
     // ================= create table tests =================
@@ -175,7 +217,7 @@ public class CommandsTest {
                 .key(KEY_NAME)
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
         assertEquals(FAILED, result.getStatus());
     }
 
@@ -190,7 +232,7 @@ public class CommandsTest {
                 .tableName(TABLE_NAME)
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
         assertEquals(SUCCESS, result.getStatus());
     }
 
@@ -206,20 +248,26 @@ public class CommandsTest {
                 .tableName(TABLE_NAME)
                 .build();
 
-        DatabaseCommandResult result = server.executeNextCommand(command.toString());
+        DatabaseCommandResult result = server.executeNextCommand(command.toRespObject());
         assertEquals(FAILED, result.getStatus());
         assertEquals(message, result.getErrorMessage());
     }
 
     @Test
     public void test_executeNext_noCommandName() {
-        DatabaseCommandResult databaseCommandResult = server.executeNextCommand((String) null);
+        DatabaseCommandResult databaseCommandResult = server.executeNextCommand((RespObject) null);
         assertEquals(FAILED, databaseCommandResult.getStatus());
     }
 
     @Test
     public void test_executeNext_noCommandFound() {
-        DatabaseCommandResult databaseCommandResult = server.executeNextCommand("fake_command_name");
+        Command command = Command.builder()
+                .name("HEH")
+                .dbName(DB_NAME)
+                .tableName(TABLE_NAME)
+                .build();
+
+        DatabaseCommandResult databaseCommandResult = server.executeNextCommand(command.toRespObject());
         assertEquals(FAILED, databaseCommandResult.getStatus());
     }
 
@@ -234,9 +282,19 @@ public class CommandsTest {
 
         @Override
         public String toString() {
-            return Stream.of(name, dbName, tableName, key, value)
+            return Stream.of("0", name, dbName, tableName, key, value)
                     .filter(Objects::nonNull)
                     .collect(Collectors.joining(" "));
+        }
+
+        public RespObject toRespObject() {
+            return new RespArray(
+                    new RespCommandId(0),
+                    new RespSimpleString(name.getBytes()),
+                    new RespSimpleString(dbName.getBytes()),
+                    new RespSimpleString(tableName.getBytes()),
+                    new RespSimpleString(key != null ? key.getBytes() : null),
+                    new RespBulkString(value != null ? value.getBytes() : null));
         }
     }
 }

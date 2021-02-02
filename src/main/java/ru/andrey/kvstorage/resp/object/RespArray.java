@@ -41,6 +41,11 @@ public class RespArray implements RespObject {
     }
 
     @Override
+    public byte[] getPayloadBytes() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
         RespUtil.writeInt(os, objects.size());

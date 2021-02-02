@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.resp.object;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.NoArgsConstructor;
 import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
@@ -9,12 +9,15 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
 @AllArgsConstructor
+@NoArgsConstructor
 public class RespBulkString implements RespObject {
+    public static final RespBulkString NULL_BULK_STRING = new RespBulkString();
+
+    public static final int NULL_STRING_SIZE = -1;
 
     public static final byte CODE = '$';
 
-    @Getter
-    private final byte[] data;
+    private byte[] data;
 
     @Override
     public boolean isError() {
@@ -23,19 +26,29 @@ public class RespBulkString implements RespObject {
 
     @Override
     public String asString() {
-        return new String(data, StandardCharsets.UTF_8);
+        if (data != null) {
+            return new String(data, StandardCharsets.UTF_8); // todo sukhoa get charset from settingsw
+        }
+        return null;
+    }
+
+    @Override
+    public byte[] getPayloadBytes() {
+        return data;
     }
 
     @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
+
         if (data == null) {
-            os.write(MINUS_ONE);
+            RespUtil.writeInt(os, NULL_STRING_SIZE);
         } else {
             RespUtil.writeInt(os, data.length);
             os.write(CRLF);
             os.write(data);
         }
+
         os.write(CRLF);
     }
 

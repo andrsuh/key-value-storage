@@ -11,8 +11,8 @@ import java.util.ArrayList;
 
 @RunWith(MockitoJUnitRunner.class)
 public class RespCommandToByteEncoderTest {
-    RespCommandToByteEncoder encoder = new RespCommandToByteEncoder();
-    ByteToRespCommandDecoder decoder = new ByteToRespCommandDecoder();
+    RespToByteEncoder encoder = new RespToByteEncoder();
+    ByteToRespDecoder decoder = new ByteToRespDecoder();
 
     ByteBuf out = Unpooled.buffer();
 

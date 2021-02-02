@@ -4,13 +4,12 @@ import lombok.AllArgsConstructor;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
+import ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @AllArgsConstructor
 public class CommandReader {
@@ -23,16 +22,13 @@ public class CommandReader {
     }
 
     public DatabaseCommand readCommand() throws IOException {
-        final List<RespObject> objects = reader.readArray().getObjects();
-        if (objects.isEmpty()) {
+        final List<RespObject> commandArgs = reader.readArray().getObjects();
+        if (commandArgs.isEmpty()) {
             throw new IllegalArgumentException("Command name is not specified");
         }
 
-        final String[] args = objects.stream()
-                .map(RespObject::asString)
-                .toArray(String[]::new);
-
-        List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-        return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs);
+        return DatabaseCommands
+                .valueOf(commandArgs.get(DatabaseCommandArgPositions.COMMAND_NAME.getPositionIndex()).asString())
+                .getCommand(env, commandArgs);
     }
 }

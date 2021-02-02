@@ -7,8 +7,8 @@ import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
+import ru.andrey.kvstorage.server.logic.DatabaseRecord;
 import ru.andrey.kvstorage.server.logic.Segment;
-import ru.andrey.kvstorage.server.logic.impl.DatabaseRow;
 import ru.andrey.kvstorage.server.logic.impl.SegmentImpl;
 import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
 
@@ -19,8 +19,14 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+
 public class SegmentInitializer implements Initializer {
 
+    /**
+     * Заполняет информацию о сегменте. Обнавляет индекс записями из сегмента
+     *
+     * @param context Контекст инициализации
+     */
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
         SegmentInitializationContext segmentContext = context.currentSegmentContext();
@@ -34,23 +40,20 @@ public class SegmentInitializer implements Initializer {
         SegmentIndex index = new SegmentIndex();
         Set<String> keys = new HashSet<>();
         // todo sukhoa we should read all segments sorting by timestamp
-        int segmentSize = 0;
+        int indexedSegmentSize = 0;
         try (DatabaseInputStream in = new DatabaseInputStream(
                 new BufferedInputStream(Files.newInputStream(segmentContext.getSegmentPath())))) {
-            var offset = 0;
 
-            Optional<DatabaseRow> storingUnit = in.readDbUnit();
-            while (storingUnit.isPresent()) {
-                DatabaseRow unit = storingUnit.get();
-                SegmentOffsetInfoImpl segmentIndexInfo = new SegmentOffsetInfoImpl(offset);
-                offset += unit.size();
-
-                String keyString = new String(unit.getKey());
+            Optional<DatabaseRecord> databaseRecordOptional = in.readDbUnit();
+            while (databaseRecordOptional.isPresent()) {
+                DatabaseRecord databaseRecord = databaseRecordOptional.get();
+                String keyString = new String(databaseRecord.getKey());
                 keys.add(keyString);
-                index.onIndexedEntityUpdated(keyString, segmentIndexInfo);
-                segmentSize = offset;
+                index.onIndexedEntityUpdated(keyString, new SegmentOffsetInfoImpl(indexedSegmentSize));
 
-                storingUnit = in.readDbUnit();
+
+                indexedSegmentSize += databaseRecord.size();
+                databaseRecordOptional = in.readDbUnit();
             }
         } catch (IOException e) {
             throw new DatabaseException("Cannot read segment: " + segmentContext.getSegmentPath(), e);
@@ -59,7 +62,7 @@ public class SegmentInitializer implements Initializer {
         SegmentInitializationContext segmentInitializationContext = SegmentInitializationContextImpl.builder()
                 .segmentName(segmentContext.getSegmentName())
                 .segmentPath(segmentContext.getSegmentPath())
-                .currentSize(segmentSize) // todo sukhoa set readOnly flag!!!! :)
+                .currentSize(indexedSegmentSize) // todo sukhoa set readOnly flag!!!! :)
                 .index(index)
                 .build();
 

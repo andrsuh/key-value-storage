@@ -1,8 +1,8 @@
 package ru.andrey.kvstorage.jclient.connection;
 
-import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
+import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
 import java.io.BufferedInputStream;
@@ -27,24 +27,26 @@ public class SocketKvsConnection implements KvsConnection {
     }
 
     @Override
-    public RespObject send(RespObject object) {
+    public synchronized RespObject send(int commandId, RespObject command) {
         if (socket.isClosed()) {
             throw new IllegalStateException("Socket is closed");
         }
         try {
-            writer.write(object);
-            return reader.readObject();
+            writer.write(command);
+            RespArray arrayResponse =  (RespArray) reader.readObject();
+            System.out.println("Client got response to command id: " + arrayResponse.getObjects().get(0).asString());
+            return arrayResponse.getObjects().get(1);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to send command to server");
         }
     }
 
     @Override
-    public void close() throws KvsConnectionException {
+    public void close() {
         try {
             socket.close();
         } catch (IOException e) {
-            throw new KvsConnectionException("Cannot close", e);
+            throw new IllegalStateException("Cannot close", e);
         }
     }
 }

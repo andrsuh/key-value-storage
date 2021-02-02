@@ -5,7 +5,9 @@ import ru.andrey.kvstorage.server.index.SegmentOffsetInfo;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
+import ru.andrey.kvstorage.server.logic.DatabaseRecord;
 import ru.andrey.kvstorage.server.logic.Segment;
+import ru.andrey.kvstorage.server.logic.WritableDatabaseRecord;
 import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
 import ru.andrey.kvstorage.server.logic.io.DatabaseOutputStream;
 
@@ -68,12 +70,6 @@ public class SegmentImpl implements Segment {
     }
 
     static String createSegmentName(String tableName) {
-        // todo sukhoa remove this shit after min allowed segment size is set
-        //        try {
-        //            Thread.sleep(1);
-        //        } catch (InterruptedException e) {
-        //            e.printStackTrace();
-        //        }
         return tableName + "_" + System.currentTimeMillis();
     }
 
@@ -83,35 +79,17 @@ public class SegmentImpl implements Segment {
     }
 
     @Override
-    public boolean write(String objectKey, String objectValue) throws IOException { // todo sukhoa deal with second exception
-
-        DatabaseRow storingUnit = new DatabaseRow(objectKey, objectValue);
-
-        if (!canAllocate(storingUnit.size())) {
-            System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
-            readOnly = true;
-            return false;
-        }
-
-        currentSizeInBytes = currentSizeInBytes + storingUnit.size();
-
-        try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.APPEND);
-             DatabaseOutputStream out = new DatabaseOutputStream(Channels.newOutputStream(byteChannel))) {
-
-            var startPosition = byteChannel.position();
-            out.write(storingUnit);
-
-            segmentIndex.onIndexedEntityUpdated(objectKey, new SegmentOffsetInfoImpl(startPosition));
-        }
-        return true; // todo sukhoa fix
+    public boolean write(String objectKey, byte[] objectValue) throws IOException {
+        WritableDatabaseRecord databaseRecord = new SetDatabaseRecord(objectKey, objectValue);
+        return updateSegment(databaseRecord);
     }
 
     private boolean canAllocate(long length) {
-        return MAX_SEGMENT_SIZE - currentSizeInBytes >= length;
+        return length + currentSizeInBytes <= MAX_SEGMENT_SIZE;
     }
 
     @Override
-    public Optional<String> read(String objectKey) throws IOException {
+    public Optional<byte[]> read(String objectKey) throws IOException {
         Optional<SegmentOffsetInfo> indexInfo = segmentIndex.searchForKey(objectKey);
 
         if (indexInfo.isEmpty()) {
@@ -123,15 +101,40 @@ public class SegmentImpl implements Segment {
 
             byteChannel.position(indexInfo.get().getOffset());
 
-            DatabaseRow unit = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
+            DatabaseRecord record = in.readDbUnit().orElseThrow(() -> new IllegalStateException("Not enough bytes"));
 
-            // todo sukhoa charset, handle separator
-            return Optional.of(new String(unit.getValue()));
+            return Optional.ofNullable(record.isValuePresented() ? record.getValue() : null);
         }
     }
 
     @Override
     public boolean isReadOnly() {
         return readOnly;
+    }
+
+    @Override
+    public boolean delete(String objectKey) throws IOException {
+        WritableDatabaseRecord emptyRow = new RemoveDatabaseRecord(objectKey);
+        return updateSegment(emptyRow);
+    }
+
+    private boolean updateSegment(WritableDatabaseRecord databaseRecord) throws IOException {
+        if (!canAllocate(databaseRecord.size())) {
+            System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
+            readOnly = true;
+            return false;
+        }
+
+        currentSizeInBytes = currentSizeInBytes + databaseRecord.size();
+
+        try (SeekableByteChannel byteChannel = Files.newByteChannel(segmentPath, StandardOpenOption.APPEND);
+             DatabaseOutputStream out = new DatabaseOutputStream(Channels.newOutputStream(byteChannel))) {
+
+            var startPosition = byteChannel.position();
+            out.write(databaseRecord);
+
+            segmentIndex.onIndexedEntityUpdated(new String(databaseRecord.getKey()), new SegmentOffsetInfoImpl(startPosition));
+        }
+        return true;
     }
 }

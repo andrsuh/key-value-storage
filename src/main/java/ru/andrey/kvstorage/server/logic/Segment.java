@@ -12,9 +12,11 @@ public interface Segment {
     // todo sukhoa in future may return something like SegmentWriteResult .. with report and error details?
     // for new returns false if cannot allocate requested capacity
     // exception is questionable
-    boolean write(String objectKey, String objectValue) throws IOException, DatabaseException;
+    boolean write(String objectKey, byte[] objectValue) throws IOException, DatabaseException;
 
-    Optional<String> read(String objectKey) throws IOException;
+    Optional<byte[]> read(String objectKey) throws IOException;
 
     boolean isReadOnly();
+
+    boolean delete(String objectKey) throws IOException;
 }

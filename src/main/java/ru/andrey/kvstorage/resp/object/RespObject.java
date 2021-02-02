@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 public interface RespObject {
 
     byte[] CRLF = "\r\n".getBytes(StandardCharsets.UTF_8);
-    byte[] MINUS_ONE = "-1".getBytes(StandardCharsets.UTF_8);
 
     boolean isError();
 
@@ -16,13 +15,18 @@ public interface RespObject {
 
     void write(OutputStream os) throws IOException;
 
+    /**
+     * Returns the byte payload for types it might be reasonable
+     */
+    byte[] getPayloadBytes();
+
     default byte[] getBytes() {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
         try {
             write(os);
         } catch (IOException e) {
-            e.printStackTrace();
+            e.printStackTrace(); // todo sukhoa baaaaaaad
             return null;
         }
 

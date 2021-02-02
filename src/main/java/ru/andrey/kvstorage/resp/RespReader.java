@@ -1,16 +1,12 @@
 package ru.andrey.kvstorage.resp;
 
 import lombok.AllArgsConstructor;
-import ru.andrey.kvstorage.resp.object.RespArray;
-import ru.andrey.kvstorage.resp.object.RespBulkString;
-import ru.andrey.kvstorage.resp.object.RespError;
-import ru.andrey.kvstorage.resp.object.RespObject;
-import ru.andrey.kvstorage.resp.object.RespSimpleString;
+import ru.andrey.kvstorage.resp.object.*;
 
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.nio.ByteBuffer;
 
 @AllArgsConstructor
 public class RespReader {
@@ -41,6 +37,8 @@ public class RespReader {
                 return readBulkString();
             case RespArray.CODE:
                 return readArray();
+            case RespCommandId.CODE:
+                return readCommandId();
             default:
                 throw new IOException(String.format("Unknown type character in stream: %1$x", code));
         }
@@ -58,11 +56,14 @@ public class RespReader {
         final int size = readInt();
 
         if (size == -1) {
-            return new RespBulkString(null);
+            return RespBulkString.NULL_BULK_STRING;
         }
         if (size < 0) {
             throw new IOException(String.format("Invalid bulk string size: %1$d", size));
         }
+
+        int cr = is.read();
+        int lf = is.read();
 
         final byte[] data = new byte[size];
         final int read = is.read(data, 0, size);
@@ -74,8 +75,8 @@ public class RespReader {
             throw new IOException(String.format("Failed to read enough chars. Read: %1$d, Expected: %2$d", read, size));
         }
 
-        final int cr = is.read();
-        final int lf = is.read();
+        cr = is.read();
+        lf = is.read();
 
         if (cr == -1 || lf == -1) {
             throw new EOFException("Unexpected end of stream");
@@ -94,6 +95,9 @@ public class RespReader {
             throw new IOException(String.format("Invalid array size: %1$d", size));
         }
 
+        final int cr = is.read();
+        final int lf = is.read();
+
         final RespObject[] objects = new RespObject[size];
         for (int i = 0; i < size; ++i) {
             objects[i] = readObject();
@@ -102,7 +106,7 @@ public class RespReader {
         return new RespArray(objects);
     }
 
-    private String readString() throws IOException {
+    private byte[] readString() throws IOException {
         byte[] buf = new byte[128];
         int room = buf.length;
         int count = 0;
@@ -135,40 +139,19 @@ public class RespReader {
             b = is.read();
         }
 
-        return new String(buf, 0, count, StandardCharsets.UTF_8);
+        return buf;
+    }
+
+    private RespCommandId readCommandId() throws IOException {
+        int commandId = readInt();
+
+        final int cr = is.read();
+        final int lf = is.read();
+
+        return new RespCommandId(commandId);
     }
 
     private int readInt() throws IOException {
-        final int sign;
-
-        int b = is.read();
-        if (b == MINUS) {
-            b = is.read();
-            sign = -1;
-        } else {
-            sign = 1;
-        }
-
-        int number = 0;
-        while (true) {
-            if (b == -1) {
-                throw new EOFException("Unexpected end of stream");
-            }
-
-            if (b == CR) {
-                if (is.read() == LF) {
-                    return sign * number;
-                }
-                throw new IOException("Invalid character in integer");
-            }
-
-            final int digit = b - ZERO;
-            if (digit < 0 || 10 <= digit) {
-                throw new IOException("Invalid character in integer");
-            }
-
-            number = number * 10 + digit;
-            b = is.read();
-        }
+        return ByteBuffer.wrap(is.readNBytes(4)).getInt(); // todo sukhoa what is not enough bytes?
     }
 }

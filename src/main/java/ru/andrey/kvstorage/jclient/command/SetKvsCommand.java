@@ -14,7 +14,7 @@ public class SetKvsCommand implements KvsCommand {
     private final String tableName;
     private final String key;
     private final String value;
-    private final RespCommandId commandId = new RespCommandId();
+    private final RespCommandId commandId = new RespCommandId(KvsCommand.idGen.getAndIncrement());
 
     public SetKvsCommand(String databaseName, String tableName, String key, String value) {
         this.databaseName = databaseName;

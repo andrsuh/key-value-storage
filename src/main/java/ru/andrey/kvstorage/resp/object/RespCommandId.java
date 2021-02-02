@@ -1,20 +1,18 @@
 package ru.andrey.kvstorage.resp.object;
 
+import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import ru.andrey.kvstorage.jclient.command.KvsCommand;
 import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
 @AllArgsConstructor
-@NoArgsConstructor
 public class RespCommandId implements RespObject {
 
     public static final byte CODE = '!';
 
-    public int commandId = KvsCommand.idGen.getAndIncrement();
+    public final int commandId;
 
     @Override
     public boolean isError() {
@@ -31,6 +29,11 @@ public class RespCommandId implements RespObject {
         os.write(CODE);
         RespUtil.writeInt(os, commandId);
         os.write(CRLF);
+    }
+
+    @Override
+    public byte[] getPayloadBytes() {
+        return Unpooled.buffer(4).writeInt(commandId).array();
     }
 
     @Override

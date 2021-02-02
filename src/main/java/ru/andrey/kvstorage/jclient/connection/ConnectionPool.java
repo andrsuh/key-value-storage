@@ -2,30 +2,26 @@ package ru.andrey.kvstorage.jclient.connection;
 
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
-import ru.andrey.kvstorage.KvsClientInboundHandler;
-import ru.andrey.kvstorage.jclient.exception.KvsConnectionException;
-import ru.andrey.kvstorage.resp.ByteToRespCommandDecoder;
-import ru.andrey.kvstorage.resp.RespCommandToByteEncoder;
+import ru.andrey.kvstorage.resp.ByteToRespDecoder;
+import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespObject;
+import ru.andrey.kvstorage.server.connector.KvsClientInboundHandler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class ConnectionPool {
 
     private final List<NettyKvsConnection> connections;
+
+    public static final Map<Integer, AtomicReference<RespObject>> results = new ConcurrentHashMap<>();
 
     private final Random random = new Random();
 
@@ -56,8 +52,8 @@ public class ConnectionPool {
                     @Override
                     public void initChannel(SocketChannel ch) throws Exception {
                         ch.pipeline()
-                                .addLast(new RespCommandToByteEncoder(),
-                                        new ByteToRespCommandDecoder(),
+                                .addLast(new RespToByteEncoder(),
+                                        new ByteToRespDecoder(),
                                         new KvsClientInboundHandler()
                                 );
                     }
@@ -96,13 +92,23 @@ public class ConnectionPool {
         }
 
         @Override
-        public RespObject send(RespObject command) {
-            channel.writeAndFlush(command);
-            return null;
+        public RespObject send(int commandId, RespObject command) {
+            AtomicReference<RespObject> futureResult = results.computeIfAbsent(commandId, id -> new AtomicReference<>());
+            try {
+                synchronized (futureResult) {
+                    channel.writeAndFlush(command);
+                    futureResult.wait(); // todo sukhoa we can implement awaitility in temporary manner
+                }
+                return futureResult.get();
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Interrupted: ", e);
+            } finally {
+                results.remove(commandId);
+            }
         }
 
         @Override
-        public void close() throws KvsConnectionException {
+        public void close() {
             channel.close().addListener(new GenericFutureListener<Future<? super Void>>() {
                 @Override
                 public void operationComplete(Future<? super Void> future) throws Exception {

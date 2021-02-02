@@ -17,14 +17,36 @@ public class Main {
                 "test_3",
                 connectionPool::getClientConnection);
 
-
         KvsRepository<Post> postRepository = new PostRepositoryImpl(new PostMapper(), () -> client);
 
 //        Post post = postRepository.get("1");
         Post post1 = postRepository.set("2", new Post("Test", "dakenviy", "Good content"));
         Post post2 = postRepository.get("2");
 //        System.out.println(post);
-        System.out.println(post1);
-        System.out.println(post2);
+//        System.out.println(post1);
+//        System.out.println(post2);
+
+        Post post = postRepository.get("1");
+        System.out.println(post);
     }
+
+//    public static void main(String[] args) throws InterruptedException {
+//        ConnectionPool connectionPool = new ConnectionPool(new ConnectionConfig());
+//
+//        KvsClient client = new SimpleKvsClient(
+//                "test_3",
+//                () -> new SocketKvsConnection(new ConnectionConfig()));
+//
+//        KvsRepository<Post> postRepository = new PostRepositoryImpl(new PostMapper(), () -> client);
+//
+////        Post post = postRepository.get("1");
+//        Post post1 = postRepository.set("2", new Post("Test", "dakenviy", "Good content"));
+////        Post post2 = postRepository.get("2");
+////        System.out.println(post);
+////        System.out.println(post1);
+////        System.out.println(post2);
+//
+////        Post post = postRepository.get("1");
+//        System.out.println(post1);
+//    }
 }

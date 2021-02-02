@@ -1,45 +1,29 @@
 package ru.andrey.kvstorage.server;
 
-import org.apache.commons.lang3.StringUtils;
-import ru.andrey.kvstorage.resp.RespReader;
-import ru.andrey.kvstorage.resp.RespWriter;
+import lombok.Getter;
+import ru.andrey.kvstorage.resp.object.RespArray;
+import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
-import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.initialization.Initializer;
-import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.InitializationContextImpl;
-import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
-import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
-import ru.andrey.kvstorage.server.resp.CommandReader;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+
+import static ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions.COMMAND_NAME;
 
 public class DatabaseServer {
-
-    private static ExecutorService executor = Executors.newSingleThreadExecutor();
-
-    private final ServerSocket serverSocket;
+    @Getter
     private final ExecutionEnvironment env;
+    private final ExecutorService dbCommandExecutor = Executors.newSingleThreadExecutor();
 
-    public DatabaseServer(ExecutionEnvironment env, Initializer initializer) throws IOException, DatabaseException {
-        System.out.println("Server port is " + env.getPort());
-
-        this.serverSocket = new ServerSocket(env.getPort());
+    public DatabaseServer(ExecutionEnvironment env, DatabaseServerInitializer initializer) throws DatabaseException {
         this.env = env;
 
         InitializationContextImpl initializationContext = InitializationContextImpl.builder()
@@ -49,85 +33,31 @@ public class DatabaseServer {
         initializer.perform(initializationContext);
     }
 
-    public static void main(String[] args) throws IOException, DatabaseException {
-
-        Initializer initializer = new DatabaseServerInitializer(
-                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
-
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
-
-        // databaseServer.executeNextCommand("SET_KEY test_3 Post 1 {\"title\":\"post\",\"user\":\"andrey\",\"content\":\"bla\"}");
-
-        while (true) {
-            executor.submit(new ClientTask(databaseServer.serverSocket.accept(), databaseServer));
-        }
-    }
-
-    public DatabaseCommandResult executeNextCommand(String commandText) {
+    public CompletableFuture<DatabaseCommandResult> executeNextCommand(RespObject msg) {
         try {
-            if (StringUtils.isEmpty(commandText)) {
-                return DatabaseCommandResult.error("Command name is not specified");
-            }
+            RespArray message = (RespArray) msg;
+            System.out.println("Server got client request: [ $message]");
 
-            final String[] args = commandText.split(" ");
-            if (args.length < 1) {
-                return DatabaseCommandResult.error("Command name is not specified");
-            }
+            List<RespObject> commandArgs = message.getObjects();
+            DatabaseCommand command = DatabaseCommands
+                    .valueOf(commandArgs.get(COMMAND_NAME.getPositionIndex()).asString())
+                    .getCommand(env, commandArgs);
 
-            List<String> commandArgs = Arrays.stream(args).skip(1).collect(Collectors.toList());
-            return DatabaseCommands.valueOf(args[0]).getCommand(env, commandArgs).execute();
+            return executeNextCommand(command);
         } catch (Exception e) {
             System.out.println(e.getMessage());
-            return DatabaseCommandResult.error(e);
+            return CompletableFuture.completedFuture(DatabaseCommandResult.error(e));
         }
     }
 
-    public DatabaseCommandResult executeNextCommand(DatabaseCommand command) {
-        try {
-            return command.execute();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return DatabaseCommandResult.error(e);
-        }
-    }
-
-    static class ClientTask implements Runnable, Closeable {
-        private final Socket client;
-        private final DatabaseServer server;
-
-        public ClientTask(Socket client, DatabaseServer server) {
-            this.client = client;
-            this.server = server;
-        }
-
-        @Override
-        public void run() {
+    public CompletableFuture<DatabaseCommandResult> executeNextCommand(DatabaseCommand command) {
+        return CompletableFuture.supplyAsync(() -> {
             try {
-                final CommandReader reader = new CommandReader(
-                        new RespReader(new BufferedInputStream(client.getInputStream())),
-                        server.env
-                );
-                final RespWriter writer = new RespWriter(new BufferedOutputStream(client.getOutputStream()));
-
-                while (!client.isClosed()) {
-                    if (!reader.hasNextCommand()) continue;
-
-                    writer.write(server.executeNextCommand(reader.readCommand()).serialize());
-                }
-            } catch (IOException e) {
-                System.out.println("Client socket threw IO Exception " + e.getMessage());
-            } finally {
-                close();
+                return command.execute();
+            } catch (DatabaseException e) {
+                System.out.println(e.getMessage());
+                return DatabaseCommandResult.error(e);
             }
-        }
-
-        @Override
-        public void close() {
-            try {
-                client.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
+        }, dbCommandExecutor);
     }
 }
