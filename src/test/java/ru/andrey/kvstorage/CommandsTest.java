@@ -292,7 +292,7 @@ public class CommandsTest {
                     new RespCommandId(0),
                     new RespSimpleString(name.getBytes()),
                     new RespSimpleString(dbName.getBytes()),
-                    new RespSimpleString(tableName.getBytes()),
+                    new RespSimpleString(tableName != null ? tableName.getBytes() : null),
                     new RespSimpleString(key != null ? key.getBytes() : null),
                     new RespBulkString(value != null ? value.getBytes() : null));
         }
