@@ -27,7 +27,7 @@
     <dependencies>
         <dependency>
             <groupId>ru.andrey</groupId>
-            <artifactId>common</artifactId>
+            <artifactId>protocol</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
 
