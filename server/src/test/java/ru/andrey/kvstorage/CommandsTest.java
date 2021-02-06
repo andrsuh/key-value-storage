@@ -13,6 +13,9 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 import ru.andrey.kvstorage.resp.object.*;
 import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.config.DatabaseConfig;
+import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
+import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.connector.JavaSocketServerConnector;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
@@ -26,6 +29,7 @@ import ru.andrey.kvstorage.server.logic.Database;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -63,13 +67,21 @@ public class CommandsTest {
 
     @Before
     public void setUp() throws IOException, DatabaseException {
+        DatabaseServerConfig testConfig = DatabaseServerConfig.builder()
+                .dbConfig(new DatabaseConfig(temporaryFolder.getRoot().getAbsolutePath()))
+                .serverConfig(new ServerConfig("127.0.0.1", 8080))
+                .build();
+
         env = mock(ExecutionEnvironment.class);
-        when(env.getWorkingPath()).thenReturn(temporaryFolder.getRoot().toPath());
+        Path workingPath = Path.of(testConfig.getDbConfig().getWorkingPath());
+        when(env.getWorkingPath()).thenReturn(workingPath);
 
-        DatabaseServer databaseServer = new DatabaseServer(env,
-                new DatabaseServerInitializer(new DatabaseInitializer(new TableInitializer(new SegmentInitializer()))));
+        DatabaseServerInitializer initializer = new DatabaseServerInitializer(
+                new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        server = new JavaSocketServerConnector(databaseServer);
+        DatabaseServer databaseServer = new DatabaseServer(env, initializer);
+
+        server = new JavaSocketServerConnector(databaseServer, testConfig.getServerConfig());
     }
 
     @After

@@ -4,6 +4,9 @@ import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.DatabaseServer;
+import ru.andrey.kvstorage.server.config.ConfigLoader;
+import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
+import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
@@ -23,19 +26,17 @@ import java.util.concurrent.*;
 
 public class JavaSocketServerConnector implements AutoCloseable {
 
-    private static final ExecutorService clientIOWorkers = new ThreadPoolExecutor(
-            100, 100, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<>(1),
-            (rejected, pool) -> {
-                System.out.println("Client connection has been rejected. Number of clients exceeded: " + pool.getTaskCount());
-            });
+    private final ExecutorService clientIOWorkers = Executors.newSingleThreadExecutor();
 
     private final ExecutorService connectionAcceptorExecutor = Executors.newSingleThreadExecutor();
     private final ServerSocket serverSocket;
     private final DatabaseServer databaseServer;
 
-    public JavaSocketServerConnector(DatabaseServer databaseServer) throws IOException, DatabaseException {
+    public JavaSocketServerConnector(DatabaseServer databaseServer, ServerConfig config) throws IOException, DatabaseException {
+        System.out.println("Starting server on port " + config.getPort() + " (host " + config.getHost() + ")");
+
         this.databaseServer = databaseServer;
-        this.serverSocket = new ServerSocket(8080);
+        this.serverSocket = new ServerSocket(config.getPort());
 
         connectionAcceptorExecutor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
@@ -52,6 +53,7 @@ public class JavaSocketServerConnector implements AutoCloseable {
 
     @Override
     public void close() throws Exception {
+        System.out.println("Stopping socket connector");
         connectionAcceptorExecutor.shutdownNow();
         clientIOWorkers.shutdownNow();
         serverSocket.close();
@@ -59,12 +61,15 @@ public class JavaSocketServerConnector implements AutoCloseable {
 
     public static void main(String[] args) throws IOException, DatabaseException {
 
+        ConfigLoader loader = new ConfigLoader();
+        DatabaseServerConfig config = loader.readConfig();
+
         DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(), initializer);
+        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(config.getDbConfig()), initializer);
 
-        new JavaSocketServerConnector(databaseServer);
+        new JavaSocketServerConnector(databaseServer, config.getServerConfig());
     }
 
     public DatabaseCommandResult executeNextCommand(RespObject msg) {
