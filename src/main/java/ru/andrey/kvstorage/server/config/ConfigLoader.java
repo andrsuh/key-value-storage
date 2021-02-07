@@ -1,11 +1,13 @@
 package ru.andrey.kvstorage.server.config;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.Properties;
 
 @RequiredArgsConstructor
+@Slf4j
 public class ConfigLoader {
 
     private final String name;
@@ -19,7 +21,7 @@ public class ConfigLoader {
         try {
             serverProperties.load(this.getClass().getClassLoader().getResourceAsStream("server.properties"));
         } catch (IOException ex) {
-            System.out.println("Error: server.properties file not found, using default values");
+            log.warn("Error: server.properties file not found, using default values");
         }
 
         String workingPath = serverProperties.getProperty("kvs.workingPath", DatabaseConfig.DEFAULT_WORKING_PATH);

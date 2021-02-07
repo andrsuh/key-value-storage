@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.DatabaseInitializationContext;
@@ -16,6 +17,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 // stateless for lectures
+@Slf4j
 public class DatabaseInitializer implements Initializer {
     private final Initializer tableInitializer;
 
@@ -27,7 +29,7 @@ public class DatabaseInitializer implements Initializer {
     public void perform(InitializationContext initialContext) throws DatabaseException {
         DatabaseInitializationContext databaseContext = initialContext.currentDbContext();
 
-        System.out.println("Creating database: " + databaseContext.getDbName());
+        log.info("Creating database: {}", databaseContext.getDbName());
 
         if (!Files.exists(databaseContext.getDatabasePath())) {
             throw new DatabaseException("Database with such name doesn't exist: " + databaseContext.getDbName());
@@ -57,6 +59,7 @@ public class DatabaseInitializer implements Initializer {
                     });
             initialContext.executionEnvironment()
                     .addDatabase(DatabaseImpl.initializeFromContext(initialContext.currentDbContext()));
+            log.info("Database {} created", databaseContext.getDbName());
         } catch (IOException e) {
             throw new DatabaseException("Cannot initialize database: " + databaseContext.getDbName(), e);
         }

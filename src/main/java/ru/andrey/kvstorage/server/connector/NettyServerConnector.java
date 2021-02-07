@@ -6,6 +6,7 @@ import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.resp.ByteToRespDecoder;
 import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespArray;
@@ -29,6 +30,7 @@ import java.util.List;
 
 import static ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions.COMMAND_NAME;
 
+@Slf4j
 public class NettyServerConnector {
 
     private final DatabaseServerBootstrap bs;
@@ -61,19 +63,19 @@ public class NettyServerConnector {
                     .childOption(ChannelOption.SO_KEEPALIVE, true);
 
             // Bind and start to accept incoming connections.
-            System.out.println("Starting server on port " + config.getPort() + " (host " + config.getHost() + ")");
+            log.info("Starting server on port {} (host {})", config.getPort(), config.getHost());
             ChannelFuture f = b.bind(config.getHost(), config.getPort()).sync();
 
-            System.out.println("Netty server started.");
+            log.info("Netty server started.");
 
-            f.channel().closeFuture().addListener(future -> System.out.println("Server shut down server acceptor closed."));
+            f.channel().closeFuture().addListener(future -> log.info("Server shut down server acceptor closed"));
         }
 
         @Override
         public void close() {
             workerGroup.shutdownGracefully();
             bossGroup.shutdownGracefully();
-            System.out.println("Netty server stopped.");
+            log.info("Netty server stopped");
         }
     }
 
@@ -88,7 +90,7 @@ public class NettyServerConnector {
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) {
             RespArray message = (RespArray) msg;
-            System.out.println("Server got client request: [ " + message + "]");
+            log.debug("Server got client request: [ {} ]", message);
 
             List<RespObject> commandArgs = message.getObjects();
 
@@ -98,11 +100,15 @@ public class NettyServerConnector {
 
             DatabaseCommandResult databaseCommandResult = executeNextCommand(command);
 
+            log.debug("Command executed with status {}", databaseCommandResult.getStatus());
+
             RespObject commandResult = databaseCommandResult.serialize();
 
             RespArray serverResponse = new RespArray(message.getObjects().get(0), commandResult);
 
-            ctx.channel().writeAndFlush(serverResponse).addListener(future -> System.out.println("Server sent: " + serverResponse));
+            ctx.channel()
+                    .writeAndFlush(serverResponse)
+                    .addListener(future -> log.debug("Server sent: {}", serverResponse));
         }
 
         @Override

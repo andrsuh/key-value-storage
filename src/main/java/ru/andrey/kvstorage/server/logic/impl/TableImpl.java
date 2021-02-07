@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
@@ -21,6 +22,7 @@ import java.util.Optional;
  * - представляет из себя директорию в файловой системе, именованную как таблица
  * и хранящую файлы-сегменты данной таблицы
  */
+@Slf4j
 public class TableImpl implements Table {
     private final String tableName;
     private final Path tablePath;
@@ -79,6 +81,7 @@ public class TableImpl implements Table {
                 // todo sukhoa use Atomic reference in future
                 currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
             }
+            log.debug("Value was written to the table {}, key: {}", tableName, objectKey);
         } catch (IOException e) {
             throw new DatabaseException(e); // todo sukhoa review exceptions
         }
@@ -109,6 +112,7 @@ public class TableImpl implements Table {
                 // todo sukhoa use Atomic reference in future
                 currentSegment = SegmentImpl.create(SegmentImpl.createSegmentName(tableName), tablePath);
             }
+            log.debug("Value was deleted from table {}, key: {}", tableName, objectKey);
         } catch (IOException e) {
             throw new DatabaseException(e); // todo sukhoa review exceptions
         }

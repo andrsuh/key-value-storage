@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.jclient.connection;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
 import ru.andrey.kvstorage.resp.object.RespArray;
@@ -10,6 +11,7 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 
+@Slf4j
 public class SocketKvsConnection implements KvsConnection {
 
     private final Socket socket;
@@ -34,7 +36,7 @@ public class SocketKvsConnection implements KvsConnection {
         try {
             writer.write(command);
             RespArray arrayResponse =  (RespArray) reader.readObject();
-            System.out.println("Client got response to command id: " + arrayResponse.getObjects().get(0).asString());
+            log.debug("Client got response to command id: " + arrayResponse.getObjects().get(0).asString());
             return arrayResponse.getObjects().get(1);
         } catch (IOException e) {
             throw new IllegalStateException("Failed to send command to server");

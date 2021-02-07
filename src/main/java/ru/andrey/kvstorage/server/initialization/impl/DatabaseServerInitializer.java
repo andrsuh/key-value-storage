@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
@@ -12,6 +13,7 @@ import java.nio.file.Path;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 public class DatabaseServerInitializer implements Initializer {
     private final Initializer databaseInitializer;
 
@@ -21,18 +23,18 @@ public class DatabaseServerInitializer implements Initializer {
 
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
-        System.out.println("Starting initialization process... ");
+        log.info("Starting initialization process... ");
 
         ExecutionEnvironment env = context.executionEnvironment();
 
         try {
             if (!env.getWorkingPath().toFile().exists()) {
-                System.out.println("Creating working directory " + env.getWorkingPath().toString());
+                log.info("Creating working directory {}", env.getWorkingPath().toString());
                 boolean success = env.getWorkingPath().toFile().mkdirs();
                 if (!success)
                     throw new IOException("Directory was not created");
             } else {
-                System.out.println("Using existing working directory " + env.getWorkingPath().toString());
+                log.info("Using existing working directory {}", env.getWorkingPath().toString());
             }
         } catch (IOException ex) {
             throw new DatabaseException("Cannot create working directory (" + env.getWorkingPath().toString() + ")", ex);
@@ -54,6 +56,7 @@ public class DatabaseServerInitializer implements Initializer {
                     throw new RuntimeException(e);
                 }
             });
+            log.info("Initialization process completed");
         } catch (Exception e) { // todo sukhoa handle this. refactor
             throw new DatabaseException(e);
         }

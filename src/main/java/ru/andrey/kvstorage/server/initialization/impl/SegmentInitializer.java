@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
@@ -19,7 +20,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
-
+@Slf4j
 public class SegmentInitializer implements Initializer {
 
     /**
@@ -31,7 +32,7 @@ public class SegmentInitializer implements Initializer {
     public void perform(InitializationContext context) throws DatabaseException {
         SegmentInitializationContext segmentContext = context.currentSegmentContext();
 
-        System.out.println("Creating segment " + segmentContext.getSegmentName());
+        log.info("Creating segment {}", segmentContext.getSegmentName());
 
         if (!Files.exists(segmentContext.getSegmentPath())) {
             throw new DatabaseException("Segment with such name doesn't exist: " + segmentContext.getSegmentName());

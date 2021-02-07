@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.SegmentOffsetInfo;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
@@ -26,6 +27,7 @@ import java.util.Optional;
  * - именование файла-сегмента должно позволять установить очередность их появления
  * - является неизменяемым после появления более нового сегмента
  */
+@Slf4j
 public class SegmentImpl implements Segment {
     private static final long MAX_SEGMENT_SIZE = 100_000L; // todo sukhoa use properties
 
@@ -120,7 +122,7 @@ public class SegmentImpl implements Segment {
 
     private boolean updateSegment(WritableDatabaseRecord databaseRecord) throws IOException {
         if (!canAllocate(databaseRecord.size())) {
-            System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
+            log.warn("Segment {} is full. Current size: {}", segmentName, currentSizeInBytes);
             readOnly = true;
             return false;
         }

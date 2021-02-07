@@ -1,6 +1,5 @@
 package ru.andrey.kvstorage.jclient.connection;
 
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -8,6 +7,7 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.resp.ByteToRespDecoder;
 import ru.andrey.kvstorage.resp.RespToByteEncoder;
 import ru.andrey.kvstorage.resp.object.RespObject;
@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public class ConnectionPool {
 
     private final List<NettyKvsConnection> connections;
@@ -86,7 +87,7 @@ public class ConnectionPool {
             channel.closeFuture().addListener(new GenericFutureListener() {
                 @Override
                 public void operationComplete(Future future) throws Exception {
-                    System.out.println("SESSION CLOSED");
+                    log.info("Session closed");
                 }
             });
         }
@@ -112,7 +113,7 @@ public class ConnectionPool {
             channel.close().addListener(new GenericFutureListener<Future<? super Void>>() {
                 @Override
                 public void operationComplete(Future<? super Void> future) throws Exception {
-                    System.out.println("REALLY SESSION CLOSED BY CLIENT");
+                    log.info("Session closed by client");
                 }
             });
         }

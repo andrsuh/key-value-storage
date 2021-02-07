@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
@@ -13,6 +14,7 @@ import java.util.Arrays;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 public class TableInitializer implements Initializer {
 
     private final Initializer segmentInitializer;
@@ -25,7 +27,7 @@ public class TableInitializer implements Initializer {
     public void perform(InitializationContext context) throws DatabaseException {
         TableInitializationContext tableContext = context.currentTableContext();
 
-        System.out.println("Creating table " + tableContext.getTableName());
+        log.info("Creating table {}", tableContext.getTableName());
 
         if (!Files.exists(tableContext.getTablePath())) {
             throw new DatabaseException("Table with such name doesn't exist: " + tableContext.getTableName());
@@ -58,6 +60,7 @@ public class TableInitializer implements Initializer {
 
                         context.currentDbContext().addTable(TableImpl.initializeFromContext(context.currentTableContext()));
                     });
+            log.info("Table {} created", tableContext.getTableName());
         } catch (Exception e) { // todo sukhoa handle this. refactor
             throw new DatabaseException(e);
         }
