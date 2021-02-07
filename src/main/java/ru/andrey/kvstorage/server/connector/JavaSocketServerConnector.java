@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.server.connector;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
 import ru.andrey.kvstorage.resp.object.RespObject;
@@ -24,6 +25,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.*;
 
+@Slf4j
 public class JavaSocketServerConnector implements AutoCloseable {
 
     private final ExecutorService clientIOWorkers = Executors.newSingleThreadExecutor();
@@ -33,7 +35,7 @@ public class JavaSocketServerConnector implements AutoCloseable {
     private final DatabaseServer databaseServer;
 
     public JavaSocketServerConnector(DatabaseServer databaseServer, ServerConfig config) throws IOException, DatabaseException {
-        System.out.println("Starting server on port " + config.getPort() + " (host " + config.getHost() + ")");
+        log.info("Starting server on port {} (host {})", config.getPort(), config.getHost());
 
         this.databaseServer = databaseServer;
         this.serverSocket = new ServerSocket(config.getPort());
@@ -44,16 +46,16 @@ public class JavaSocketServerConnector implements AutoCloseable {
                     Socket clientSocket = JavaSocketServerConnector.this.serverSocket.accept();
                     clientIOWorkers.submit(new ClientTask(clientSocket, databaseServer));
                 } catch (Throwable t) {
-                    System.out.println("Server acceptor thread exception: " + t);
+                    log.error("Server acceptor thread exception: " + t);
                 }
             }
-            System.out.println("Server acceptor stopped.");
+            log.info("Server acceptor stopped");
         });
     }
 
     @Override
     public void close() throws Exception {
-        System.out.println("Stopping socket connector");
+        log.info("Stopping socket connector");
         connectionAcceptorExecutor.shutdownNow();
         clientIOWorkers.shutdownNow();
         serverSocket.close();
@@ -74,10 +76,10 @@ public class JavaSocketServerConnector implements AutoCloseable {
 
     public DatabaseCommandResult executeNextCommand(RespObject msg) {
         try {
-            System.out.println("Server got client request: [ " + msg + "]");
+            log.debug("Server got client request: [ {} ]", msg);
             return databaseServer.executeNextCommand(msg).get();
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error(e.getMessage());
             return DatabaseCommandResult.error(e);
         }
     }
@@ -108,13 +110,13 @@ public class JavaSocketServerConnector implements AutoCloseable {
                     writer.write(databaseCommandResult.serialize());
                 }
             } catch (IOException e) {
-                System.out.println("Client socket threw IO Exception " + e.getMessage());
+                log.error("Client socket threw IO Exception {}" ,e.getMessage());
             } catch (InterruptedException e) {
-                System.out.println("Got interrupted exception " + e.getMessage()); // todo sukhoa bad
+                log.error("Got interrupted exception {}", e.getMessage()); // todo sukhoa bad
             } catch (ExecutionException e) {
-                System.out.println("Got execution exception " + e.getMessage()); // todo sukhoa bad
+                log.error("Got execution exception {}", e.getMessage()); // todo sukhoa bad
             } catch (Throwable t) {
-                System.out.println("Unexpected exception" + t);
+                log.error("Unexpected exception {}", t.toString());
             } finally {
                 close();
             }
@@ -124,7 +126,7 @@ public class JavaSocketServerConnector implements AutoCloseable {
         public void close() {
             try {
                 client.close();
-                System.out.println("Client has been disconnected: " + client.getInetAddress());
+                log.info("Client has been disconnected: {}", client.getInetAddress());
             } catch (IOException e) {
                 e.printStackTrace(); // todo sukhoa mmmmm
             }

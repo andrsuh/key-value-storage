@@ -2,6 +2,7 @@ package ru.andrey.kvstorage.server.connector;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.jclient.connection.ConnectionPool;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespCommandId;
@@ -9,12 +10,13 @@ import ru.andrey.kvstorage.resp.object.RespObject;
 
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public class KvsClientInboundHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         RespArray message = (RespArray) msg;
-        System.out.println("Server  responded: [" + message.asString()  + "]");
+        log.debug("Server  responded: [ {} ]", message.asString());
         RespCommandId commandId = (RespCommandId) message.getObjects().get(0);
 
 
@@ -28,6 +30,6 @@ public class KvsClientInboundHandler extends ChannelInboundHandlerAdapter {
             resultHolder.notify();
         }
 
-        System.out.println("Client got response to command id: " + commandId.commandId);
+        log.debug("Client got response to command id: {}", commandId.commandId);
     }
 }

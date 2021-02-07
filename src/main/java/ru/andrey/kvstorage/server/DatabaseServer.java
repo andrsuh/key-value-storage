@@ -1,6 +1,7 @@
 package ru.andrey.kvstorage.server;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.console.DatabaseCommand;
@@ -18,6 +19,7 @@ import java.util.concurrent.Executors;
 
 import static ru.andrey.kvstorage.server.console.DatabaseCommandArgPositions.COMMAND_NAME;
 
+@Slf4j
 public class DatabaseServer {
     @Getter
     private final ExecutionEnvironment env;
@@ -36,7 +38,7 @@ public class DatabaseServer {
     public CompletableFuture<DatabaseCommandResult> executeNextCommand(RespObject msg) {
         try {
             RespArray message = (RespArray) msg;
-            System.out.println("Server got client request: [ $message]");
+            log.debug("Server got client request: [ {} ]", message);
 
             List<RespObject> commandArgs = message.getObjects();
             DatabaseCommand command = DatabaseCommands
@@ -45,7 +47,7 @@ public class DatabaseServer {
 
             return executeNextCommand(command);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            log.error(e.getMessage());
             return CompletableFuture.completedFuture(DatabaseCommandResult.error(e));
         }
     }
@@ -55,7 +57,7 @@ public class DatabaseServer {
             try {
                 return command.execute();
             } catch (DatabaseException e) {
-                System.out.println(e.getMessage());
+                log.error(e.getMessage());
                 return DatabaseCommandResult.error(e);
             }
         }, dbCommandExecutor);
