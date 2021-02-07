@@ -267,7 +267,7 @@ public class CommandsTest {
 
     @Test
     public void test_executeNext_noCommandName() {
-        DatabaseCommandResult databaseCommandResult = server.executeNextCommand((RespObject) null);
+        DatabaseCommandResult databaseCommandResult = server.executeNextCommand((RespArray) null);
         assertEquals(FAILED, databaseCommandResult.getStatus());
     }
 
@@ -299,7 +299,7 @@ public class CommandsTest {
                     .collect(Collectors.joining(" "));
         }
 
-        public RespObject toRespObject() {
+        public RespArray toRespObject() {
             return new RespArray(
                     new RespCommandId(0),
                     new RespSimpleString(name.getBytes()),

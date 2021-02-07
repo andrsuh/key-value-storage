@@ -33,9 +33,8 @@ public class DatabaseServer {
         initializer.perform(initializationContext);
     }
 
-    public CompletableFuture<DatabaseCommandResult> executeNextCommand(RespObject msg) {
+    public CompletableFuture<DatabaseCommandResult> executeNextCommand(RespArray message) {
         try {
-            RespArray message = (RespArray) msg;
             System.out.println("Server got client request: [ $message]");
 
             List<RespObject> commandArgs = message.getObjects();
