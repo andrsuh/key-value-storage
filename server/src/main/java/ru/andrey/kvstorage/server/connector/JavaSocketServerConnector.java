@@ -2,6 +2,7 @@ package ru.andrey.kvstorage.server.connector;
 
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
+import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.ConfigLoader;
@@ -72,10 +73,10 @@ public class JavaSocketServerConnector implements AutoCloseable {
         new JavaSocketServerConnector(databaseServer, config.getServerConfig());
     }
 
-    public DatabaseCommandResult executeNextCommand(RespObject msg) {
+    public DatabaseCommandResult executeNextCommand(RespArray message) {
         try {
-            System.out.println("Server got client request: [ " + msg + "]");
-            return databaseServer.executeNextCommand(msg).get();
+            System.out.println("Server got client request: [ " + message + "]");
+            return databaseServer.executeNextCommand(message).get();
         } catch (Exception e) {
             System.out.println(e.getMessage());
             return DatabaseCommandResult.error(e);

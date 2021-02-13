@@ -31,11 +31,12 @@ public class SocketKvsConnection implements KvsConnection {
         if (socket.isClosed()) {
             throw new IllegalStateException("Socket is closed");
         }
+
         try {
             writer.write(command);
-            RespArray arrayResponse =  (RespArray) reader.readObject();
-            System.out.println("Client got response to command id: " + arrayResponse.getObjects().get(0).asString());
-            return arrayResponse.getObjects().get(1);
+            RespObject result = reader.readObject();
+            System.out.println("Client got response to command id: " + commandId);
+            return result;
         } catch (IOException e) {
             throw new IllegalStateException("Failed to send command to server");
         }
