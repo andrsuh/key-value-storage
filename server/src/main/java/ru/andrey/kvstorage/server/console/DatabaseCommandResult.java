@@ -11,15 +11,33 @@ import java.util.Optional;
 
 public interface DatabaseCommandResult extends DatabaseApiSerializable {
 
+    /**
+     * Формирует успешный результат выполнения команды из значения результата.
+     *
+     * @param result значение результата
+     * @return успешный результат выполнения команды, который был сформирован
+     */
     static DatabaseCommandResult success(byte[] result) {
         return new DatabaseCommandResultImpl(result, null, DatabaseCommandStatus.SUCCESS);
     }
 
+    /**
+     * Формирует результат команды, при выполнении которой произошла ошибка.
+     *
+     * @param message сообщение об ошибке
+     * @return результат команды, при выполнении которой произошла ошибка
+     */
     static DatabaseCommandResult error(String message) {
         Objects.requireNonNull(message);
         return new DatabaseCommandResultImpl(null, message, DatabaseCommandStatus.FAILED);
     }
 
+    /**
+     * Формирует результат команды, при выполнении которой произошла ошибка, из исключения.
+     *
+     * @param exception исключение, из которого нужно сформировать результат выполнения команды
+     * @return результат команды, при выполнении которой произошла ошибка
+     */
     static DatabaseCommandResult error(Exception exception) {
         Objects.requireNonNull(exception);
         String message = exception.getMessage() != null
@@ -28,14 +46,37 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         return DatabaseCommandResult.error(message);
     }
 
+    /**
+     * Возвращает значение результата выполнения команды в виде {@code Optional<String>}.
+     *
+     * @return значение результата выполнения команды в виде {@code Optional<String>}
+     */
     Optional<byte[]> getResult();
 
+    /**
+     * Возвращает статус выполнения команды.
+     *
+     * @return статус выполнения команды
+     */
     DatabaseCommandStatus getStatus();
 
+    /**
+     * Возвращает {@code true} - если команда выполнилась успешно (status == DatabaseCommandStatus.SUCCESS), {@code false} - в ином случае.
+     *
+     * @return {@code true} - если команда выполнилась успешно (status == DatabaseCommandStatus.SUCCESS), {@code false} - в ином случае
+     */
     boolean isSuccess();
 
+    /**
+     * Возвращает сообщение об ошибке, которая произошла при выполнении команды.
+     *
+     * @return сообщение об ошибке, которая произошла при выполнении команды
+     */
     String getErrorMessage();
 
+    /**
+     * Перечисление, описывающее возможные варианты статуса выполнения команды.
+     */
     enum DatabaseCommandStatus {
         SUCCESS, FAILED
     }

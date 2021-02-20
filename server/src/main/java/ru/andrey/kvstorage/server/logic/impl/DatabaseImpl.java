@@ -69,11 +69,6 @@ public class DatabaseImpl implements Database {
     }
 
     @Override
-    public void createTableIfNotExists(String tableName, int segmentSizeInBytes){
-
-    }
-
-    @Override
     public void write(String tableName, String objectKey, byte[] objectValue) throws DatabaseException {
         Table table = tables.get(tableName);
         if (table == null) {

@@ -9,10 +9,26 @@ public interface RespObject {
 
     byte[] CRLF = "\r\n".getBytes(StandardCharsets.UTF_8);
 
+    /**
+     * Возвращает {@code true} - если данный объект является ошибкой, {@code false} - в ином случае.
+     *
+     * @return {@code true} - если данный объект является ошибкой, {@code false} - в ином случае
+     */
     boolean isError();
 
+    /**
+     * Возвращает строковое представление данного объекта.
+     *
+     * @return строковое представление данного объекта
+     */
     String asString();
 
+    /**
+     * Сериализует данный объект в байты и записывает его в OutputStream.
+     *
+     * @param os - выходной поток, куда будут записываться данные
+     * @throws IOException если произошла ошибка ввода-вывода
+     */
     void write(OutputStream os) throws IOException;
 
     /**
@@ -20,6 +36,11 @@ public interface RespObject {
      */
     byte[] getPayloadBytes();
 
+    /**
+     * Возвращает байтовое представление данного объекта.
+     *
+     * @return байтовое представление данного объекта
+     */
     default byte[] getBytes() {
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
 
