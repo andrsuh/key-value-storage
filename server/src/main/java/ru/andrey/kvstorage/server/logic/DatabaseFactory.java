@@ -7,7 +7,7 @@ import java.nio.file.Path;
 @FunctionalInterface
 public interface DatabaseFactory {
     /**
-     * Создает базу данных с указанным именем, если это имя еще не занято.
+     * Создает базу данных с указанным именем, если такая база еще не существует.
      *
      * @param dbName имя базы данных
      * @param dbRoot путь до директории, в которой будет создана база данных

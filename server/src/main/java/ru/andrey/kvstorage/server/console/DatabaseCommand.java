@@ -4,7 +4,7 @@ import ru.andrey.kvstorage.server.exception.DatabaseException;
 
 public interface DatabaseCommand {
     /**
-     * Запуск данной команды.
+     * Запускает команду.
      *
      * @return результат выполнение команды
      * @throws DatabaseException если произошла ошибка СУБД

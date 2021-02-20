@@ -21,7 +21,7 @@ public interface Segment {
      *
      * @param objectKey ключ, по которому нужно записать значение
      * @param objectValue значение, которое нужно записать
-     * @return {@code true} - если значение записалось, {@code false} - если нет
+     * @return {@code true} - если значение успешно записалось, {@code false} - если нет
      * @throws IOException если произошла ошибка ввода-вывода.
      * @throws DatabaseException
      */

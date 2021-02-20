@@ -7,14 +7,12 @@ import java.util.Optional;
 
 public interface ExecutionEnvironment {
     /**
-     * Возвращает путь до папки, где находятся базы данных.
-     *
-     * @return путь до папки, где находятся базы данных
+     * @return путь до директории, где находятся базы данных
      */
     Path getWorkingPath();
 
     /**
-     * Возвращает {@code Optional<Database>}.
+     * Возвращает {@code Optional<Database>} или {@code Optional#EMPTY}.
      *
      * @param name имя базы данных
      * @return {@code Optional<Database>}

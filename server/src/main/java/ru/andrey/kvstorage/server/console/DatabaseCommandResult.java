@@ -33,7 +33,7 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
     }
 
     /**
-     * Формирует результат команды, при выполнении которой произошла ошибка, из исключения.
+     * Формирует результат команды, при выполнении которой произошла ошибка.
      *
      * @param exception исключение, из которого нужно сформировать результат выполнения команды
      * @return результат команды, при выполнении которой произошла ошибка
@@ -47,8 +47,6 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
     }
 
     /**
-     * Возвращает значение результата выполнения команды в виде {@code Optional<String>}.
-     *
      * @return значение результата выполнения команды в виде {@code Optional<String>}
      */
     Optional<byte[]> getResult();
