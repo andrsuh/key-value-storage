@@ -7,12 +7,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Comparator;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
@@ -22,20 +24,24 @@ public class SegmentTest {
     private final String dbName = "db1";
     private final String tableName = "table1";
     private Path dbPath;
+    private Path tablePath;
     private Database database;
 
     @Before
     public void setUp() throws IOException, DatabaseException {
-        dbPath = Files.createTempDirectory(dbName);
+        dbPath = Files.createDirectory(Path.of(System.getProperty("user.dir") + "/db_files"));
         database = DatabaseImpl.create(dbName, dbPath);
         database.createTableIfNotExists(tableName);
+        tablePath = Path.of(dbPath + "/" + dbName + "/" + tableName);
     }
 
     @After
-    public void tearDown() {
-        try {
-            Files.delete(dbPath);
-        } catch (Exception ignored) {}
+    public void tearDown() throws IOException {
+        Files.walk(dbPath)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+        Files.deleteIfExists(dbPath);
     }
 
     @Test
@@ -43,21 +49,20 @@ public class SegmentTest {
         byte[] array = new byte[50000];
         SecureRandom.getInstanceStrong().nextBytes(array);
         database.write(tableName, "key1", array);
-        String segmentsPath = dbPath + "/" + tableName;
-        assertEquals(1, Files.list(Path.of(segmentsPath)).count());
+        assertEquals(1, Files.list(tablePath).count());
         database.write(tableName, "key2", array);
-        assertEquals(2, Files.list(Path.of(segmentsPath)).count());
+        assertEquals(2, Files.list(tablePath).count());
     }
 
     @Test
     public void create_whenCreated_returnValidName() throws DatabaseException {
-        Segment segment = SegmentImpl.create(tableName, Path.of(dbPath + "/" + tableName));
-        assertTrue(segment.getName().matches(tableName + "_[0-9]*"));
+        Segment segment = SegmentImpl.create(tableName, tablePath);
+        assertTrue(segment.getName().matches(tableName));
     }
 
     @Test
     public void writeRead_WhenValidData_writeAndReadEqualData() throws DatabaseException, IOException {
-        Segment segment = SegmentImpl.create(tableName, Path.of(dbPath + "/" + tableName));
+        Segment segment = SegmentImpl.create(tableName, tablePath);
 
         String key1 = "key1";
         String key2 = "key2";
@@ -88,7 +93,7 @@ public class SegmentTest {
 
     @Test
     public void writeRead_WhenNull_ReturnEmptyOptional() throws DatabaseException, IOException {
-        Segment segment = SegmentImpl.create(tableName, Path.of(dbPath + "/" + tableName));
+        Segment segment = SegmentImpl.create(tableName, tablePath);
         String key = "key1";
         segment.write(key, null);
         assertTrue("Written null value but data read was not null", segment.read(key).isEmpty());
@@ -96,7 +101,7 @@ public class SegmentTest {
 
     @Test
     public void read_WhenWasNotWritten_ReturnEmptyOptional() throws DatabaseException, IOException {
-        Segment segment = SegmentImpl.create(tableName, Path.of(dbPath + "/" + tableName));
+        Segment segment = SegmentImpl.create(tableName, tablePath);
         String key = "key1";
         assertTrue("Written null value but data read was not null", segment.read(key).isEmpty());
     }
