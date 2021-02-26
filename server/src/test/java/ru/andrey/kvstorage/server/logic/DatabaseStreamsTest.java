@@ -1,4 +1,4 @@
-package ru.andrey.kvstorage;
+package ru.andrey.kvstorage.server.logic;
 
 import org.junit.After;
 import org.junit.Before;
