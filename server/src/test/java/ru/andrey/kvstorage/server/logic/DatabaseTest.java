@@ -6,10 +6,12 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
@@ -26,11 +28,12 @@ public class DatabaseTest {
     }
 
     @After
-    public void tearDown() {
-        try {
-            Files.delete(dbPath);
-        } catch (Exception ignored) {
-        }
+    public void tearDown() throws IOException {
+        Files.walk(dbPath)
+                .sorted(Comparator.reverseOrder())
+                .map(Path::toFile)
+                .forEach(File::delete);
+        Files.deleteIfExists(dbPath);
     }
 
     @Test
