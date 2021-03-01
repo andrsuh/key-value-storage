@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 
@@ -126,6 +127,84 @@ public class DatabaseTest {
         Optional<byte[]> actualData1 = database.read(table1, key1);
         Optional<byte[]> actualData2 = database.read(table2, key2);
         Optional<byte[]> actualData3 = database.read(table3, key3);
+
+        String assertTrueMsg = "Data was written but no data read";
+        assertTrue(assertTrueMsg, actualData1.isPresent());
+        assertTrue(assertTrueMsg, actualData2.isPresent());
+        assertTrue(assertTrueMsg, actualData3.isPresent());
+
+        String assertArrayEqualsMsg = "Data written & data read are not equal";
+        assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
+        assertArrayEquals(assertArrayEqualsMsg, data2, actualData2.get());
+        assertArrayEquals(assertArrayEqualsMsg, data3, actualData3.get());
+    }
+
+    @Test
+    public void writeRead_WhenVeryLongKey_HandleCorrectly() throws DatabaseException {
+        String table = "table1";
+
+        String key1 = "key1".repeat(2500);
+        String key2 = "key2".repeat(5000);
+        String key3 = "key3".repeat(12500);
+
+        byte[] data1 = "value1".getBytes();
+        byte[] data2 = "value2".getBytes();
+        byte[] data3 = "value3".getBytes();
+
+        Random random = new Random();
+
+        random.nextBytes(data1);
+        random.nextBytes(data2);
+        random.nextBytes(data3);
+
+        database.createTableIfNotExists(table);
+
+        database.write(table, key1, data1);
+        database.write(table, key2, data2);
+        database.write(table, key3, data3);
+
+        Optional<byte[]> actualData1 = database.read(table, key1);
+        Optional<byte[]> actualData2 = database.read(table, key2);
+        Optional<byte[]> actualData3 = database.read(table, key3);
+
+        String assertTrueMsg = "Data was written but no data read";
+        assertTrue(assertTrueMsg, actualData1.isPresent());
+        assertTrue(assertTrueMsg, actualData2.isPresent());
+        assertTrue(assertTrueMsg, actualData3.isPresent());
+
+        String assertArrayEqualsMsg = "Data written & data read are not equal";
+        assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
+        assertArrayEquals(assertArrayEqualsMsg, data2, actualData2.get());
+        assertArrayEquals(assertArrayEqualsMsg, data3, actualData3.get());
+    }
+
+    @Test
+    public void writeRead_WhenVeryLongValue_HandleCorrectly() throws DatabaseException {
+        String table = "table1";
+
+        String key1 = "key1";
+        String key2 = "key2";
+        String key3 = "key3";
+
+        byte[] data1 = new byte[10000];
+        byte[] data2 = new byte[20000];
+        byte[] data3 = new byte[50000];
+
+        Random random = new Random();
+
+        random.nextBytes(data1);
+        random.nextBytes(data2);
+        random.nextBytes(data3);
+
+        database.createTableIfNotExists(table);
+
+        database.write(table, key1, data1);
+        database.write(table, key2, data2);
+        database.write(table, key3, data3);
+
+        Optional<byte[]> actualData1 = database.read(table, key1);
+        Optional<byte[]> actualData2 = database.read(table, key2);
+        Optional<byte[]> actualData3 = database.read(table, key3);
 
         String assertTrueMsg = "Data was written but no data read";
         assertTrue(assertTrueMsg, actualData1.isPresent());
