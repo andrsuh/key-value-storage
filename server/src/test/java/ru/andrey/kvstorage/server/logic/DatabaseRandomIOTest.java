@@ -10,6 +10,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -48,6 +50,8 @@ public class DatabaseRandomIOTest {
 
     @Test
     public void writeRead_WhenRandomIO_WriteAndReadValidData() throws DatabaseException {
+        Instant start = Instant.now();
+
         for (int i = 0; i < 10; i++)
             testWriteNew();
         for (int i = 0; i < OPERATIONS_COUNT; i++) {
@@ -66,6 +70,8 @@ public class DatabaseRandomIOTest {
                     break;
             }
         }
+
+        System.out.println("\n\nEXECUTION TIME: " + Duration.between(start, Instant.now()).toMillis() + "ms");
     }
 
     private void testReadValid() throws DatabaseException {
