@@ -2,3 +2,4 @@ language: java
 jdk: openjdk13
 os: linux
 install: true
+if: branch = master OR branch = dev
