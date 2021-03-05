@@ -20,7 +20,7 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
         this.key = key;
         this.keySize = key.length;
         this.value = value;
-        this.valueSize = value.length;
+        this.valueSize = value == null ? -1 : value.length;
     }
 
     public byte[] getKey() {

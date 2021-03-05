@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
 
@@ -129,5 +130,14 @@ public class SegmentTest {
         }
         assertTrue(segment.isReadOnly());
         assertFalse(segment.write("key", bytes));
+    }
+
+    @Test
+    public void writeBigValue() throws DatabaseException, IOException, NoSuchAlgorithmException {
+        Segment segment = SegmentImpl.create(tableName, tablePath);
+        byte[] bigObject = new byte[200000];
+        SecureRandom.getInstanceStrong().nextBytes(bigObject);
+        segment.write("key", bigObject);
+        assertArrayEquals(bigObject, segment.read("key").get());
     }
 }

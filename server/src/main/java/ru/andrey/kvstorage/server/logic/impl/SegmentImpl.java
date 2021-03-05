@@ -21,7 +21,7 @@ import java.util.Optional;
 
 /**
  * Сегмент - append-only файл, хранящий пары ключ-значение, разделенные специальным символом.
- * - имеет ограниченный размер
+ * - имеет ограниченный размер, большие значения (>100000) записываются в последний сегмент, если он не read-only
  * - при превышении размера сегмента создается новый сегмент и дальнейшие операции записи производятся в него
  * - именование файла-сегмента должно позволять установить очередность их появления
  * - является неизменяемым после появления более нового сегмента
@@ -84,8 +84,8 @@ public class SegmentImpl implements Segment {
         return updateSegment(databaseRecord);
     }
 
-    private boolean canAllocate(long length) {
-        return length + currentSizeInBytes <= MAX_SEGMENT_SIZE;
+    private boolean canAllocate() {
+        return currentSizeInBytes < MAX_SEGMENT_SIZE;
     }
 
     @Override
@@ -119,7 +119,7 @@ public class SegmentImpl implements Segment {
     }
 
     private boolean updateSegment(WritableDatabaseRecord databaseRecord) throws IOException {
-        if (!canAllocate(databaseRecord.size())) {
+        if (!canAllocate()) {
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
             readOnly = true;
             return false;
