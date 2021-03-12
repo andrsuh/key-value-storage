@@ -9,6 +9,8 @@ import ru.andrey.kvstorage.server.logic.Table;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Optional;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -52,6 +54,15 @@ public class TableTest {
         assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
         assertArrayEquals(assertArrayEqualsMsg, data2, actualData2.get());
         assertArrayEquals(assertArrayEqualsMsg, data3, actualData3.get());
+    }
+
+    @Test
+    public void writeReadBugValue() throws NoSuchAlgorithmException, DatabaseException {
+        String key = "key1";
+        byte[] bigObject = new byte[200000];
+        SecureRandom.getInstanceStrong().nextBytes(bigObject);
+        table.write("key", bigObject);
+        assertArrayEquals(bigObject, table.read("key").get());
     }
 
     @Test

@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Random;
@@ -215,6 +217,15 @@ public class DatabaseTest {
         assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
         assertArrayEquals(assertArrayEqualsMsg, data2, actualData2.get());
         assertArrayEquals(assertArrayEqualsMsg, data3, actualData3.get());
+    }
+
+    @Test
+    public void writeReadBugValue() throws NoSuchAlgorithmException, DatabaseException {
+        byte[] bigObject = new byte[200000];
+        SecureRandom.getInstanceStrong().nextBytes(bigObject);
+        database.createTableIfNotExists("table");
+        database.write("table", "key1", bigObject);
+        assertArrayEquals(bigObject, database.read("table", "key1").get());
     }
 
     @Test

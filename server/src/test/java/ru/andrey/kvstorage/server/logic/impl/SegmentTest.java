@@ -133,7 +133,7 @@ public class SegmentTest {
     }
 
     @Test
-    public void writeBigValue() throws DatabaseException, IOException, NoSuchAlgorithmException {
+    public void writeReadBigValue() throws DatabaseException, IOException, NoSuchAlgorithmException {
         Segment segment = SegmentImpl.create(tableName, tablePath);
         byte[] bigObject = new byte[200000];
         SecureRandom.getInstanceStrong().nextBytes(bigObject);
