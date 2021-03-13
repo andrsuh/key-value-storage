@@ -46,18 +46,6 @@ public class SegmentTest {
     }
 
     @Test
-    public void whenSegmentOverflow_createNew() throws NoSuchAlgorithmException, DatabaseException, IOException {
-        byte[] array = new byte[99988];
-        SecureRandom.getInstanceStrong().nextBytes(array);
-        database.write(tableName, "key1", array);
-        assertEquals(1, Files.list(tablePath).count());
-        array = new byte[5];
-        SecureRandom.getInstanceStrong().nextBytes(array);
-        database.write(tableName, "key2", array);
-        assertEquals(2, Files.list(tablePath).count());
-    }
-
-    @Test
     public void create_whenCreated_returnValidName() throws DatabaseException {
         Segment segment = SegmentImpl.create(tableName, tablePath);
         assertTrue(segment.getName().matches(tableName));
@@ -107,29 +95,6 @@ public class SegmentTest {
         Segment segment = SegmentImpl.create(tableName, tablePath);
         String key = "key1";
         assertTrue("Written null value but data read was not null", segment.read(key).isEmpty());
-    }
-
-    @Test
-    public void write_thenAssertReadOnly() throws DatabaseException, NoSuchAlgorithmException, IOException {
-        Segment segment = SegmentImpl.create(tableName, tablePath);
-        byte[] bytes = new byte[1000];
-        String keyPrefix = "k";
-        int i;
-        assertFalse(segment.isReadOnly());
-        for (i = 0; i < 100 && !segment.isReadOnly(); i++) {
-            try {
-                SecureRandom.getInstanceStrong().nextBytes(bytes);
-                if (!segment.write(keyPrefix + i, bytes)) {
-                    if (i < 97)
-                        fail();
-                    return;
-                }
-            } catch (IOException | DatabaseException e) {
-                fail("Throws exception but should not");
-            }
-        }
-        assertTrue(segment.isReadOnly());
-        assertFalse(segment.write("key", bytes));
     }
 
     @Test

@@ -77,6 +77,8 @@ public class DatabaseRandomIOTest {
     private void testReadValid() throws DatabaseException {
         String table = getRandomTable();
         String key = getRandomKey(table);
+        if (key == null)
+            return;
         Optional<byte[]> data = database.read(table, key);
         assertTrue("Read by valid key returned empty optional", data.isPresent());
         assertArrayEquals(dataWritten.get(table).get(key), data.get());
@@ -84,7 +86,10 @@ public class DatabaseRandomIOTest {
 
     private void testReadInvalid() throws DatabaseException {
         String table = getRandomTable();
-        String key = getRandomKey(table) + "_INVALID";
+        String randomKey = getRandomKey(table);
+        if (randomKey == null)
+            return;
+        String key = randomKey + "_INVALID";
         Optional<byte[]> data = database.read(table, key);
         assertTrue("Read by invalid key returned non-empty optional", data.isEmpty());
     }
@@ -100,6 +105,8 @@ public class DatabaseRandomIOTest {
     private void testWriteExisting() throws DatabaseException {
         String table = getRandomTable();
         String key = getRandomKey(table);
+        if (key == null)
+            return;
         byte[] value = generateValue();
         dataWritten.get(table).remove(key);
         database.write(table, key, value);
@@ -128,6 +135,8 @@ public class DatabaseRandomIOTest {
 
     private String getRandomKey(String table) {
         List<String> keys = new ArrayList<>(dataWritten.get(table).keySet());
+        if (keys.size() == 0)
+            return null;
         Random random = new Random();
         return keys.get(random.nextInt(keys.size()));
     }
