@@ -4,6 +4,7 @@ import org.junit.Before;
 import org.junit.Test;
 import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.TableIndex;
+import ru.andrey.kvstorage.server.logic.Segment;
 import ru.andrey.kvstorage.server.logic.Table;
 
 import java.io.IOException;
@@ -13,18 +14,23 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Optional;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 public class TableTest {
 
     private Table table;
+    private static final String tableName = "table1";
 
     @Before
     public void setUp() throws IOException, DatabaseException {
-        table = TableImpl.create("table1",
-                Files.createTempDirectory("table1"),
+        table = TableImpl.create(tableName,
+                Files.createTempDirectory(tableName),
                 new TableIndex());
+    }
+
+    @Test
+    public void getName_ReturnValidName() {
+        assertEquals(tableName, table.getName());
     }
 
     @Test
@@ -58,7 +64,6 @@ public class TableTest {
 
     @Test
     public void writeRead_WhenBigValue_ThenHandleCorrectly() throws NoSuchAlgorithmException, DatabaseException {
-        String key = "key1";
         byte[] bigObject = new byte[200000];
         SecureRandom.getInstanceStrong().nextBytes(bigObject);
         table.write("key", bigObject);
@@ -76,5 +81,24 @@ public class TableTest {
     public void read_WhenWasNotWritten_ReturnEmptyOptional() throws DatabaseException {
         String key = "key1";
         assertTrue("Written null value but data read was not null", table.read(key).isEmpty());
+    }
+
+    @Test
+    public void writeValue_ThenDelete_HandleCorrectly() throws DatabaseException, IOException {
+        String key = "key1";
+        byte[] data1 = "data1".getBytes(StandardCharsets.UTF_8);
+
+        table.write(key, data1);
+
+        Optional<byte[]> actualData1 = table.read(key);
+
+        String assertTrueMsg = "Data was written but no data read";
+        assertTrue(assertTrueMsg, actualData1.isPresent());
+
+        String assertArrayEqualsMsg = "Data written & data read are not equal";
+        assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
+
+        table.delete(key);
+        assertTrue(table.read(key).isEmpty());
     }
 }

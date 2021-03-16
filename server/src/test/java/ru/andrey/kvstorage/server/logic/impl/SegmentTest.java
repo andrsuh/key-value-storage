@@ -140,4 +140,24 @@ public class SegmentTest {
         segment.write("key", bigObject);
         assertArrayEquals(bigObject, segment.read("key").get());
     }
+
+    @Test
+    public void writeValue_ThenDelete_HandleCorrectly() throws DatabaseException, IOException {
+        Segment segment = SegmentImpl.create(tableName, tablePath);
+        String key = "key1";
+        byte[] data1 = "data1".getBytes(StandardCharsets.UTF_8);
+
+        segment.write(key, data1);
+
+        Optional<byte[]> actualData1 = segment.read(key);
+
+        String assertTrueMsg = "Data was written but no data read";
+        assertTrue(assertTrueMsg, actualData1.isPresent());
+
+        String assertArrayEqualsMsg = "Data written & data read are not equal";
+        assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
+
+        segment.delete(key);
+        assertTrue(segment.read(key).isEmpty());
+    }
 }

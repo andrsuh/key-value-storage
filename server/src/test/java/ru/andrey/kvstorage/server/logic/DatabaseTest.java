@@ -250,4 +250,28 @@ public class DatabaseTest {
         assertThrows(DatabaseException.class,
                 () -> database.write("INVALID_NAME", "key1", "data1".getBytes()));
     }
+
+    @Test
+    public void writeValue_ThenDelete_HandleCorrectly() throws DatabaseException {
+        String table = "table1";
+
+        String key1 = "key1";
+
+        byte[] data1 = "data1".getBytes(StandardCharsets.UTF_8);
+
+        database.createTableIfNotExists(table);
+
+        database.write(table, key1, data1);
+
+        Optional<byte[]> actualData1 = database.read(table, key1);
+
+        String assertTrueMsg = "Data was written but no data read";
+        assertTrue(assertTrueMsg, actualData1.isPresent());
+
+        String assertArrayEqualsMsg = "Data written & data read are not equal";
+        assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
+
+        database.delete(table, key1);
+        assertTrue(database.read(table, key1).isEmpty());
+    }
 }
