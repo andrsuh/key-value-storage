@@ -57,7 +57,7 @@ public class TableTest {
     }
 
     @Test
-    public void writeReadBigValue() throws NoSuchAlgorithmException, DatabaseException {
+    public void writeRead_WhenBigValue_ThenHandleCorrectly() throws NoSuchAlgorithmException, DatabaseException {
         String key = "key1";
         byte[] bigObject = new byte[200000];
         SecureRandom.getInstanceStrong().nextBytes(bigObject);
