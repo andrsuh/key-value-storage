@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Optional;
 
@@ -45,21 +46,32 @@ public class SegmentTest {
     }
 
     @Test
-    public void whenSegmentOverflow_createNew() throws NoSuchAlgorithmException, DatabaseException, IOException {
-        byte[] array = new byte[99988];
-        SecureRandom.getInstanceStrong().nextBytes(array);
-        database.write(tableName, "key1", array);
-        assertEquals(1, Files.list(tablePath).count());
-        array = new byte[5];
-        SecureRandom.getInstanceStrong().nextBytes(array);
-        database.write(tableName, "key2", array);
-        assertEquals(2, Files.list(tablePath).count());
-    }
-
-    @Test
     public void create_whenCreated_returnValidName() throws DatabaseException {
         Segment segment = SegmentImpl.create(tableName, tablePath);
         assertTrue(segment.getName().matches(tableName));
+    }
+
+    @Test
+    public void write_thenAssertReadOnly() throws DatabaseException, NoSuchAlgorithmException, IOException {
+        Segment segment = SegmentImpl.create(tableName, tablePath);
+        byte[] bytes = new byte[1000];
+        String keyPrefix = "k";
+        int i;
+        assertFalse(segment.isReadOnly());
+        for (i = 0; i < 100 && !segment.isReadOnly(); i++) {
+            try {
+                SecureRandom.getInstanceStrong().nextBytes(bytes);
+                if (!segment.write(keyPrefix + i, bytes)) {
+                    if (i < 97)
+                        fail();
+                    return;
+                }
+            } catch (IOException | DatabaseException e) {
+                fail("Throws exception but should not");
+            }
+        }
+        assertTrue(segment.isReadOnly());
+        assertFalse(segment.write("key", bytes));
     }
 
     @Test
@@ -94,6 +106,18 @@ public class SegmentTest {
     }
 
     @Test
+    public void whenSegmentOverflow_createNew() throws NoSuchAlgorithmException, DatabaseException, IOException {
+        byte[] array = new byte[99988];
+        SecureRandom.getInstanceStrong().nextBytes(array);
+        database.write(tableName, "key1", array);
+        assertEquals(1, Files.list(tablePath).count());
+        array = new byte[5];
+        SecureRandom.getInstanceStrong().nextBytes(array);
+        database.write(tableName, "key2", array);
+        assertEquals(2, Files.list(tablePath).count());
+    }
+
+    @Test
     public void writeRead_WhenNull_ReturnEmptyOptional() throws DatabaseException, IOException {
         Segment segment = SegmentImpl.create(tableName, tablePath);
         String key = "key1";
@@ -109,25 +133,31 @@ public class SegmentTest {
     }
 
     @Test
-    public void write_thenAssertReadOnly() throws DatabaseException, NoSuchAlgorithmException, IOException {
+    public void writeRead_WhenBigValue_ThenHandleCorrectly() throws DatabaseException, IOException, NoSuchAlgorithmException {
         Segment segment = SegmentImpl.create(tableName, tablePath);
-        byte[] bytes = new byte[1000];
-        String keyPrefix = "k";
-        int i;
-        assertFalse(segment.isReadOnly());
-        for (i = 0; i < 100 && !segment.isReadOnly(); i++) {
-            try {
-                SecureRandom.getInstanceStrong().nextBytes(bytes);
-                if (!segment.write(keyPrefix + i, bytes)) {
-                    if (i < 97)
-                        fail();
-                    return;
-                }
-            } catch (IOException | DatabaseException e) {
-                fail("Throws exception but should not");
-            }
-        }
-        assertTrue(segment.isReadOnly());
-        assertFalse(segment.write("key", bytes));
+        byte[] bigObject = new byte[200000];
+        SecureRandom.getInstanceStrong().nextBytes(bigObject);
+        segment.write("key", bigObject);
+        assertArrayEquals(bigObject, segment.read("key").get());
+    }
+
+    @Test
+    public void writeValue_ThenDelete_HandleCorrectly() throws DatabaseException, IOException {
+        Segment segment = SegmentImpl.create(tableName, tablePath);
+        String key = "key1";
+        byte[] data1 = "data1".getBytes(StandardCharsets.UTF_8);
+
+        segment.write(key, data1);
+
+        Optional<byte[]> actualData1 = segment.read(key);
+
+        String assertTrueMsg = "Data was written but no data read";
+        assertTrue(assertTrueMsg, actualData1.isPresent());
+
+        String assertArrayEqualsMsg = "Data written & data read are not equal";
+        assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
+
+        segment.delete(key);
+        assertTrue(segment.read(key).isEmpty());
     }
 }

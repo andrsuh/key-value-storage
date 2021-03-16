@@ -19,7 +19,7 @@ public class DatabaseOutputStream extends DataOutputStream {
      * Записывает в БД в следующем формате:
      * - Размер ключа в байтахб используя {@link WritableDatabaseRecord#getKeySize()}
      * - Ключ
-     * - Размер записи в байтах {@link WritableDatabaseRecord#getValueSize()}
+     * - Размер записи в байтах (для null-значений размер равен -1) {@link WritableDatabaseRecord#getValueSize()}
      * - Запись
      * Например при использовании UTF_8,
      * "key" : "value"
@@ -35,7 +35,8 @@ public class DatabaseOutputStream extends DataOutputStream {
         writeInt(databaseRecord.getKeySize());
         write(databaseRecord.getKey());
         writeInt(databaseRecord.getValueSize());
-        write(databaseRecord.getValue());
+        if (databaseRecord.getValue() != null)
+            write(databaseRecord.getValue());
 
         return size() - sizeBefore;
     }

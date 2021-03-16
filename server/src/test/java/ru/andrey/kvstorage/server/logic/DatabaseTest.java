@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Random;
@@ -218,6 +220,15 @@ public class DatabaseTest {
     }
 
     @Test
+    public void writeRead_WhenBigValue_ThenHandleCorrectly() throws NoSuchAlgorithmException, DatabaseException {
+        byte[] bigObject = new byte[200000];
+        SecureRandom.getInstanceStrong().nextBytes(bigObject);
+        database.createTableIfNotExists("table");
+        database.write("table", "key1", bigObject);
+        assertArrayEquals(bigObject, database.read("table", "key1").get());
+    }
+
+    @Test
     public void writeRead_WhenNull_ReturnEmptyOptional() throws DatabaseException {
         String table = "table1";
         String key = "key1";
@@ -238,5 +249,29 @@ public class DatabaseTest {
     public void write_WhenNoSuchTable_ThrowException() {
         assertThrows(DatabaseException.class,
                 () -> database.write("INVALID_NAME", "key1", "data1".getBytes()));
+    }
+
+    @Test
+    public void writeValue_ThenDelete_HandleCorrectly() throws DatabaseException {
+        String table = "table1";
+
+        String key1 = "key1";
+
+        byte[] data1 = "data1".getBytes(StandardCharsets.UTF_8);
+
+        database.createTableIfNotExists(table);
+
+        database.write(table, key1, data1);
+
+        Optional<byte[]> actualData1 = database.read(table, key1);
+
+        String assertTrueMsg = "Data was written but no data read";
+        assertTrue(assertTrueMsg, actualData1.isPresent());
+
+        String assertArrayEqualsMsg = "Data written & data read are not equal";
+        assertArrayEquals(assertArrayEqualsMsg, data1, actualData1.get());
+
+        database.delete(table, key1);
+        assertTrue(database.read(table, key1).isEmpty());
     }
 }
