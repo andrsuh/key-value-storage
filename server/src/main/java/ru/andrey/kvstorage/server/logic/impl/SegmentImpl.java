@@ -27,7 +27,7 @@ import java.util.Optional;
  * - является неизменяемым после появления более нового сегмента
  */
 public class SegmentImpl implements Segment {
-    private static final long MAX_SEGMENT_SIZE = 2L * (Integer.MAX_VALUE - 5) + 8; // todo sukhoa use properties
+    private static final long MAX_SEGMENT_SIZE = 100_000; // todo sukhoa use properties
 
     private final String segmentName;
     private final Path segmentPath;
@@ -84,8 +84,8 @@ public class SegmentImpl implements Segment {
         return updateSegment(databaseRecord);
     }
 
-    private boolean canAllocate(long size) {
-        return currentSizeInBytes + size <= MAX_SEGMENT_SIZE;
+    private boolean canAllocate() {
+        return currentSizeInBytes < MAX_SEGMENT_SIZE;
     }
 
     @Override
@@ -119,8 +119,7 @@ public class SegmentImpl implements Segment {
     }
 
     private boolean updateSegment(WritableDatabaseRecord databaseRecord) throws IOException {
-        long recordSize = databaseRecord.getKeySize() + databaseRecord.getValueSize() + 8;
-        if (!canAllocate(recordSize)) {
+        if (!canAllocate()) {
             System.out.println("Segment " + segmentName + " is full. Current size : " + currentSizeInBytes);
             readOnly = true;
             return false;

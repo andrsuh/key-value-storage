@@ -220,7 +220,7 @@ public class DatabaseTest {
     }
 
     @Test
-    public void writeReadBugValue() throws NoSuchAlgorithmException, DatabaseException {
+    public void writeReadBigValue() throws NoSuchAlgorithmException, DatabaseException {
         byte[] bigObject = new byte[200000];
         SecureRandom.getInstanceStrong().nextBytes(bigObject);
         database.createTableIfNotExists("table");
