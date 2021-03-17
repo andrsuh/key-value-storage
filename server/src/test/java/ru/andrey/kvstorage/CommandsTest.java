@@ -69,7 +69,7 @@ public class CommandsTest {
     public void setUp() throws IOException, DatabaseException {
         DatabaseServerConfig testConfig = DatabaseServerConfig.builder()
                 .dbConfig(new DatabaseConfig(temporaryFolder.getRoot().getAbsolutePath()))
-                .serverConfig(new ServerConfig("127.0.0.1", 8080))
+                .serverConfig(new ServerConfig("127.0.0.1", 0))
                 .build();
 
         env = mock(ExecutionEnvironment.class);

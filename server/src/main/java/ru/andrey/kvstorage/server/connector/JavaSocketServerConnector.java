@@ -39,6 +39,9 @@ public class JavaSocketServerConnector implements AutoCloseable {
         this.databaseServer = databaseServer;
         this.serverSocket = new ServerSocket(config.getPort());
 
+        if (config.getPort() == 0)
+            System.out.println("Using port " + serverSocket.getLocalPort());
+
         connectionAcceptorExecutor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
