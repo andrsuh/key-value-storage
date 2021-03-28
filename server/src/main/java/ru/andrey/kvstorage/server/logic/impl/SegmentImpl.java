@@ -43,7 +43,7 @@ public class SegmentImpl implements Segment {
         this.currentSizeInBytes = 0;
     }
 
-    public SegmentImpl(SegmentInitializationContext context) {
+    private SegmentImpl(SegmentInitializationContext context) {
         this.readOnly = true;
         this.segmentName = context.getSegmentName();
         this.segmentPath = context.getSegmentPath();
@@ -51,10 +51,14 @@ public class SegmentImpl implements Segment {
         this.currentSizeInBytes = context.getCurrentSize();
     }
 
-    static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
+    public static Segment create(String segmentName, Path tableRootPath) throws DatabaseException {
         SegmentImpl sg = new SegmentImpl(segmentName, tableRootPath);
         sg.initializeAsNew();
         return sg;
+    }
+
+    public static Segment initializeFromContext(SegmentInitializationContext context) {
+        return new SegmentImpl(context);
     }
 
     private void initializeAsNew() throws DatabaseException {
