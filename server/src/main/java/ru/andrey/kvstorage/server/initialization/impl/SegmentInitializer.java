@@ -66,7 +66,7 @@ public class SegmentInitializer implements Initializer {
                 .index(index)
                 .build();
 
-        SegmentImpl segment = new SegmentImpl(segmentInitializationContext);
+        Segment segment = SegmentImpl.initializeFromContext(segmentInitializationContext);
 
         tableIndexUpdate(context.currentTableContext(), keys, segment);
         context.currentTableContext().updateCurrentSegment(segment); // as they are initialized sequentially in accordance to creation time we can do this
