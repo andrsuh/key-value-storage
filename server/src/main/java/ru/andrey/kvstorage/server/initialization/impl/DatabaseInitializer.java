@@ -17,9 +17,9 @@ import java.util.stream.StreamSupport;
 
 // stateless for lectures
 public class DatabaseInitializer implements Initializer {
-    private final Initializer tableInitializer;
+    private final TableInitializer tableInitializer;
 
-    public DatabaseInitializer(Initializer tableInitializer) {
+    public DatabaseInitializer(TableInitializer tableInitializer) {
         this.tableInitializer = tableInitializer;
     }
 
