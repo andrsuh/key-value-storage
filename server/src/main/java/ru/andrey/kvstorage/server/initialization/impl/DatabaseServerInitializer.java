@@ -13,9 +13,9 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class DatabaseServerInitializer implements Initializer {
-    private final Initializer databaseInitializer;
+    private final DatabaseInitializer databaseInitializer;
 
-    public DatabaseServerInitializer(Initializer databaseInitializer) {
+    public DatabaseServerInitializer(DatabaseInitializer databaseInitializer) {
         this.databaseInitializer = databaseInitializer;
     }
 

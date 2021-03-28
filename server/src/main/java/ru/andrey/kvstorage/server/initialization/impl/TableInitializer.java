@@ -15,9 +15,9 @@ import java.util.stream.StreamSupport;
 
 public class TableInitializer implements Initializer {
 
-    private final Initializer segmentInitializer;
+    private final SegmentInitializer segmentInitializer;
 
-    public TableInitializer(Initializer segmentInitializer) {
+    public TableInitializer(SegmentInitializer segmentInitializer) {
         this.segmentInitializer = segmentInitializer;
     }
 
