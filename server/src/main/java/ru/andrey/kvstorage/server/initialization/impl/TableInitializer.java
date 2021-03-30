@@ -27,7 +27,7 @@ public class TableInitializer implements Initializer {
      *
      * @param context контекст с информацией об инициализируемой бд, окружении, таблицы
      * @throws DatabaseException если в контексте лежит неправильный путь к таблице, невозможно прочитать содержимого папки,
-     *  или если возникла ошибка более низкоуровневых инициализаторов (????)
+     *  или если возникла ошибка ошибка дочерних инициализаторов
      */
     @Override
     public void perform(InitializationContext context) throws DatabaseException {

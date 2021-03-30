@@ -29,7 +29,7 @@ public class DatabaseInitializer implements Initializer {
      *
      * @param initialContext контекст с информацией об инициализируемой бд и об окружении
      * @throws DatabaseException если в контексте лежит неправильный путь к базе, невозможно прочитать содержимого папки,
-     *  или если возникла ошибка более низкоуровневых инициализаторов (????)
+     *  или если возникла ошибка ошибка дочерних инициализаторов
      */
     @Override
     public void perform(InitializationContext initialContext) throws DatabaseException {
