@@ -30,6 +30,7 @@ public interface DatabaseInitializationContext {
     /**
      * Добавляет таблицу в ассоциативный массив накопленных таблиц.
      *
+     * @throws RuntimeException если указанная таблица уже добавлена
      * @param table таблица, которую нужно добавить
      */
     void addTable(Table table);
