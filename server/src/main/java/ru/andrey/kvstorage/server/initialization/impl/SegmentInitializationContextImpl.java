@@ -12,7 +12,7 @@ import java.nio.file.Path;
 public class SegmentInitializationContextImpl implements SegmentInitializationContext {
     private final String segmentName;
     private final Path segmentPath;
-    private final int currentSize;
+    private final long currentSize;
     private final SegmentIndex index; // todo sukhoa think of better design
 
     private SegmentInitializationContextImpl(String segmentName, Path segmentPath, int currentSize, SegmentIndex index) {
@@ -23,6 +23,6 @@ public class SegmentInitializationContextImpl implements SegmentInitializationCo
     }
 
     public SegmentInitializationContextImpl(String segmentName, Path tablePath, int currentSize) {
-        this(segmentName, tablePath.resolve(segmentName), currentSize, null); // todo sukhoa maybe not null?
+        this(segmentName, tablePath.resolve(segmentName), currentSize, new SegmentIndex());
     }
 }

@@ -57,12 +57,12 @@ public class DatabaseServerInitializer implements Initializer {
                         .build();
                 try {
                     databaseInitializer.perform(downstreamContext);
-                } catch (DatabaseException e) { // todo sukhoa make them throw unchecked exception
+                } catch (DatabaseException e) {
                     throw new RuntimeException(e);
                 }
             });
-        } catch (Exception e) { // todo sukhoa handle this. refactor
-            throw new DatabaseException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 }

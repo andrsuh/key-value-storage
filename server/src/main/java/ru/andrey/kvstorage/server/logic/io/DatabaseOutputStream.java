@@ -24,7 +24,7 @@ public class DatabaseOutputStream extends DataOutputStream {
      * Например при использовании UTF_8,
      * "key" : "value"
      * 3key5value
-     * Метод вернет 10
+     * Метод вернет 16
      *
      * @param databaseRecord запись
      * @return размер записи
