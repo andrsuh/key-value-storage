@@ -23,11 +23,19 @@ public class DatabaseInitializer implements Initializer {
         this.tableInitializer = tableInitializer;
     }
 
+    /**
+     * Добавляет в контекст информацию об инициализируемой бд.
+     * Запускает инициализацию всех таблиц это базы
+     *
+     * @param initialContext контекст с информацией об инициализируемой бд и об окружении
+     * @throws DatabaseException если в контексте лежит неправильный путь к базе, невозможно прочитать содержимого папки,
+     *  или если возникла ошибка более низкоуровневых инициализаторов (????)
+     */
     @Override
     public void perform(InitializationContext initialContext) throws DatabaseException {
         DatabaseInitializationContext databaseContext = initialContext.currentDbContext();
 
-        System.out.println("Creating database: " + databaseContext.getDbName());
+        System.out.println("Initialize database: " + databaseContext.getDbName());
 
         if (!Files.exists(databaseContext.getDatabasePath())) {
             throw new DatabaseException("Database with such name doesn't exist: " + databaseContext.getDbName());
