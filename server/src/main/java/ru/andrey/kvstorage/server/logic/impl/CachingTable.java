@@ -10,13 +10,13 @@ import java.util.Optional;
  */
 public class CachingTable implements Table {
     private final Table table;
-    private final DatabaseCache cache;
+    private final DatabaseCacheImpl cache;
 
     public CachingTable(Table table) {
-        this(table, new DatabaseCache());
+        this(table, new DatabaseCacheImpl());
     }
 
-    public CachingTable(Table table, DatabaseCache cache) {
+    public CachingTable(Table table, DatabaseCacheImpl cache) {
         this.table = table;
         this.cache = cache;
     }
