@@ -15,14 +15,14 @@ public class SegmentInitializationContextImpl implements SegmentInitializationCo
     private final long currentSize;
     private final SegmentIndex index; // todo sukhoa think of better design
 
-    private SegmentInitializationContextImpl(String segmentName, Path segmentPath, int currentSize, SegmentIndex index) {
+    private SegmentInitializationContextImpl(String segmentName, Path segmentPath, long currentSize, SegmentIndex index) {
         this.segmentName = segmentName;
         this.segmentPath = segmentPath;
         this.currentSize = currentSize;
         this.index = index;
     }
 
-    public SegmentInitializationContextImpl(String segmentName, Path tablePath, int currentSize) {
+    public SegmentInitializationContextImpl(String segmentName, Path tablePath, long currentSize) {
         this(segmentName, tablePath.resolve(segmentName), currentSize, new SegmentIndex());
     }
 }
