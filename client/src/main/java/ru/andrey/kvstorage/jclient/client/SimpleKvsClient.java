@@ -19,6 +19,16 @@ public class SimpleKvsClient implements KvsClient {
     }
 
     @Override
+    public String createDatabase() {
+        return executeCommand(new CreateDatabaseKvsCommand(databaseName));
+    }
+
+    @Override
+    public String createTable(String tableName) {
+        return executeCommand(new CreateTableKvsCommand(databaseName, tableName));
+    }
+
+    @Override
     public String get(String tableName, String key) {
         return executeCommand(new GetKvsCommand(databaseName, tableName, key));
     }
@@ -31,16 +41,6 @@ public class SimpleKvsClient implements KvsClient {
     @Override
     public String delete(String tableName, String key) {
         return executeCommand(new DeleteKvsCommand(databaseName, tableName, key));
-    }
-
-    @Override
-    public String createDatabase(String databaseName) {
-        return executeCommand(new CreateDatabaseKvsCommand(databaseName));
-    }
-
-    @Override
-    public String executeCommand(String commandString) {
-        return executeCommand(new StringKsvCommand(commandString));
     }
 
     private String executeCommand(KvsCommand command) {
