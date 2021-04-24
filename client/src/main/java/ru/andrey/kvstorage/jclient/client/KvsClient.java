@@ -10,5 +10,7 @@ public interface KvsClient {
 
     String delete(String tableName, String key);
 
+    String createDatabase(String databaseName);
+
     String executeCommand(String commandString);
 }

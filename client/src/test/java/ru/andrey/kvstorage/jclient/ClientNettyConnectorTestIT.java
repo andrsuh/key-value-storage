@@ -57,7 +57,7 @@ public class ClientNettyConnectorTestIT {
         ConnectionPool connectionPool = new ConnectionPool(new ConnectionConfig());
         this.client = new SimpleKvsClient(DATABASE_NAME, connectionPool::getClientConnection);
 
-        client.executeCommand("CREATE_DATABASE " + DATABASE_NAME);
+        client.createDatabase(DATABASE_NAME);
         client.executeCommand("CREATE_TABLE " + DATABASE_NAME + " " + TABLE_NAME);
     }
 

@@ -57,7 +57,7 @@ public class ClientJavaSocketConnectorTestIT {
         connector = new JavaSocketServerConnector(databaseServer, testConfig.getServerConfig());
 
         this.client = new SimpleKvsClient(DATABASE_NAME, () -> new SocketKvsConnection(new ConnectionConfig()));
-        client.executeCommand("CREATE_DATABASE " + DATABASE_NAME);
+        client.createDatabase(DATABASE_NAME);
         client.executeCommand("CREATE_TABLE " + DATABASE_NAME + " " + TABLE_NAME);
     }
 

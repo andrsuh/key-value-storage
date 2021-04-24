@@ -34,6 +34,11 @@ public class SimpleKvsClient implements KvsClient {
     }
 
     @Override
+    public String createDatabase(String databaseName) {
+        return executeCommand(new CreateDatabaseKvsCommand(databaseName));
+    }
+
+    @Override
     public String executeCommand(String commandString) {
         return executeCommand(new StringKsvCommand(commandString));
     }
