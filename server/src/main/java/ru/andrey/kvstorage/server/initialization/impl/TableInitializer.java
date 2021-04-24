@@ -21,6 +21,14 @@ public class TableInitializer implements Initializer {
         this.segmentInitializer = segmentInitializer;
     }
 
+    /**
+     * Добавляет в контекст информацию об инициализируемой таблице.
+     * Запускает инициализацию всех сегментов в порядке их создания (из имени)
+     *
+     * @param context контекст с информацией об инициализируемой бд, окружении, таблицы
+     * @throws DatabaseException если в контексте лежит неправильный путь к таблице, невозможно прочитать содержимого папки,
+     *  или если возникла ошибка ошибка дочерних инициализаторов
+     */
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
         TableInitializationContext tableContext = context.currentTableContext();

@@ -1,6 +1,7 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
 import lombok.Getter;
+import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.DatabaseInitializationContext;
 import ru.andrey.kvstorage.server.logic.Table;
 
@@ -21,6 +22,9 @@ public class DatabaseInitializationContextImpl implements DatabaseInitialization
 
     @Override
     public void addTable(Table table) {
-        tables.put(table.getName(), table); // todo sukhoa check if already exists
+        if (tables.containsKey(table.getName()))
+            throw new RuntimeException("Table with such name already exists.");
+
+        tables.put(table.getName(), table);
     }
 }

@@ -23,9 +23,12 @@ import java.util.Set;
 public class SegmentInitializer implements Initializer {
 
     /**
-     * Заполняет информацию о сегменте. Обнавляет индекс записями из сегмента
+     * Добавляет в контекст информацию об инициализируемом сегменте.
+     * Составляет индекс сегмента
+     * Обновляет инфу в индексе таблицы
      *
-     * @param context Контекст инициализации
+     * @param context контекст с информацией об инициализируемой бд и об окружении
+     * @throws DatabaseException если в контексте лежит неправильный путь к сегменту, невозможно прочитать содержимое. Ошибка в содержании
      */
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
