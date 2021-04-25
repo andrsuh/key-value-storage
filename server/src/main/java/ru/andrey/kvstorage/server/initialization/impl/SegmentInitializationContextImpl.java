@@ -2,6 +2,7 @@ package ru.andrey.kvstorage.server.initialization.impl;
 
 import lombok.Builder;
 import lombok.Getter;
+import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.initialization.SegmentInitializationContext;
 
@@ -22,7 +23,14 @@ public class SegmentInitializationContextImpl implements SegmentInitializationCo
         this.index = index;
     }
 
+    /**
+     * Не используйте этот конструктор. Оставлен для совместимости со старыми тестами.
+     */
     public SegmentInitializationContextImpl(String segmentName, Path tablePath, long currentSize) {
         this(segmentName, tablePath.resolve(segmentName), currentSize, new SegmentIndex());
+    }
+
+    public SegmentInitializationContextImpl(String segmentName, Path tablePath) {
+        this(segmentName, tablePath.resolve(segmentName), 0, new SegmentIndex());
     }
 }

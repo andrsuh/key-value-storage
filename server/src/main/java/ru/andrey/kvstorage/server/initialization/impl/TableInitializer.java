@@ -56,7 +56,7 @@ public class TableInitializer implements Initializer {
                                 .executionEnvironment(context.executionEnvironment())
                                 .currentDatabaseContext(context.currentDbContext())
                                 .currentTableContext(context.currentTableContext())
-                                .currentSegmentContext(new SegmentInitializationContextImpl(segmentName, tableContext.getTablePath(), 0)) // todo sukhao fix size
+                                .currentSegmentContext(new SegmentInitializationContextImpl(segmentName, tableContext.getTablePath()))
                                 .build();
                         try {
                             segmentInitializer.perform(downstreamContext);
