@@ -31,6 +31,9 @@ public class SetKeyCommand implements DatabaseCommand {
         this.value = args.get(VALUE.getPositionIndex()).getPayloadBytes();
     }
 
+    /**
+     * @return предыдущее значение. Например, "previous" или null, если такого не было
+     */
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
         Database database = env.getDatabase(databaseName)

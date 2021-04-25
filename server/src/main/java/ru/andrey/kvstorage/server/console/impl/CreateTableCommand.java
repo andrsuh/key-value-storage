@@ -29,6 +29,9 @@ public class CreateTableCommand implements DatabaseCommand {
         this.env = env;
     }
 
+    /**
+     * @return сообщение о том, что заданная таблица была создана. Например, "Table table1 in database db1 created"
+     */
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
         Optional<Database> database = env.getDatabase(databaseName);

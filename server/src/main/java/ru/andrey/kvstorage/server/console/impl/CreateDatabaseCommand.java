@@ -27,6 +27,9 @@ public class CreateDatabaseCommand implements DatabaseCommand {
         this.databaseName = args.get(DATABASE_NAME.getPositionIndex()).asString();
     }
 
+    /**
+     * @return сообщение о том, что заданная база была создана. Например, "Database db1 created"
+     */
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
         env.addDatabase(databaseFactory.createNonExistent(databaseName, env.getWorkingPath()));

@@ -30,6 +30,9 @@ public class DeleteKeyCommand implements DatabaseCommand {
         this.key = args.get(KEY.getPositionIndex()).asString();
     }
 
+    /**
+     * @return удаленное значение. Например, "previous"
+     */
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
         Database database = env.getDatabase(databaseName)

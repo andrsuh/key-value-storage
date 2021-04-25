@@ -6,6 +6,10 @@ import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
 
 import java.util.List;
 
+/**
+ * Перечисление команд. Пример создания и использования:
+ *  DatabaseCommands.valueOf("GET_KEY").getCommand(env, commandArgs).execute()
+ */
 public enum DatabaseCommands {
 
     CREATE_DATABASE {
@@ -39,6 +43,8 @@ public enum DatabaseCommands {
         }
     };
 
-
+    /**
+     * Возвращает созданную команду
+     */
     public abstract DatabaseCommand getCommand(ExecutionEnvironment env, List<RespObject> commandArgs);
 }

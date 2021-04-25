@@ -29,6 +29,9 @@ public class GetKeyCommand implements DatabaseCommand {
         this.key = args.get(KEY.getPositionIndex()).asString();
     }
 
+    /**
+     * @return текущее значение. Например "value'
+     */
     @Override
     public DatabaseCommandResult execute() throws DatabaseException {
         Database database = env.getDatabase(databaseName)
