@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-public interface DatabaseCommandResult extends DatabaseApiSerializable {
+public class DatabaseCommandResult implements DatabaseApiSerializable {
 
     /**
      * Формирует успешный результат выполнения команды из значения результата.
@@ -17,8 +17,8 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
      * @param result значение результата
      * @return успешный результат выполнения команды, который был сформирован
      */
-    static DatabaseCommandResult success(byte[] result) {
-        return new DatabaseCommandResultImpl(result, null, DatabaseCommandStatus.SUCCESS);
+    public static DatabaseCommandResult success(byte[] result) {
+        return new DatabaseCommandResult(result, null, DatabaseCommandStatus.SUCCESS);
     }
 
     /**
@@ -27,9 +27,9 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
      * @param message сообщение об ошибке
      * @return результат команды, при выполнении которой произошла ошибка
      */
-    static DatabaseCommandResult error(String message) {
+    public static DatabaseCommandResult error(String message) {
         Objects.requireNonNull(message);
-        return new DatabaseCommandResultImpl(null, message, DatabaseCommandStatus.FAILED);
+        return new DatabaseCommandResult(null, message, DatabaseCommandStatus.FAILED);
     }
 
     /**
@@ -38,7 +38,7 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
      * @param exception исключение, из которого нужно сформировать результат выполнения команды
      * @return результат команды, при выполнении которой произошла ошибка
      */
-    static DatabaseCommandResult error(Exception exception) {
+    public static DatabaseCommandResult error(Exception exception) {
         Objects.requireNonNull(exception);
         String message = exception.getMessage() != null
                 ? exception.getMessage()
@@ -46,80 +46,66 @@ public interface DatabaseCommandResult extends DatabaseApiSerializable {
         return DatabaseCommandResult.error(message);
     }
 
+    private final byte[] result;
+    private final String errorMessage;
+    private final DatabaseCommandStatus status;
+
+    private DatabaseCommandResult(byte[] result, String errorMessage, DatabaseCommandStatus status) {
+        this.result = result;
+        this.errorMessage = errorMessage;
+        this.status = status;
+    }
+
     /**
      * @return значение результата выполнения команды в виде {@code Optional<String>}
      */
-    Optional<byte[]> getResult();
+    public Optional<byte[]> getResult() {
+        return Optional.ofNullable(result);
+    }
 
     /**
      * Возвращает статус выполнения команды.
      *
      * @return статус выполнения команды
      */
-    DatabaseCommandStatus getStatus();
+    public DatabaseCommandStatus getStatus() {
+        return status;
+    }
 
     /**
      * Возвращает {@code true} - если команда выполнилась успешно (status == DatabaseCommandStatus.SUCCESS), {@code false} - в ином случае.
      *
      * @return {@code true} - если команда выполнилась успешно (status == DatabaseCommandStatus.SUCCESS), {@code false} - в ином случае
      */
-    boolean isSuccess();
+    public boolean isSuccess() {
+        return status == DatabaseCommandStatus.SUCCESS;
+    }
 
     /**
      * Возвращает сообщение об ошибке, которая произошла при выполнении команды.
      *
      * @return сообщение об ошибке, которая произошла при выполнении команды
      */
-    String getErrorMessage();
+    public String getErrorMessage() {
+        return errorMessage;
+    }
+
+    @Override
+    public RespObject serialize() {
+        if (isSuccess()) {
+            if (getResult().isPresent()) {
+                return new RespBulkString(result);
+            }
+            return RespBulkString.NULL_BULK_STRING;
+        } else {
+            return new RespError(errorMessage.getBytes(StandardCharsets.UTF_8));
+        }
+    }
 
     /**
      * Перечисление, описывающее возможные варианты статуса выполнения команды.
      */
-    enum DatabaseCommandStatus {
+    public enum DatabaseCommandStatus {
         SUCCESS, FAILED
-    }
-
-    class DatabaseCommandResultImpl implements DatabaseCommandResult {
-        private final byte[] result;
-        private final String errorMessage;
-        private final DatabaseCommandStatus status;
-
-        private DatabaseCommandResultImpl(byte[] result, String errorMessage, DatabaseCommandStatus status) {
-            this.result = result;
-            this.errorMessage = errorMessage;
-            this.status = status;
-        }
-
-        @Override
-        public boolean isSuccess() {
-            return status == DatabaseCommandStatus.SUCCESS;
-        }
-
-        @Override
-        public DatabaseCommandStatus getStatus() {
-            return status;
-        }
-
-        @Override
-        public String getErrorMessage() {
-            return errorMessage;
-        }
-
-        @Override
-        public Optional<byte[]> getResult() {
-            return Optional.ofNullable(result);
-        }
-
-        @Override
-        public RespObject serialize() {
-            if (isSuccess()) {
-                if (getResult().isPresent()) {
-                    return new RespBulkString(result);
-                }
-                return RespBulkString.NULL_BULK_STRING;
-            } else {
-                return new RespError(errorMessage.getBytes(StandardCharsets.UTF_8));
-            }
-        }
     }
 }
