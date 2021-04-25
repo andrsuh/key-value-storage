@@ -15,8 +15,6 @@ import java.util.Optional;
  */
 public interface Table {
     /**
-     * Возвращает имя таблицы.
-     *
      * @return имя таблицы
      */
     String getName();

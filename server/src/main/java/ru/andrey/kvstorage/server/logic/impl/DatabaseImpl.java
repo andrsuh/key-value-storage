@@ -35,6 +35,9 @@ public class DatabaseImpl implements Database {
         this.tables = context.getTables();
     }
 
+    /**
+     * @param databaseRoot путь к директории, которая может содержать несколько БД, поэтому при создании БД необходимо создать директорию внутри databaseRoot.
+     */
     public static Database create(String dbName, Path databaseRoot) throws DatabaseException {
         DatabaseImpl db = new DatabaseImpl(dbName, databaseRoot);
         db.initializeAsNew();
