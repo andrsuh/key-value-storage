@@ -12,7 +12,7 @@ public interface KvsIndex<K, V> {
     void onIndexedEntityUpdated(K key, V value);
 
     /**
-     * Ищет индексную информацию по указанному ключу.
+     * Ищет значение в индексе по указанному ключу.
      *
      * @param key ключ, по которому нужно провести поиск значение
      * @return {@code Optional<V>}

@@ -1,6 +1,7 @@
 package ru.andrey.kvstorage.jclient.repository;
 
 import ru.andrey.kvstorage.jclient.client.KvsClient;
+import ru.andrey.kvstorage.jclient.exception.DatabaseExecutionException;
 import ru.andrey.kvstorage.jclient.mapper.EntityMapper;
 
 import java.util.function.Supplier;
@@ -18,7 +19,7 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
     Supplier<KvsClient> getClientFactory();
 
     @Override
-    default E get(String id) {
+    default E get(String id) throws DatabaseExecutionException {
         if (id == null) {
             throw new IllegalArgumentException("null id passed");
         }
@@ -29,7 +30,7 @@ public interface SpecifiedKvsRepository<E> extends KvsRepository<E> {
     }
 
     @Override
-    default E set(String id, E entity) {
+    default E set(String id, E entity) throws DatabaseExecutionException {
         if (id == null) {
             throw new IllegalArgumentException("null id passed");
         }

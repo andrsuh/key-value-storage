@@ -1,23 +1,26 @@
 package ru.andrey.kvstorage.resp.object;
 
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
-import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Строка
+ */
 @AllArgsConstructor
-@NoArgsConstructor
 public class RespBulkString implements RespObject {
-    public static final RespBulkString NULL_BULK_STRING = new RespBulkString();
+    /**
+     * Код объекта
+     */
+    public static final byte CODE = '$';
 
     public static final int NULL_STRING_SIZE = -1;
 
-    public static final byte CODE = '$';
+    public static final RespBulkString NULL_STRING = new RespBulkString(null);
 
-    private byte[] data;
+    private final byte[] data;
 
     @Override
     public boolean isError() {
@@ -33,18 +36,13 @@ public class RespBulkString implements RespObject {
     }
 
     @Override
-    public byte[] getPayloadBytes() {
-        return data;
-    }
-
-    @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
 
         if (data == null) {
-            RespUtil.writeInt(os, NULL_STRING_SIZE);
+            os.write(String.valueOf(NULL_STRING_SIZE).getBytes(StandardCharsets.UTF_8));
         } else {
-            RespUtil.writeInt(os, data.length);
+            os.write(String.valueOf(data.length).getBytes(StandardCharsets.UTF_8));
             os.write(CRLF);
             os.write(data);
         }

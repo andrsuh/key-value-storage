@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.DatabaseInitializationContext;
 import ru.andrey.kvstorage.server.logic.Database;
@@ -20,7 +20,7 @@ public class DatabaseImpl implements Database {
     private final Map<String, Table> tables;
 
     // todo sukhoa this class is very difficult to test. Think of some proxy/middleware DatabaseInitializer class
-    private DatabaseImpl(String dbName, Path databaseRoot) {
+    public DatabaseImpl(String dbName, Path databaseRoot) {
         Objects.requireNonNull(dbName);
         Objects.requireNonNull(databaseRoot);
 
@@ -35,9 +35,6 @@ public class DatabaseImpl implements Database {
         this.tables = context.getTables();
     }
 
-    /**
-     * @param databaseRoot путь к директории, которая может содержать несколько БД, поэтому при создании БД необходимо создать директорию внутри databaseRoot.
-     */
     public static Database create(String dbName, Path databaseRoot) throws DatabaseException {
         DatabaseImpl db = new DatabaseImpl(dbName, databaseRoot);
         db.initializeAsNew();

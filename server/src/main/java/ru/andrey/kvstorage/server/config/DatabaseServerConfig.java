@@ -1,12 +1,14 @@
 package ru.andrey.kvstorage.server.config;
 
 import lombok.Builder;
-import lombok.Value;
+import lombok.Getter;
+import lombok.ToString;
 
-@Value
+@ToString
+@Getter
 @Builder
 public class DatabaseServerConfig {
-    ServerConfig serverConfig;
+    private final ServerConfig serverConfig;
 
-    DatabaseConfig dbConfig;
+    private final DatabaseConfig dbConfig;
 }

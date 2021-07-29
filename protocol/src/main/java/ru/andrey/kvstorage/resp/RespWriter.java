@@ -1,18 +1,28 @@
 package ru.andrey.kvstorage.resp;
 
-import lombok.AllArgsConstructor;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
 import java.io.IOException;
 import java.io.OutputStream;
 
-@AllArgsConstructor
-public class RespWriter {
+public class RespWriter implements AutoCloseable{
 
     private final OutputStream os;
 
+    public RespWriter(OutputStream os) {
+        this.os = os;
+    }
+
+    /**
+     * Записывает в output stream объект
+     */
     public void write(RespObject object) throws IOException {
         object.write(os);
         os.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+        os.close();
     }
 }

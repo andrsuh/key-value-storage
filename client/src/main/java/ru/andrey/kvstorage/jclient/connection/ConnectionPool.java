@@ -1,6 +1,5 @@
 package ru.andrey.kvstorage.jclient.connection;
 
-
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
@@ -10,6 +9,7 @@ import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import ru.andrey.kvstorage.resp.ByteToRespDecoder;
 import ru.andrey.kvstorage.resp.RespToByteEncoder;
+import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
 import java.util.*;
@@ -91,7 +91,7 @@ public class ConnectionPool {
         }
 
         @Override
-        public RespObject send(int commandId, RespObject command) {
+        public RespObject send(int commandId, RespArray command) {
             AtomicReference<RespObject> futureResult = results.computeIfAbsent(commandId, id -> new AtomicReference<>());
             try {
                 synchronized (futureResult) {

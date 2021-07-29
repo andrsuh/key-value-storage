@@ -1,27 +1,31 @@
 package ru.andrey.kvstorage.server.logic;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-import ru.andrey.kvstorage.server.logic.DatabaseRecord;
-import ru.andrey.kvstorage.server.logic.WritableDatabaseRecord;
+import org.junit.rules.TemporaryFolder;
 import ru.andrey.kvstorage.server.logic.io.DatabaseInputStream;
 import ru.andrey.kvstorage.server.logic.io.DatabaseOutputStream;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertTrue;
 
 public class DatabaseStreamsTest {
 
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
     private DatabaseInputStream inputStream;
     private DatabaseOutputStream outputStream;
     private FileInputStream fileInputStream;
     private FileOutputStream fileOutputStream;
-    private File testFile;
     private final String key = "key";
     private final String value = "value";
     private final WritableDatabaseRecord simpleDatabaseRecord =
@@ -29,20 +33,11 @@ public class DatabaseStreamsTest {
 
     @Before
     public void setUp() throws IOException {
-        testFile = new File("testfile");
-        if (!testFile.createNewFile()) {
-            throw new IOException("Cannot create test file");
-        }
+        File testFile = temporaryFolder.newFile("testFile");
         fileOutputStream = new FileOutputStream(testFile);
         fileInputStream = new FileInputStream(testFile);
         inputStream = new DatabaseInputStream(fileInputStream);
         outputStream = new DatabaseOutputStream(fileOutputStream);
-    }
-
-    @After
-    public void tearDown() throws IOException {
-        if (!testFile.delete())
-            throw new IOException("Cannot delete test file");
     }
 
     @Test

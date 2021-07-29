@@ -1,13 +1,18 @@
 package ru.andrey.kvstorage.server.config;
 
-import lombok.Value;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Value
+/**
+ * Какой хост и какой порт будет слушать наш сервер
+ */
+@Getter
+@AllArgsConstructor
 public class ServerConfig {
 
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 8080;
 
-    String host;
-    int port;
+    private final String host;
+    private final int port;
 }

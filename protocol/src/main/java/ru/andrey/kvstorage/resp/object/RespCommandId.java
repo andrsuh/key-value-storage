@@ -1,6 +1,5 @@
 package ru.andrey.kvstorage.resp.object;
 
-import io.netty.buffer.Unpooled;
 import lombok.AllArgsConstructor;
 import ru.andrey.kvstorage.resp.RespUtil;
 
@@ -29,11 +28,6 @@ public class RespCommandId implements RespObject {
         os.write(CODE);
         RespUtil.writeInt(os, commandId);
         os.write(CRLF);
-    }
-
-    @Override
-    public byte[] getPayloadBytes() {
-        return Unpooled.buffer(4).writeInt(commandId).array();
     }
 
     @Override

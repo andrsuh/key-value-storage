@@ -32,5 +32,5 @@ public interface SegmentInitializationContext {
      *
      * @return текущий размер инициализируемого сегмента
      */
-    long getCurrentSize();
+    int getCurrentSize(); // todo sukhoa should be long
 }

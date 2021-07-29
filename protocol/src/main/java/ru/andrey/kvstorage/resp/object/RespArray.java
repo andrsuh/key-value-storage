@@ -2,16 +2,22 @@ package ru.andrey.kvstorage.resp.object;
 
 import lombok.Getter;
 import lombok.NonNull;
-import ru.andrey.kvstorage.resp.RespUtil;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Массив RESP объектов
+ */
 public class RespArray implements RespObject {
 
+    /**
+     * Код объекта
+     */
     public static final byte CODE = '*';
 
     private static final String AS_STRING_SEPARATOR = " ";
@@ -41,14 +47,9 @@ public class RespArray implements RespObject {
     }
 
     @Override
-    public byte[] getPayloadBytes() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
-        RespUtil.writeInt(os, objects.size());
+        os.write(String.valueOf(objects.size()).getBytes(StandardCharsets.UTF_8));
         os.write(CRLF);
 
         for (RespObject object : objects) {

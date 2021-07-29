@@ -1,5 +1,6 @@
 package ru.andrey.kvstorage.jclient.connection;
 
+import ru.andrey.kvstorage.jclient.exception.ConnectionException;
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
 import ru.andrey.kvstorage.resp.object.RespArray;
@@ -13,7 +14,13 @@ import java.net.Socket;
 public class SocketKvsConnection implements KvsConnection {
 
     private final Socket socket;
+    /**
+     * Читает из инпут стрима сокета. Используется для отправки команд
+     */
     private final RespReader reader;
+    /**
+     * Пишет в аутпут стрим сокета. Используется для получаения ответа
+     */
     private final RespWriter writer;
 
     public SocketKvsConnection(ConnectionConfig config) {
@@ -26,10 +33,16 @@ public class SocketKvsConnection implements KvsConnection {
         }
     }
 
+    /**
+     * Отправляет с помощью сокета команду и получает результат.
+     * @param commandId id команды (номер)
+     * @param command   команда
+     * @throws ConnectionException если сокет закрыт или если произошла другая ошибка соединения
+     */
     @Override
-    public synchronized RespObject send(int commandId, RespObject command) {
+    public synchronized RespObject send(int commandId, RespArray command) throws ConnectionException {
         if (socket.isClosed()) {
-            throw new IllegalStateException("Socket is closed");
+            throw new ConnectionException("Socket is closed");
         }
 
         try {
@@ -38,14 +51,19 @@ public class SocketKvsConnection implements KvsConnection {
             System.out.println("Client got response to command id: " + commandId);
             return result;
         } catch (IOException e) {
-            throw new IllegalStateException("Failed to send command to server");
+            throw new ConnectionException("Failed to send command to server", e);
         }
     }
 
+    /**
+     * Закрывает сокет
+     */
     @Override
     public void close() {
         try {
             socket.close();
+            reader.close();
+            writer.close();
         } catch (IOException e) {
             throw new IllegalStateException("Cannot close", e);
         }

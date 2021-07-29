@@ -9,19 +9,33 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 @AllArgsConstructor
-public class RespReader {
+public class RespReader implements AutoCloseable {
 
+    /**
+     * Специальные символы окончания элемента
+     */
     private static final byte CR = '\r';
     private static final byte LF = '\n';
-    private static final byte MINUS = '-';
-    private static final byte ZERO = '0';
 
     private final InputStream is;
 
+    /**
+     * Есть ли следующий массив в стриме?
+     */
     public boolean hasArray() throws IOException {
-        return is.read() == RespArray.CODE;
+        int code = is.read();
+        if (code == -1)
+            throw new EOFException("Unexpected end of stream");
+        return code == RespArray.CODE;
     }
 
+    /**
+     * Считывает из input stream следующий объект. Может прочитать любой объект, сам определит его тип на основе кода объекта.
+     * Например, если первый элемент "-", то вернет ошибку. Если "$" - bulk строку
+     *
+     * @throws EOFException если stream пустой
+     * @throws IOException  при ошибке чтения
+     */
     public RespObject readObject() throws IOException {
         final int code = is.read();
         if (code == -1) {
@@ -29,8 +43,6 @@ public class RespReader {
         }
 
         switch (code) {
-            case RespSimpleString.CODE:
-                return readSimpleString();
             case RespError.CODE:
                 return readError();
             case RespBulkString.CODE:
@@ -44,25 +56,34 @@ public class RespReader {
         }
     }
 
-    public RespSimpleString readSimpleString() throws IOException {
-        return new RespSimpleString(readString());
-    }
-
+    /**
+     * Считывает объект ошибки
+     *
+     * @throws EOFException если stream пустой
+     * @throws IOException  при ошибке чтения
+     */
     public RespError readError() throws IOException {
         return new RespError(readString());
     }
 
+    /**
+     * Читает bulk строку
+     *
+     * @throws EOFException если stream пустой
+     * @throws IOException  при ошибке чтения
+     */
     public RespBulkString readBulkString() throws IOException {
-        final int size = readInt();
+        final int size = readIntFromString();
 
-        if (size == -1) {
-            return RespBulkString.NULL_BULK_STRING;
+        if (size == RespBulkString.NULL_STRING_SIZE) {
+            if (is.skip(1) != 1)
+                throw new IOException("Cannot skip LF");
+            return RespBulkString.NULL_STRING;
         }
         if (size < 0) {
             throw new IOException(String.format("Invalid bulk string size: %1$d", size));
         }
 
-        int cr = is.read();
         int lf = is.read();
 
         final byte[] data = new byte[size];
@@ -75,7 +96,7 @@ public class RespReader {
             throw new IOException(String.format("Failed to read enough chars. Read: %1$d, Expected: %2$d", read, size));
         }
 
-        cr = is.read();
+        int cr = is.read();
         lf = is.read();
 
         if (cr == -1 || lf == -1) {
@@ -88,14 +109,19 @@ public class RespReader {
         return new RespBulkString(data);
     }
 
+    /**
+     * Считывает массив RESP элементов
+     *
+     * @throws EOFException если stream пустой
+     * @throws IOException  при ошибке чтения
+     */
     public RespArray readArray() throws IOException {
-        final int size = readInt();
+        final int size = readIntFromString();
 
         if (size < 0) {
             throw new IOException(String.format("Invalid array size: %1$d", size));
         }
 
-        final int cr = is.read();
         final int lf = is.read();
 
         final RespObject[] objects = new RespObject[size];
@@ -142,16 +168,43 @@ public class RespReader {
         return buf;
     }
 
-    private RespCommandId readCommandId() throws IOException {
+    /**
+     * Считывает id команды
+     *
+     * @throws EOFException если stream пустой
+     * @throws IOException  при ошибке чтения
+     */
+    public RespCommandId readCommandId() throws IOException {
         int commandId = readInt();
 
         final int cr = is.read();
         final int lf = is.read();
+
+        if (cr == -1 || lf == -1)
+            throw new EOFException();
 
         return new RespCommandId(commandId);
     }
 
     private int readInt() throws IOException {
         return ByteBuffer.wrap(is.readNBytes(4)).getInt(); // todo sukhoa what is not enough bytes?
+    }
+
+    private int readIntFromString() throws IOException {
+        StringBuffer buffer = new StringBuffer();
+        while (true) {
+            byte symbol = (byte) is.read();
+            if (symbol == -1)
+                throw new EOFException("Unexpected end of stream");
+            if (symbol == '\r')
+                break;
+            buffer.append(new String(new byte[]{symbol}));
+        }
+        return Integer.parseInt(buffer.toString());
+    }
+
+    @Override
+    public void close() throws IOException {
+        is.close();
     }
 }

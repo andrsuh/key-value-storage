@@ -7,10 +7,11 @@ import ru.andrey.kvstorage.jclient.client.KvsClient;
 import ru.andrey.kvstorage.jclient.client.SimpleKvsClient;
 import ru.andrey.kvstorage.jclient.connection.ConnectionConfig;
 import ru.andrey.kvstorage.jclient.connection.ConnectionPool;
+import ru.andrey.kvstorage.jclient.exception.DatabaseExecutionException;
 import ru.andrey.kvstorage.jclient.repository.KvsRepository;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws DatabaseExecutionException {
         ConnectionPool connectionPool = new ConnectionPool(new ConnectionConfig());
 
         KvsClient client = new SimpleKvsClient(

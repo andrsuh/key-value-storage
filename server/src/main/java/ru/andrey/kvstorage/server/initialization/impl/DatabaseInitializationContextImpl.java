@@ -1,7 +1,5 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
-import lombok.Getter;
-import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.DatabaseInitializationContext;
 import ru.andrey.kvstorage.server.logic.Table;
 
@@ -9,7 +7,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
 public class DatabaseInitializationContextImpl implements DatabaseInitializationContext {
     private final String dbName;
     private final Path databasePath;
@@ -21,10 +18,22 @@ public class DatabaseInitializationContextImpl implements DatabaseInitialization
     }
 
     @Override
-    public void addTable(Table table) {
-        if (tables.containsKey(table.getName()))
-            throw new RuntimeException("Table with such name already exists.");
+    public String getDbName() {
+        return dbName;
+    }
 
-        tables.put(table.getName(), table);
+    @Override
+    public Path getDatabasePath() {
+        return databasePath;
+    }
+
+    @Override
+    public Map<String, Table> getTables() {
+        return tables;
+    }
+
+    @Override
+    public void addTable(Table table) {
+        tables.put(table.getName(), table); // todo sukhoa check if already exists
     }
 }

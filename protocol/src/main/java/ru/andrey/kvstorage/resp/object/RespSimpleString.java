@@ -26,11 +26,6 @@ public class RespSimpleString implements RespObject {
     }
 
     @Override
-    public byte[] getPayloadBytes() {
-        return message;
-    }
-
-    @Override
     public void write(OutputStream os) throws IOException {
         os.write(CODE);
         os.write(message);

@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.TableIndex;
 import ru.andrey.kvstorage.server.initialization.TableInitializationContext;
 import ru.andrey.kvstorage.server.logic.Segment;
@@ -44,7 +44,7 @@ public class TableImpl implements Table {
         this.currentSegment = context.getCurrentSegment();
     }
 
-    static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
+    public static Table create(String tableName, Path pathToDatabaseRoot, TableIndex tableIndex) throws DatabaseException {
         TableImpl tb = new TableImpl(tableName, pathToDatabaseRoot, tableIndex);
         tb.initializeAsNew();
         return new CachingTable(tb);

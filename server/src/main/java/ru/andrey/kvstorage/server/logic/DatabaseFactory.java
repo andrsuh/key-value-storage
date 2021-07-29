@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.server.logic;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 
 import java.nio.file.Path;
 

@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
 
@@ -19,13 +19,6 @@ public class DatabaseServerInitializer implements Initializer {
         this.databaseInitializer = databaseInitializer;
     }
 
-    /**
-     * Если заданная в окружении директория не существует - создает ее
-     * Добавляет информацию о существующих в директории базах, нацинает их инициалиализацию
-     *
-     * @param context контекст, содержащий информацию об окружении
-     * @throws DatabaseException если произошла ошибка при создании директории, ее обходе или ошибка инициализации бд
-     */
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
         System.out.println("Starting initialization process... ");
@@ -57,12 +50,12 @@ public class DatabaseServerInitializer implements Initializer {
                         .build();
                 try {
                     databaseInitializer.perform(downstreamContext);
-                } catch (DatabaseException e) {
+                } catch (DatabaseException e) { // todo sukhoa make them throw unchecked exception
                     throw new RuntimeException(e);
                 }
             });
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) { // todo sukhoa handle this. refactor
+            throw new DatabaseException(e);
         }
     }
 }

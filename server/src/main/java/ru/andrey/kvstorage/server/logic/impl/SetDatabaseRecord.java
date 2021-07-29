@@ -2,10 +2,8 @@ package ru.andrey.kvstorage.server.logic.impl;
 
 import ru.andrey.kvstorage.server.logic.WritableDatabaseRecord;
 
-/**
- * Запись в БД, означающая добавление значения по ключу
- */
 public class SetDatabaseRecord implements WritableDatabaseRecord {
+
     private final byte[] key;
     private final int keySize;
 
@@ -47,5 +45,4 @@ public class SetDatabaseRecord implements WritableDatabaseRecord {
     public boolean isValuePresented() {
         return true;
     }
-
 }

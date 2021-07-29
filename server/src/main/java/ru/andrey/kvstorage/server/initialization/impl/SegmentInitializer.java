@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
@@ -23,12 +23,9 @@ import java.util.Set;
 public class SegmentInitializer implements Initializer {
 
     /**
-     * Добавляет в контекст информацию об инициализируемом сегменте.
-     * Составляет индекс сегмента
-     * Обновляет инфу в индексе таблицы
+     * Заполняет информацию о сегменте. Обнавляет индекс записями из сегмента
      *
-     * @param context контекст с информацией об инициализируемой бд и об окружении
-     * @throws DatabaseException если в контексте лежит неправильный путь к сегменту, невозможно прочитать содержимое. Ошибка в содержании
+     * @param context Контекст инициализации
      */
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
