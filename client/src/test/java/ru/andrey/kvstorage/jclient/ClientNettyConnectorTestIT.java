@@ -10,6 +10,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 import ru.andrey.kvstorage.jclient.client.SimpleKvsClient;
 import ru.andrey.kvstorage.jclient.connection.ConnectionConfig;
 import ru.andrey.kvstorage.jclient.connection.ConnectionPool;
+import ru.andrey.kvstorage.jclient.exception.DatabaseExecutionException;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.DatabaseConfig;
 import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
@@ -17,7 +18,7 @@ import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.connector.NettyServerConnector;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
@@ -40,7 +41,7 @@ public class ClientNettyConnectorTestIT {
     private static final String TABLE_NAME = "test_table";
 
     @Before
-    public void setUp() throws DatabaseException, InterruptedException {
+    public void setUp() throws DatabaseException, InterruptedException, DatabaseExecutionException {
         DatabaseServerConfig testConfig = DatabaseServerConfig.builder()
                 .dbConfig(new DatabaseConfig(temporaryFolder.getRoot().getAbsolutePath()))
                 .serverConfig(new ServerConfig("127.0.0.1", 8080))
@@ -66,7 +67,7 @@ public class ClientNettyConnectorTestIT {
     }
 
     @Test
-    public void test() {
+    public void test() throws DatabaseExecutionException {
         assertNull(client.get(TABLE_NAME, "key"));
         assertNull(client.set(TABLE_NAME, "key", "oldValue"));
         assertEquals("oldValue", client.set(TABLE_NAME, "key", "newValue"));
