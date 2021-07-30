@@ -59,6 +59,11 @@ public class JavaSocketServerConnectorTest {
             } catch (Exception ignored) {
             }
         }
+        try {
+            Thread.sleep(100);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     @Test
