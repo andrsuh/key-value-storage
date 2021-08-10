@@ -15,11 +15,11 @@ public class SocketKvsConnection implements KvsConnection {
 
     private final Socket socket;
     /**
-     * Читает из инпут стрима сокета. Используется для отправки команд
+     * Читает из инпут стрима сокета. Используется для чтения ответа
      */
     private final RespReader reader;
     /**
-     * Пишет в аутпут стрим сокета. Используется для получаения ответа
+     * Пишет в аутпут стрим сокета. Используется для отправки команд
      */
     private final RespWriter writer;
 
@@ -62,8 +62,6 @@ public class SocketKvsConnection implements KvsConnection {
     public void close() {
         try {
             socket.close();
-            reader.close();
-            writer.close();
         } catch (IOException e) {
             throw new IllegalStateException("Cannot close", e);
         }

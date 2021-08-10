@@ -19,6 +19,13 @@ public class DatabaseServerInitializer implements Initializer {
         this.databaseInitializer = databaseInitializer;
     }
 
+    /**
+     * Если заданная в окружении директория не существует - создает ее
+     * Добавляет информацию о существующих в директории базах, нацинает их инициалиализацию
+     *
+     * @param context контекст, содержащий информацию об окружении
+     * @throws DatabaseException если произошла ошибка при создании директории, ее обходе или ошибка инициализации бд
+     */
     @Override
     public void perform(InitializationContext context) throws DatabaseException {
         System.out.println("Starting initialization process... ");

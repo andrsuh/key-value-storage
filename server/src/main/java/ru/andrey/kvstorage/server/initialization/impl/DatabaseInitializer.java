@@ -23,6 +23,14 @@ public class DatabaseInitializer implements Initializer {
         this.tableInitializer = tableInitializer;
     }
 
+    /**
+     * Добавляет в контекст информацию об инициализируемой бд.
+     * Запускает инициализацию всех таблиц это базы
+     *
+     * @param initialContext контекст с информацией об инициализируемой бд и об окружении
+     * @throws DatabaseException если в контексте лежит неправильный путь к базе, невозможно прочитать содержимого папки,
+     *  или если возникла ошибка ошибка дочерних инициализаторов
+     */
     @Override
     public void perform(InitializationContext initialContext) throws DatabaseException {
         DatabaseInitializationContext databaseContext = initialContext.currentDbContext();
