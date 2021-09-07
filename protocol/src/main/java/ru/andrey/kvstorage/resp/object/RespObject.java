@@ -5,8 +5,14 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Преставляет собой объект в RESP
+ */
 public interface RespObject {
 
+    /**
+     * Последовательность символов, означающая конец объекта
+     */
     byte[] CRLF = "\r\n".getBytes(StandardCharsets.UTF_8);
 
     /**
@@ -15,19 +21,16 @@ public interface RespObject {
     boolean isError();
 
     /**
-     * @return строковое представление данного объекта
+     * @return возвращает строковое значение команды (не в RESP, без специальных символов).
+     * Например, для {@link RespBulkString} со значением "string" - "string"
      */
     String asString();
 
     /**
-     * Сериализует данный объект в байты и записывает его в переданный OutputStream.
+     * Сериализует данный объект в RESP и записывает байты в переданный OutputStream.
      */
     void write(OutputStream os) throws IOException;
 
-    /**
-     * Returns the byte payload for types it might be reasonable
-     */
-    byte[] getPayloadBytes();
 
     /**
      * Возвращает байтовое представление данного объекта.

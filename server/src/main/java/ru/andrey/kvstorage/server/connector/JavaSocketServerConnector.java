@@ -2,50 +2,57 @@ package ru.andrey.kvstorage.server.connector;
 
 import ru.andrey.kvstorage.resp.RespReader;
 import ru.andrey.kvstorage.resp.RespWriter;
-import ru.andrey.kvstorage.resp.object.RespArray;
-import ru.andrey.kvstorage.resp.object.RespObject;
 import ru.andrey.kvstorage.server.DatabaseServer;
 import ru.andrey.kvstorage.server.config.ConfigLoader;
 import ru.andrey.kvstorage.server.config.DatabaseServerConfig;
 import ru.andrey.kvstorage.server.config.ServerConfig;
 import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
-import ru.andrey.kvstorage.server.exception.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.TableInitializer;
 import ru.andrey.kvstorage.server.resp.CommandReader;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.Closeable;
-import java.io.IOException;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class JavaSocketServerConnector implements AutoCloseable {
+/**
+ * Класс, который предоставляет доступ к серверу через сокеты
+ */
+public class JavaSocketServerConnector implements Closeable {
 
+    /**
+     * Экзекьютор для выполнения ClientTask
+     */
     private final ExecutorService clientIOWorkers = Executors.newSingleThreadExecutor();
-
-    private final ExecutorService connectionAcceptorExecutor = Executors.newSingleThreadExecutor();
     private final ServerSocket serverSocket;
+    private final ExecutorService connectionAcceptorExecutor = Executors.newSingleThreadExecutor();
     private final DatabaseServer databaseServer;
 
-    public JavaSocketServerConnector(DatabaseServer databaseServer, ServerConfig config) throws IOException, DatabaseException {
-        System.out.println("Starting server on port " + config.getPort() + " (host " + config.getHost() + ")");
-
+    /**
+     * Стартует сервер. По аналогии с сокетом открывает коннекшн в конструкторе.
+     */
+    public JavaSocketServerConnector(DatabaseServer databaseServer, ServerConfig config) throws IOException {
         this.databaseServer = databaseServer;
+
+        System.out.println("Starting server on port " + config.getPort() + " (host " + config.getHost() + ")");
         this.serverSocket = new ServerSocket(config.getPort());
+        System.out.println("Using port " + serverSocket.getLocalPort() + " of localhost");
+    }
 
-        if (config.getPort() == 0)
-            System.out.println("Using port " + serverSocket.getLocalPort());
-
+    /**
+     * Начинает слушать заданный порт, начинает аксептить клиентские сокеты. На каждый из них начинает клиентскую таску
+     */
+    public void start() {
         connectionAcceptorExecutor.submit(() -> {
             while (!Thread.currentThread().isInterrupted()) {
                 try {
-                    Socket clientSocket = JavaSocketServerConnector.this.serverSocket.accept();
+                    Socket clientSocket = serverSocket.accept();
                     clientIOWorkers.submit(new ClientTask(clientSocket, databaseServer));
                 } catch (Throwable t) {
                     System.out.println("Server acceptor thread exception: " + t);
@@ -55,15 +62,23 @@ public class JavaSocketServerConnector implements AutoCloseable {
         });
     }
 
+    /**
+     * Закрывает все, что нужно ¯\_(ツ)_/¯
+     */
     @Override
-    public void close() throws Exception {
+    public void close() {
         System.out.println("Stopping socket connector");
-        connectionAcceptorExecutor.shutdownNow();
         clientIOWorkers.shutdownNow();
-        serverSocket.close();
+        connectionAcceptorExecutor.shutdownNow();
+        try {
+            serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    public static void main(String[] args) throws IOException, DatabaseException {
+
+    public static void main(String[] args) throws Exception {
 
         ConfigLoader loader = new ConfigLoader();
         DatabaseServerConfig config = loader.readConfig();
@@ -71,64 +86,79 @@ public class JavaSocketServerConnector implements AutoCloseable {
         DatabaseServerInitializer initializer = new DatabaseServerInitializer(
                 new DatabaseInitializer(new TableInitializer(new SegmentInitializer())));
 
-        DatabaseServer databaseServer = new DatabaseServer(new ExecutionEnvironmentImpl(config.getDbConfig()), initializer);
+        DatabaseServer databaseServer = DatabaseServer.initialize(new ExecutionEnvironmentImpl(config.getDbConfig()), initializer);
 
-        new JavaSocketServerConnector(databaseServer, config.getServerConfig());
+        JavaSocketServerConnector javaSocketServerConnector = new JavaSocketServerConnector(databaseServer, config.getServerConfig());
+        javaSocketServerConnector.start();
+
+        Thread.sleep(120_0);
+
+        javaSocketServerConnector.close();
     }
 
-    public DatabaseCommandResult executeNextCommand(RespArray message) {
-        try {
-            System.out.println("Server got client request: [ " + message + "]");
-            return databaseServer.executeNextCommand(message).get();
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-            return DatabaseCommandResult.error(e);
-        }
-    }
-
+    /**
+     * Runnable, описывающий исполнение клиентской команды.
+     */
     static class ClientTask implements Runnable, Closeable {
         private final Socket client;
         private final DatabaseServer server;
 
+        /**
+         * @param client клиентский сокет
+         * @param server сервер, на котором исполняется задача
+         */
         public ClientTask(Socket client, DatabaseServer server) {
             this.client = client;
             this.server = server;
         }
 
+        /**
+         * Исполняет задачу.
+         * 1. Читает из сокета команду с помощью {@link CommandReader}
+         * 2. Исполняет ее на сервере
+         * 3. Записывает результат в сокет с помощью {@link RespWriter}
+         */
         @Override
         public void run() {
-            try {
-                final CommandReader reader = new CommandReader(
-                        new RespReader(new BufferedInputStream(client.getInputStream())),
-                        server.getEnv()
-                );
-                final RespWriter writer = new RespWriter(new BufferedOutputStream(client.getOutputStream()));
-
+            try (CommandReader reader = new CommandReader(new RespReader(new BufferedInputStream(client.getInputStream())), server.getEnv());
+                 RespWriter writer = new RespWriter(new BufferedOutputStream(client.getOutputStream()))) {
                 while (!client.isClosed() && !Thread.currentThread().isInterrupted()) {
-                    if (!reader.hasNextCommand()) continue;
+                    try {
+                        if (!reader.hasNextCommand())
+                            continue;
+                    } catch (EOFException eof) {
+                        break;
+                    }
 
                     DatabaseCommandResult databaseCommandResult = server.executeNextCommand(reader.readCommand()).get();
 
                     writer.write(databaseCommandResult.serialize());
                 }
             } catch (IOException e) {
+                e.printStackTrace();
                 System.out.println("Client socket threw IO Exception " + e.getMessage());
             } catch (InterruptedException e) {
+                e.printStackTrace();
                 System.out.println("Got interrupted exception " + e.getMessage()); // todo sukhoa bad
             } catch (ExecutionException e) {
+                e.printStackTrace();
                 System.out.println("Got execution exception " + e.getMessage()); // todo sukhoa bad
             } catch (Throwable t) {
+                t.printStackTrace();
                 System.out.println("Unexpected exception" + t);
             } finally {
                 close();
             }
         }
 
+        /**
+         * Закрывает клиентский сокет
+         */
         @Override
         public void close() {
             try {
                 client.close();
-                System.out.println("Client has been disconnected: " + client.getInetAddress());
+                System.out.println("Client has been disconnected: " + client.getRemoteSocketAddress());
             } catch (IOException e) {
                 e.printStackTrace(); // todo sukhoa mmmmm
             }

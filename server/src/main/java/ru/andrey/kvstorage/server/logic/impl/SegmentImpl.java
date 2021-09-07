@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.server.logic.impl;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.index.SegmentOffsetInfo;
 import ru.andrey.kvstorage.server.index.impl.SegmentIndex;
 import ru.andrey.kvstorage.server.index.impl.SegmentOffsetInfoImpl;
@@ -44,7 +44,7 @@ public class SegmentImpl implements Segment {
     }
 
     private SegmentImpl(SegmentInitializationContext context) {
-        this.readOnly = true;
+        this.readOnly = context.getCurrentSize() >= MAX_SEGMENT_SIZE;
         this.segmentName = context.getSegmentName();
         this.segmentPath = context.getSegmentPath();
         this.segmentIndex = context.getIndex();
@@ -74,6 +74,9 @@ public class SegmentImpl implements Segment {
     }
 
     static String createSegmentName(String tableName) {
+        try {
+            Thread.sleep(1);
+        } catch (InterruptedException ignored) {}
         return tableName + "_" + System.currentTimeMillis();
     }
 

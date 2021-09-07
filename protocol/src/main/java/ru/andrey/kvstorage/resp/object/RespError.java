@@ -7,6 +7,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
+/**
+ * Сообщение об ошибке в RESP протоколе
+ */
 @AllArgsConstructor
 public class RespError implements RespObject {
 
@@ -23,11 +26,6 @@ public class RespError implements RespObject {
     @Override
     public String asString() {
         return new String(message, StandardCharsets.UTF_8);
-    }
-
-    @Override
-    public byte[] getPayloadBytes() {
-        return message;
     }
 
     @Override

@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.server.initialization;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 
 public interface Initializer {
     /**

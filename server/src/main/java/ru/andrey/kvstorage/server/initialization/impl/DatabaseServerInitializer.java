@@ -1,7 +1,7 @@
 package ru.andrey.kvstorage.server.initialization.impl;
 
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.InitializationContext;
 import ru.andrey.kvstorage.server.initialization.Initializer;
 
@@ -57,12 +57,12 @@ public class DatabaseServerInitializer implements Initializer {
                         .build();
                 try {
                     databaseInitializer.perform(downstreamContext);
-                } catch (DatabaseException e) {
+                } catch (DatabaseException e) { // todo sukhoa make them throw unchecked exception
                     throw new RuntimeException(e);
                 }
             });
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+        } catch (Exception e) { // todo sukhoa handle this. refactor
+            throw new DatabaseException(e);
         }
     }
 }

@@ -1,7 +1,5 @@
 package ru.andrey.kvstorage.server.logic;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
-
 import java.io.IOException;
 import java.util.Optional;
 
@@ -25,11 +23,10 @@ public interface Segment {
      *
      * @param objectKey ключ, по которому нужно записать значение
      * @param objectValue значение, которое нужно записать
-     * @return {@code true} - если значение успешно записалось, {@code false} - если нет
+     * @return {@code true} - если значение записалось, {@code false} - если нет
      * @throws IOException если произошла ошибка ввода-вывода.
-     * @throws DatabaseException
      */
-    boolean write(String objectKey, byte[] objectValue) throws IOException, DatabaseException;
+    boolean write(String objectKey, byte[] objectValue) throws IOException;
 
     /**
      * Считывает значение из сегмента по переданному ключу.

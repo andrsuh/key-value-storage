@@ -1,10 +1,10 @@
 package ru.andrey.kvstorage.server.logic;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
+import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import static org.junit.Assert.assertTrue;
 
 public class DatabaseRandomIOTest {
 
-    private static final int OPERATIONS_COUNT = 10_000;
+    private static final int OPERATIONS_COUNT = 3_000;
 
     private static final List<String> tables = List.of("table1", "table2", "table3");
 

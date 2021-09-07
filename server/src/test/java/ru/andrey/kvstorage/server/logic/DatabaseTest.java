@@ -1,18 +1,16 @@
 package ru.andrey.kvstorage.server.logic;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
+import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import java.util.Comparator;
 import java.util.Optional;
 import java.util.Random;
@@ -220,9 +218,9 @@ public class DatabaseTest {
     }
 
     @Test
-    public void writeRead_WhenBigValue_ThenHandleCorrectly() throws NoSuchAlgorithmException, DatabaseException {
+    public void writeRead_WhenBigValue_ThenHandleCorrectly() throws DatabaseException {
         byte[] bigObject = new byte[200000];
-        SecureRandom.getInstanceStrong().nextBytes(bigObject);
+        new Random().nextBytes(bigObject);
         database.createTableIfNotExists("table");
         database.write("table", "key1", bigObject);
         assertArrayEquals(bigObject, database.read("table", "key1").get());

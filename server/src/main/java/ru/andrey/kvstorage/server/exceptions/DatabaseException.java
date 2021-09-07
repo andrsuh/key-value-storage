@@ -1,4 +1,4 @@
-package ru.andrey.kvstorage.server.exception;
+package ru.andrey.kvstorage.server.exceptions;
 
 public class DatabaseException extends Exception {
     public DatabaseException(String message) {

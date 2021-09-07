@@ -8,7 +8,7 @@ import java.util.List;
 
 /**
  * Перечисление команд. Пример создания и использования:
- *  DatabaseCommands.valueOf("GET_KEY").getCommand(env, commandArgs).execute()
+ * DatabaseCommands.valueOf("GET_KEY").getCommand(env, commandArgs).execute()
  */
 public enum DatabaseCommands {
 

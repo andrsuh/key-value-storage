@@ -1,13 +1,10 @@
 package ru.andrey.kvstorage.server.console;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
-
 public interface DatabaseCommand {
     /**
      * Запускает команду.
      *
-     * @return результат выполнение команды
-     * @throws DatabaseException если произошла ошибка СУБД
+     * @return Сообщение о выполнении результата команды.
      */
-    DatabaseCommandResult execute() throws DatabaseException;
+    DatabaseCommandResult execute();
 }

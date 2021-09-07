@@ -1,5 +1,7 @@
 package ru.andrey.kvstorage.jclient.connection;
 
+import ru.andrey.kvstorage.jclient.exception.ConnectionException;
+import ru.andrey.kvstorage.resp.object.RespArray;
 import ru.andrey.kvstorage.resp.object.RespObject;
 
 /**
@@ -12,9 +14,7 @@ public interface KvsConnection extends AutoCloseable {
      * @param commandId id команды (номер)
      * @param command   команда
      * @return Результат исполнения
+     * @throws ConnectionException если не удалось прочитать ответ
      */
-    RespObject send(int commandId, RespObject command);
-
-    @Override
-    void close();
+    RespObject send(int commandId, RespArray command) throws ConnectionException;
 }

@@ -1,48 +1,37 @@
-package ru.andrey.kvstorage.server.logic.impl;
+package ru.andrey.kvstorage.server.logic;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
-import ru.andrey.kvstorage.server.logic.Database;
-import ru.andrey.kvstorage.server.logic.Segment;
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
+import ru.andrey.kvstorage.server.logic.impl.DatabaseImpl;
+import ru.andrey.kvstorage.server.logic.impl.SegmentImpl;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 
 public class SegmentTest {
 
+    @Rule
+    public TemporaryFolder temporaryFolder = new TemporaryFolder();
     private final String dbName = "db1";
     private final String tableName = "table1";
-    private Path dbPath;
     private Path tablePath;
     private Database database;
 
     @Before
-    public void setUp() throws IOException, DatabaseException {
-        dbPath = Files.createDirectory(Path.of(System.getProperty("user.dir") + "/db_files"));
+    public void setUp() throws DatabaseException {
+        Path dbPath = temporaryFolder.getRoot().toPath();
         database = DatabaseImpl.create(dbName, dbPath);
         database.createTableIfNotExists(tableName);
-        tablePath = Path.of(dbPath + "/" + dbName + "/" + tableName);
-    }
-
-    @After
-    public void tearDown() throws IOException {
-        Files.walk(dbPath)
-                .sorted(Comparator.reverseOrder())
-                .map(Path::toFile)
-                .forEach(File::delete);
-        Files.deleteIfExists(dbPath);
+        tablePath = Path.of(dbPath.toString(), dbName, tableName);
     }
 
     @Test
@@ -52,22 +41,19 @@ public class SegmentTest {
     }
 
     @Test
-    public void write_thenAssertReadOnly() throws DatabaseException, NoSuchAlgorithmException, IOException {
+    public void write_thenAssertReadOnly() throws DatabaseException,IOException {
         Segment segment = SegmentImpl.create(tableName, tablePath);
         byte[] bytes = new byte[1000];
         String keyPrefix = "k";
         int i;
         assertFalse(segment.isReadOnly());
+        Random random = new Random();
         for (i = 0; i < 100 && !segment.isReadOnly(); i++) {
-            try {
-                SecureRandom.getInstanceStrong().nextBytes(bytes);
-                if (!segment.write(keyPrefix + i, bytes)) {
-                    if (i < 97)
-                        fail();
-                    return;
-                }
-            } catch (IOException | DatabaseException e) {
-                fail("Throws exception but should not");
+            random.nextBytes(bytes);
+            if (!segment.write(keyPrefix + i, bytes)) {
+                if (i < 97)
+                    fail();
+                break;
             }
         }
         assertTrue(segment.isReadOnly());
@@ -84,7 +70,7 @@ public class SegmentTest {
 
         byte[] data1 = "data1".getBytes(StandardCharsets.UTF_8);
         byte[] data2 = "SomeVeryVeryVeryVeryVeryVeryVeryLongData".getBytes(StandardCharsets.UTF_8);
-        byte[] data3 = new byte[] {0, 1, 2, 3, 4, 5};
+        byte[] data3 = new byte[]{0, 1, 2, 3, 4, 5};
 
         segment.write(key1, data1);
         segment.write(key2, data2);
@@ -106,13 +92,14 @@ public class SegmentTest {
     }
 
     @Test
-    public void whenSegmentOverflow_createNew() throws NoSuchAlgorithmException, DatabaseException, IOException {
+    public void whenSegmentOverflow_createNew() throws  DatabaseException, IOException {
         byte[] array = new byte[99988];
-        SecureRandom.getInstanceStrong().nextBytes(array);
+        Random random = new Random();
+        random.nextBytes(array);
         database.write(tableName, "key1", array);
         assertEquals(1, Files.list(tablePath).count());
         array = new byte[5];
-        SecureRandom.getInstanceStrong().nextBytes(array);
+        random.nextBytes(array);
         database.write(tableName, "key2", array);
         assertEquals(2, Files.list(tablePath).count());
     }
@@ -133,10 +120,10 @@ public class SegmentTest {
     }
 
     @Test
-    public void writeRead_WhenBigValue_ThenHandleCorrectly() throws DatabaseException, IOException, NoSuchAlgorithmException {
+    public void writeRead_WhenBigValue_ThenHandleCorrectly() throws DatabaseException, IOException{
         Segment segment = SegmentImpl.create(tableName, tablePath);
         byte[] bigObject = new byte[200000];
-        SecureRandom.getInstanceStrong().nextBytes(bigObject);
+        new Random().nextBytes(bigObject);
         segment.write("key", bigObject);
         assertArrayEquals(bigObject, segment.read("key").get());
     }

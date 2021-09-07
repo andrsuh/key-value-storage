@@ -1,6 +1,6 @@
 package ru.andrey.kvstorage.server.logic;
 
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 
 import java.util.Optional;
 
@@ -15,6 +15,8 @@ import java.util.Optional;
  */
 public interface Table {
     /**
+     * Возвращает имя таблицы.
+     *
      * @return имя таблицы
      */
     String getName();
@@ -33,7 +35,7 @@ public interface Table {
      *
      * @param objectKey ключ, по которому нужно получить значение
      * @return значение, которое находится по ключу
-     * @throws DatabaseException если произошла ошибка ввода-вывод
+     * @throws DatabaseException если произошла ошибка ввода-вывода
      */
     Optional<byte[]> read(String objectKey) throws DatabaseException;
 

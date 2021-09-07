@@ -1,7 +1,9 @@
 package ru.andrey.kvstorage.jclient.repository;
 
-public interface KvsRepository<E> {
-    E get(String id);
+import ru.andrey.kvstorage.jclient.exception.DatabaseExecutionException;
 
-    E set(String id, E entity);
+public interface KvsRepository<E> {
+    E get(String id) throws DatabaseExecutionException;
+
+    E set(String id, E entity) throws DatabaseExecutionException;
 }

@@ -2,9 +2,6 @@ package ru.andrey.kvstorage.server.logic.impl;
 
 import ru.andrey.kvstorage.server.logic.WritableDatabaseRecord;
 
-/**
- * Запись в БД, означающая удаление значения по ключу
- */
 public class RemoveDatabaseRecord implements WritableDatabaseRecord {
     private static final byte[] EMPTY_VALUE = new byte[0];
 
@@ -49,4 +46,5 @@ public class RemoveDatabaseRecord implements WritableDatabaseRecord {
     public boolean isValuePresented() {
         return false;
     }
+
 }

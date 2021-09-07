@@ -19,7 +19,7 @@ import ru.andrey.kvstorage.server.console.DatabaseCommandResult;
 import ru.andrey.kvstorage.server.console.DatabaseCommands;
 import ru.andrey.kvstorage.server.console.ExecutionEnvironment;
 import ru.andrey.kvstorage.server.console.impl.ExecutionEnvironmentImpl;
-import ru.andrey.kvstorage.server.exception.DatabaseException;
+import ru.andrey.kvstorage.server.exceptions.DatabaseException;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.DatabaseServerInitializer;
 import ru.andrey.kvstorage.server.initialization.impl.SegmentInitializer;
